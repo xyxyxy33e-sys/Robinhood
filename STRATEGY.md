@@ -15,7 +15,11 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
 | ~9:45 AM | Entry — confirm momentum after the open, buy call | `runbooks/entry.md` |
+| every 5 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries | `runbooks/monitor.md` |
 | ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
+
+The 8:00/9:45/3:30 phases are cron Routines; the 5-minute monitor is a self-re-arming
+`send_later` loop started by a fill and stood down at 3:25 ET when the exit run takes over.
 
 Scheduled via Claude Code Routines (cron is UTC — see README for DST note). Every runbook
 begins with a market-open check and a time check; if fired at the wrong time it reschedules
@@ -57,15 +61,17 @@ Rank multiple qualifiers by: catalyst strength > relative volume > cleanest tape
 - **Order:** limit buy at mid, GFD, regular hours. If unfilled in 10 min, reprice once to
   mid + 40% of half-spread. Never market-buy an option.
 
-## 5. Position sizing & risk limits (see config.yaml)
+## 5. Position sizing & risk limits (config.yaml is the source of truth)
 
-- Premium per trade ≤ **25% of options buying power**, hard-capped at **$500**.
-- Max **1 open position**, max **1 new position per day**. No averaging down.
-- Skip the day entirely if options buying power < **$50** — log why and notify.
+- Premium per trade ≤ `max_premium_pct_of_bp`% of options buying power, hard-capped at
+  `max_premium_per_trade`. No averaging down; never re-buy a symbol stopped out today.
+- At most `max_open_positions` concurrent positions and `max_new_positions_per_day`
+  entries per day (initial entry at ~9:45, re-entries via the monitor loop until 11:30 ET).
+- Skip entries while options buying power < `min_buying_power_to_trade` — log why.
 - Cash account: option sale proceeds settle **T+1**. The exit run's proceeds fund the
   *next* day's entry; never plan on same-day recycling of proceeds.
 
-## 6. Exit rules (checked at midday and the 3:30 PM run; position never held overnight)
+## 6. Exit rules (enforced by the 5-minute monitor loop and the 3:30 PM run; position never held overnight)
 
 - **Profit-taking is discretionary — no hard take-profit cap.** The agent decides when a
   winner is done, weighing: is the underlying still making higher highs and holding VWAP?

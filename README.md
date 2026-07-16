@@ -11,10 +11,12 @@ Three Claude Code Routines fire into the trading session every weekday (times ET
 1. **~8:00 — Pre-market** (`runbooks/premarket.md`): news, earnings calendar, ranked
    candidates → journal.
 2. **~9:45 — Entry** (`runbooks/entry.md`): live momentum confirmation via the saved
-   "Daily Momentum Calls" scanner + 5-min tape check → one ATM call, 7–21 DTE, limit at
-   mid. Sized by `config.yaml`, reviewed via `review_option_order`, and (by default)
-   confirmed with you before placing.
-3. **~3:30 — Exit** (`runbooks/exit.md`): hard stop −30%, discretionary profit-taking
+   "Daily Momentum Calls" scanner + 5-min tape check → ATM calls, 7–21 DTE, limit at
+   mid. Sized and authorized per `config.yaml`, always reviewed via `review_option_order`.
+3. **Every 5 min while a position is open — Monitor** (`runbooks/monitor.md`):
+   self-re-arming check-in loop — hard stop enforcement, discretionary profit-taking,
+   and re-entries up to the daily limits (until 11:30 ET).
+4. **~3:30 — Exit** (`runbooks/exit.md`): hard stop −30%, discretionary profit-taking
    (agent judgment on momentum/tape), forced flat by 3:53 ET. Never holds overnight.
 
 The full ruleset lives in [`STRATEGY.md`](STRATEGY.md). Every run appends to
