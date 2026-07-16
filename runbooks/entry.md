@@ -1,4 +1,4 @@
-# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 15 min until 11:30 on no-trade)
+# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 15 min until 1:30 PM on no-trade)
 
 Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
 All times US/Eastern. Account = `account_number` from config.
@@ -6,7 +6,7 @@ All times US/Eastern. Account = `account_number` from config.
 ## 0. Guards — every one must pass or the day is a no-trade
 1. Trading day check (same as premarket). Market closed → journal, push, stop.
 2. Time check: if before 9:35 ET, schedule a self check-in (`send_later`) for 9:35 ET and
-   stop; if after 11:30 ET, skip the day (momentum entries decay) — journal why.
+   stop; if after 1:30 PM ET, skip the day (momentum entries decay) — journal why.
 3. `get_option_positions` (nonzero=true): if open positions ≥ `max_open_positions`, stop.
 4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
    order is already working. Also check today's journal — if an entry was already made
@@ -55,5 +55,5 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
   `runbooks/monitor.md` (stop-loss enforcement, discretionary profit-taking, re-entries).
 - **No trade** → arm a **re-check**: `send_later` in 15 minutes to re-run this runbook
   from §0 (guards apply fresh each time; journal only changes, not full re-writes).
-  Re-checks stop at 11:30 ET or when an entry fills, whichever comes first. A late
+  Re-checks stop at 1:30 PM ET or when an entry fills, whichever comes first. A late
   qualifier must pass the same gates — no loosening because the morning was quiet.

@@ -15,7 +15,7 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
 | 9:35 AM | Entry — confirm momentum after the open, buy call | `runbooks/entry.md` |
-| every 15 min until 11:30 (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
+| every 15 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
 | every 5 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries | `runbooks/monitor.md` |
 | ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
 
@@ -67,7 +67,7 @@ Rank multiple qualifiers by: catalyst strength > relative volume > cleanest tape
   `max_premium_per_trade`. No averaging down; never re-buy a symbol stopped out today.
 - At most `max_open_positions` concurrent positions and `max_new_positions_per_day`
   entries per day (initial entry at 9:35; 15-min re-checks on no-trade and monitor-loop
-  re-entries both end at 11:30 ET).
+  re-entries both end at 1:30 PM ET).
 - Skip entries while options buying power < `min_buying_power_to_trade` — log why.
 - Cash account: option sale proceeds settle **T+1**. The exit run's proceeds fund the
   *next* day's entry; never plan on same-day recycling of proceeds.
