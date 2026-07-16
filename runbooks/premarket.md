@@ -18,14 +18,14 @@ Read `config.yaml` first. All times US/Eastern.
    or regulatory news, large contracts.
 4. `run_scan` on `scan_id` from config — pre-market results are limited (the % change
    filter needs live session data) but note any carryover names with RSI/volume still hot.
-5. `get_equity_quotes` on the 3–8 most interesting catalyst names: confirm real pre-market
+5. `get_equity_quotes` on the 8–15 most interesting catalyst names: confirm real pre-market
    strength, note prior close and key levels.
 
 ## 2. Build the candidate list
-Rank the top 3 candidates by: catalyst strength > liquidity (stock + options) > cleanliness
-of the setup. For each: symbol, catalyst (one line), prior close, pre-market price, and a
-"disqualify if" condition for the 9:45 check. Explicitly list names REJECTED for
-earnings-before-expiry or binary-event risk.
+Rank the **top 10** candidates by: catalyst strength > liquidity (stock + options) >
+cleanliness of the setup. For each: symbol, catalyst (one line), prior close, pre-market
+price, and a "disqualify if" condition for the entry check. Explicitly list names REJECTED
+for earnings-before-expiry or binary-event risk.
 
 ## 3. Journal & handoff
 - Create `journal/YYYY-MM-DD.md` from `journal/TEMPLATE.md`; fill the **Pre-market** section

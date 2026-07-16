@@ -50,7 +50,9 @@ product/regulatory news) rank a candidate up; binary-event risk ranks it down.
    we trade momentum, not event lotteries.
 5. A concrete catalyst or sector tailwind identified in the pre-market journal entry.
 
-Rank multiple qualifiers by: catalyst strength > relative volume > cleanest tape. Pick one.
+Rank qualifiers by: catalyst strength > relative volume > cleanest tape. Take up to
+(`max_open_positions` − currently open) of them in one pass, best first — one contract per
+underlying, each independently passing every sizing and liquidity gate.
 
 ## 4. Contract selection
 

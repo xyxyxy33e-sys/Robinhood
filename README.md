@@ -8,8 +8,8 @@ after the open, and is always flat by the close.
 
 Three Claude Code Routines fire into the trading session every weekday (times ET):
 
-1. **~8:00 — Pre-market** (`runbooks/premarket.md`): news, earnings calendar, ranked
-   candidates → journal.
+1. **~8:00 — Pre-market** (`runbooks/premarket.md`): news, earnings calendar, top-10
+   ranked candidates → journal.
 2. **9:35 — Entry** (`runbooks/entry.md`): live momentum confirmation via the saved
    "Daily Momentum Calls" scanner + tape check → ATM calls, 7–21 DTE, limit at mid.
    Sized and authorized per `config.yaml`, always reviewed via `review_option_order`.
