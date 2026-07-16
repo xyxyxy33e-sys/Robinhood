@@ -14,7 +14,8 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 | Time (ET) | Phase | Runbook |
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
-| ~9:45 AM | Entry — confirm momentum after the open, buy call | `runbooks/entry.md` |
+| 9:30 AM | Entry — confirm momentum at the open, buy call | `runbooks/entry.md` |
+| every 15 min until 11:30 (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
 | every 5 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries | `runbooks/monitor.md` |
 | ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
 
@@ -41,11 +42,10 @@ product/regulatory news) rank a candidate up; binary-event risk ranks it down.
 
 ## 3. Momentum signal (all must hold at entry time)
 
-1. Appears in the scanner at ~9:45 ET **or** was a top pre-market candidate now up ≥2%.
-2. Price above opening price and holding above VWAP on 5-minute bars since the open
-   (via `get_equity_historicals` interval=5minute).
-3. First 15 minutes did not fully reverse the gap (no gap-and-crap: current price above the
-   9:30–9:40 low + no lower highs).
+1. Appears in the scanner **or** was a top pre-market candidate now up ≥2%.
+2. Tape confirmation scaled to session age: in the first 10 minutes, above the opening
+   print with no immediate reversal (1-minute bars); after 9:40, above open and holding
+   above VWAP on 5-minute bars with no full gap-fade.
 4. **No earnings between now and the option's expiry** (check `get_earnings_results`) —
    we trade momentum, not event lotteries.
 5. A concrete catalyst or sector tailwind identified in the pre-market journal entry.
@@ -66,7 +66,8 @@ Rank multiple qualifiers by: catalyst strength > relative volume > cleanest tape
 - Premium per trade ≤ `max_premium_pct_of_bp`% of options buying power, hard-capped at
   `max_premium_per_trade`. No averaging down; never re-buy a symbol stopped out today.
 - At most `max_open_positions` concurrent positions and `max_new_positions_per_day`
-  entries per day (initial entry at ~9:45, re-entries via the monitor loop until 11:30 ET).
+  entries per day (initial entry at 9:30; 15-min re-checks on no-trade and monitor-loop
+  re-entries both end at 11:30 ET).
 - Skip entries while options buying power < `min_buying_power_to_trade` — log why.
 - Cash account: option sale proceeds settle **T+1**. The exit run's proceeds fund the
   *next* day's entry; never plan on same-day recycling of proceeds.

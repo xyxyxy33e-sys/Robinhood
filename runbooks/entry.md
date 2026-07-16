@@ -1,11 +1,11 @@
-# Runbook: Entry (~9:45 AM ET, Mon–Fri)
+# Runbook: Entry (9:30 AM ET at the open, Mon–Fri; re-checks every 15 min until 11:30 on no-trade)
 
 Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
 All times US/Eastern. Account = `account_number` from config.
 
 ## 0. Guards — every one must pass or the day is a no-trade
 1. Trading day check (same as premarket). Market closed → journal, push, stop.
-2. Time check: if before 9:40 ET, schedule a self check-in (`send_later`) for 9:45 ET and
+2. Time check: if before 9:30 ET, schedule a self check-in (`send_later`) for 9:30 ET and
    stop; if after 11:30 ET, skip the day (momentum entries decay) — journal why.
 3. `get_option_positions` (nonzero=true): if open positions ≥ `max_open_positions`, stop.
 4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
@@ -18,8 +18,13 @@ All times US/Eastern. Account = `account_number` from config.
 ## 1. Confirm momentum (live)
 1. `run_scan` on `scan_id` — live matches now meaningful.
 2. Merge with pre-market candidates; drop anything that hit its "disqualify if".
-3. For the top 2–3: `get_equity_historicals` interval=5minute from 9:30 today —
-   require price > open, price > VWAP, and no full gap-fade (above the 9:30–9:40 low).
+3. For the top 2–3, tape check scaled to how much session exists:
+   - **9:30–9:40:** `get_equity_historicals` interval=minute — require last > opening
+     print, last ≥ prior close × (1 + min_day_change_pct/100), and no immediate reversal
+     (not below the session low of the first bars). Accept that this window trades on
+     pre-market conviction with less confirmation.
+   - **after 9:40:** interval=5minute from 9:30 — require price > open, price > VWAP,
+     and no full gap-fade (above the 9:30–9:40 low).
 4. `get_earnings_results` on finalists — reject if earnings before option expiry.
 5. Pick ONE winner (catalyst > relative volume > tape). No qualifier → no trade; journal it.
 
@@ -45,7 +50,10 @@ All times US/Eastern. Account = `account_number` from config.
 ## 4. Record
 Journal the entry: contract, fill price (from the filled order), thesis, planned exits
 (`stop_loss_pct`% hard stop / discretionary profit-taking / forced flat), order ids. Commit
-("journal: YYYY-MM-DD entry") and push. If a position was opened, start the **monitor
-loop**: `send_later` in 5 minutes with instructions to execute `runbooks/monitor.md`. The
-loop re-arms itself every 5 minutes while a position is open (stop-loss enforcement,
-discretionary profit-taking, and re-entries up to the daily limits all live there).
+("journal: YYYY-MM-DD entry") and push. Then:
+- **Position opened** → start the **monitor loop**: `send_later` in 5 minutes to execute
+  `runbooks/monitor.md` (stop-loss enforcement, discretionary profit-taking, re-entries).
+- **No trade** → arm a **re-check**: `send_later` in 15 minutes to re-run this runbook
+  from §0 (guards apply fresh each time; journal only changes, not full re-writes).
+  Re-checks stop at 11:30 ET or when an entry fills, whichever comes first. A late
+  qualifier must pass the same gates — no loosening because the morning was quiet.
