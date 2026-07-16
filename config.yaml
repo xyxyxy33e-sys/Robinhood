@@ -12,10 +12,10 @@ exit_auto_execute: true     # true: closes (TP/SL/forced flat) execute without a
 
 # --- Position sizing ---------------------------------------------------------
 min_buying_power_to_trade: 10    # USD; below this the entry run skips the day
-max_premium_per_trade: 500       # USD hard cap per position
+max_premium_per_trade: 1000       # USD hard cap per position
 max_premium_pct_of_bp: 50        # ...and never more than this % of options buying power
-max_open_positions: 2
-max_new_positions_per_day: 5
+max_open_positions: 5
+max_new_positions_per_day: 30
 
 # --- Contract selection ------------------------------------------------------
 dte_min: 7
