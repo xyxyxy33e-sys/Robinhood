@@ -67,8 +67,10 @@ underlying, each independently passing every sizing and liquidity gate.
 
 ## 5. Position sizing & risk limits (config.yaml is the source of truth)
 
-- Premium per trade ≤ `max_premium_pct_of_bp`% of options buying power, hard-capped at
-  `max_premium_per_trade`. No averaging down; never re-buy a symbol stopped out today.
+- Premium per trade ≤ `max_premium_per_trade`, limited only by live settled buying power
+  (no %-of-BP cushion rule). Quantity = floor(cap / (premium × 100)), min 1 — multiple
+  contracts of the same call allowed. No averaging down; never re-buy a symbol stopped
+  out today; one position per underlying.
 - At most `max_open_positions` concurrent positions and `max_new_positions_per_day`
   entries per day (initial entry at 9:35; 15-min re-checks on no-trade and monitor-loop
   re-entries both end at 1:30 PM ET).

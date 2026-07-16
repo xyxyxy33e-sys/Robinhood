@@ -28,19 +28,20 @@ All times US/Eastern. Account = `account_number` from config.
      and no full gap-fade (above the 9:30–9:40 low).
 4. `get_earnings_results` on finalists — reject if earnings before option expiry.
 5. Rank the qualifiers (catalyst > relative volume > tape) and take **up to
-   (max_open_positions − currently open)** of them, best first — one contract each, each
-   independently passing every gate in §2–§3. Re-read live options buying power between
-   fills (each buy consumes settled cash; the per-trade cap is min(`max_premium_per_trade`,
-   `max_premium_pct_of_bp`% of buying power AT THAT MOMENT)). One underlying = one
-   position — never two contracts on the same symbol. No qualifier → no trade; journal it.
+   (max_open_positions − currently open)** of them, best first — each independently
+   passing every gate in §2–§3. Re-read live options buying power between fills (each buy
+   consumes settled cash). One underlying = one position (never a second entry on the same
+   symbol), but a position MAY hold multiple contracts — see §2 sizing. No qualifier → no
+   trade; journal it.
 
 ## 2. Select the contract (per chosen underlying)
 1. `get_option_chains` (underlying_symbol) → pick expiration in [dte_min, dte_max].
 2. `get_option_instruments` (chain, expiration, type=call) → ATM or first strike above spot.
 3. `get_option_quotes` → gates: open_interest ≥ `min_open_interest`; spread ≤
-   `max_spread_pct_of_mid`% of mid; 1 contract at mid ≤ min(`max_premium_per_trade`,
-   `max_premium_pct_of_bp`% of buying power). Quantity is 1 contract (this account size
-   never supports more). Gates fail ATM → next strike up once → otherwise next candidate.
+   `max_spread_pct_of_mid`% of mid; 1 contract at mid ≤ min(`max_premium_per_trade`, live
+   options buying power). **Quantity** = floor(min(`max_premium_per_trade`, live buying
+   power) / (mid × 100)), minimum 1 — multiple contracts of the same call are allowed.
+   Gates fail ATM → next strike up once → otherwise next candidate.
 
 ## 3. Review → authorize → place (per chosen underlying, best-ranked first)
 1. `review_option_order`: limit buy-to-open at mid, GFD, regular hours, with chain_symbol +
@@ -64,8 +65,9 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
        rounded to tick, GFD. Monitor loop handles profit-taking in software.
      - `take_profit`: limit sell-to-close at entry × (1 + take_profit_pct/100), rounded to
        tick, GFD. Monitor loop handles the stop in software.
-     Fresh ref_id; covered by the same standing authorization as the entry. Record the
-     order id in the journal — every later close must CANCEL this order first.
+     Quantity = the full filled position quantity. Fresh ref_id; covered by the same
+     standing authorization as the entry. Record the order id in the journal — every later
+     close must CANCEL this order first.
   2. Start the **monitor loop**: `send_later` in 5 minutes to execute
      `runbooks/monitor.md` (the software side of stop/TP, discretion, re-entries).
 - **No trade** → arm a **re-check**: `send_later` in 15 minutes to re-run this runbook
