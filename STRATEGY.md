@@ -54,7 +54,9 @@ Rank multiple qualifiers by: catalyst strength > relative volume > cleanest tape
 
 ## 4. Contract selection
 
-- **Type:** call, buy-to-open. **Expiry:** nearest expiration 7–21 DTE (never 0–2 DTE).
+- **Type:** call, buy-to-open. **Expiry:** nearest expiration 1–21 DTE (never 0 DTE — no
+  contracts expiring the same day). Short-dated (1–7 DTE) contracts are cheapest but carry
+  violent gamma/theta; the forced same-day close caps expiry risk, not premium risk.
 - **Strike:** at-the-money or the first strike above spot.
 - **Liquidity gates:** open interest ≥ 500; bid-ask spread ≤ 10% of mid. If ATM fails the
   gates, step one strike out; if still failing, skip the underlying.

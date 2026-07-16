@@ -18,7 +18,7 @@ max_open_positions: 5
 max_new_positions_per_day: 30
 
 # --- Contract selection ------------------------------------------------------
-dte_min: 7
+dte_min: 1                       # 0DTE excluded: never buy a contract expiring today
 dte_max: 21
 min_open_interest: 500
 max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
