@@ -52,12 +52,16 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
 (`stop_loss_pct`% hard stop / discretionary profit-taking / forced flat), order ids. Commit
 ("journal: YYYY-MM-DD entry") and push. Then:
 - **Position opened** → two follow-ups, in order:
-  1. **Place the take-profit order**: resting sell-to-close limit at entry premium ×
-     (1 + `take_profit_pct`/100), rounded to the contract's tick, GFD, fresh ref_id
-     (covered by the same standing authorization as the entry). Record its order id in
-     the journal — every later close must CANCEL this order first.
+  1. **Place the resting protective order** per `resting_order_type` (only one sell order
+     can rest per contract — Robinhood has no OCO for options):
+     - `stop_loss`: stop_market sell-to-close, stop_price = entry × (1 + stop_loss_pct/100),
+       rounded to tick, GFD. Monitor loop handles profit-taking in software.
+     - `take_profit`: limit sell-to-close at entry × (1 + take_profit_pct/100), rounded to
+       tick, GFD. Monitor loop handles the stop in software.
+     Fresh ref_id; covered by the same standing authorization as the entry. Record the
+     order id in the journal — every later close must CANCEL this order first.
   2. Start the **monitor loop**: `send_later` in 5 minutes to execute
-     `runbooks/monitor.md` (stop-loss enforcement, discretionary profit-taking, re-entries).
+     `runbooks/monitor.md` (the software side of stop/TP, discretion, re-entries).
 - **No trade** → arm a **re-check**: `send_later` in 15 minutes to re-run this runbook
   from §0 (guards apply fresh each time; journal only changes, not full re-writes).
   Re-checks stop at 1:30 PM ET or when an entry fills, whichever comes first. A late

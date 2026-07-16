@@ -24,11 +24,13 @@ min_open_interest: 500
 max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
 
 # --- Intraday risk -----------------------------------------------------------
-take_profit_pct: 50              # after each fill, a resting sell-to-close limit is placed
-                                 # at entry premium × (1 + this%) (GFD). Fills automatically
-                                 # even if monitoring is interrupted. The agent may still
-                                 # sell earlier at its discretion (STRATEGY.md §6).
-stop_loss_pct: -30               # sell-to-close at -30% of entry premium (hard floor)
+# Robinhood holds only ONE sell order per contract (no OCO for options), so only one of
+# the two protective orders can rest broker-side; the monitor loop enforces the other.
+resting_order_type: "stop_loss"  # "stop_loss" (default: resting stop_market at the stop
+                                 # level; monitor handles profit-taking) or "take_profit"
+                                 # (resting sell limit at the target; monitor handles stops)
+take_profit_pct: 50              # profit target: entry premium × (1 + this%)
+stop_loss_pct: -30               # hard floor: entry premium × (1 + this%)
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 

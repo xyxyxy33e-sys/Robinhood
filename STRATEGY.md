@@ -76,14 +76,17 @@ Rank multiple qualifiers by: catalyst strength > relative volume > cleanest tape
 
 ## 6. Exit rules (enforced by the 5-minute monitor loop and the 3:30 PM run; position never held overnight)
 
-- **Resting take-profit order:** immediately after every entry fill, a sell-to-close limit
-  at entry × (1 + `take_profit_pct`/100) is placed GFD. It captures the win automatically
-  even if monitoring is interrupted (the failure mode observed 2026-07-16). Any other close
-  (stop, discretionary, forced flat) must cancel it first.
-- **Discretionary profit-taking below the cap:** the agent may still sell a winner before
-  the take-profit level when momentum breaks (lower highs, VWAP lost, volume faded) or into
-  an obvious exhaustion spike — take the gain rather than round-trip it. Record the
-  reasoning in the journal every time.
+- **Resting protective order (broker-side):** immediately after every entry fill, ONE
+  protective sell rests at the broker per `resting_order_type` — Robinhood holds only one
+  sell order per contract (no OCO for options). Default `stop_loss`: a stop_market at
+  entry × (1 + `stop_loss_pct`/100), so the max-loss exit executes even if monitoring is
+  interrupted (failure mode observed 2026-07-16). Alternative `take_profit`: a sell limit
+  at entry × (1 + `take_profit_pct`/100). The monitor loop enforces whichever side is not
+  resting, in software. Any other close must cancel the resting order first.
+- **Discretionary profit-taking below the target:** the agent may sell a winner before the
+  take-profit level when momentum breaks (lower highs, VWAP lost, volume faded) or into an
+  obvious exhaustion spike — take the gain rather than round-trip it. Record the reasoning
+  in the journal every time.
 - **Stop loss (hard floor):** mark ≤ −30% under entry premium → sell-to-close immediately,
   at mid, repricing toward the bid every 5 minutes until filled. Losers get no discretion.
 - **Forced flat:** whatever remains is closed starting 3:40 ET: limit at mid → reprice toward
