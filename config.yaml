@@ -1,0 +1,33 @@
+# Daily Momentum Calls — user-owned parameters.
+# Every runbook reads this file first. Edit + push to change behavior; the next
+# scheduled run picks it up automatically.
+
+account_number: "576391551"                       # "Agentic" cash account (the only agentic_allowed account)
+scan_id: "5399dce3-8430-476c-ba65-89ac920af0bf"   # saved Robinhood scanner "Daily Momentum Calls"
+
+# --- Execution authorization -------------------------------------------------
+# entry_auto_execute=true is your standing instruction to buy without asking.
+entry_auto_execute: false   # false: review order + ask for confirmation before buying
+exit_auto_execute: true     # true: closes (TP/SL/forced flat) execute without asking
+
+# --- Position sizing ---------------------------------------------------------
+min_buying_power_to_trade: 50    # USD; below this the entry run skips the day
+max_premium_per_trade: 500       # USD hard cap per position
+max_premium_pct_of_bp: 25        # ...and never more than this % of options buying power
+max_open_positions: 1
+max_new_positions_per_day: 1
+
+# --- Contract selection ------------------------------------------------------
+dte_min: 7
+dte_max: 21
+min_open_interest: 500
+max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
+
+# --- Intraday risk -----------------------------------------------------------
+take_profit_pct: 50              # sell-to-close at +50% of entry premium
+stop_loss_pct: -30               # sell-to-close at -30% of entry premium
+forced_close_start_et: "15:40"   # begin flattening
+forced_close_cross_et: "15:53"   # cross the spread if still open
+
+# --- Signal thresholds -------------------------------------------------------
+min_day_change_pct: 2            # underlying must be up at least this at entry check
