@@ -15,7 +15,7 @@
 - **Decision:** TRADE symbol / NO TRADE — reason
 - **Contract:** SYMBOL $STRIKE C MM/DD (X DTE), OI, spread
 - **Fill:** qty 1 @ $X.XX (order id …) — or authorization declined / unfilled
-- **Exit plan:** TP +50% ($X.XX) / SL −30% ($X.XX) / forced flat 3:40 ET
+- **Exit plan:** SL −30% ($X.XX) / profit-taking discretionary / forced flat 3:40 ET
 
 ## Midday check (~12:30 ET, only if position open)
 - Mark $X.XX (±X%) — action taken:

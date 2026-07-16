@@ -19,9 +19,13 @@ part of the user's standing daily-flat instruction).
 ## 2. Evaluate and close (per open contract from this strategy)
 1. `get_option_quotes` → mark vs entry premium (entry price from today's journal / the
    filled order).
-2. Whatever the P&L, the position closes today; P&L only affects urgency:
-   - mark ≤ stop loss → close NOW, limit at mid; if unfilled in 3 min reprice to bid.
-   - otherwise → sell-to-close limit at mid.
+2. Whatever the P&L, the position closes today; P&L and momentum only affect timing:
+   - mark ≤ stop loss (`stop_loss_pct`) → close NOW, limit at mid; if unfilled in 3 min
+     reprice to bid. No discretion on losers.
+   - winner or flat → discretionary (STRATEGY.md §6): pull 5-minute bars on the underlying;
+     if it's still trending (higher highs, above VWAP, volume holding) you may hold until
+     `forced_close_start_et` to capture the last leg — otherwise sell-to-close now at mid.
+     Either way, journal the reasoning; the position is flat by 3:53 regardless.
 3. `review_option_order` first; then, per `exit_auto_execute` (true = place without
    asking; false = AskUserQuestion, warning that no answer means an overnight hold).
 4. `place_option_order` (sell, position_effect=close, GFD, fresh ref_id).

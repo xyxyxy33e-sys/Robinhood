@@ -44,7 +44,9 @@ All times US/Eastern. Account = `account_number` from config.
 
 ## 4. Record
 Journal the entry: contract, fill price (from the filled order), thesis, planned exits
-(+`take_profit_pct`% / `stop_loss_pct`% / forced flat), order ids. Commit
+(`stop_loss_pct`% hard stop / discretionary profit-taking / forced flat), order ids. Commit
 ("journal: YYYY-MM-DD entry") and push. If a position was opened, schedule a midday
-check-in (`send_later`, ~12:30 ET): at midday, re-quote the position and if mark ≤ stop
-loss or ≥ take profit, follow the exit runbook §2 early.
+check-in (`send_later`, ~12:30 ET): at midday, re-quote the position; if mark ≤ stop loss,
+close immediately (exit runbook §2); if the position is well in profit but momentum has
+clearly broken (lower highs, VWAP lost, volume gone), exercise discretion and take the
+profit early rather than waiting for 3:30.

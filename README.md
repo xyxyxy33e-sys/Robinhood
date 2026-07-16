@@ -14,8 +14,8 @@ Three Claude Code Routines fire into the trading session every weekday (times ET
    "Daily Momentum Calls" scanner + 5-min tape check → one ATM call, 7–21 DTE, limit at
    mid. Sized by `config.yaml`, reviewed via `review_option_order`, and (by default)
    confirmed with you before placing.
-3. **~3:30 — Exit** (`runbooks/exit.md`): take-profit +50% / stop −30% / forced flat by
-   3:53 ET. Never holds overnight.
+3. **~3:30 — Exit** (`runbooks/exit.md`): hard stop −30%, discretionary profit-taking
+   (agent judgment on momentum/tape), forced flat by 3:53 ET. Never holds overnight.
 
 The full ruleset lives in [`STRATEGY.md`](STRATEGY.md). Every run appends to
 `journal/YYYY-MM-DD.md` and pushes, so the journal is the durable memory across sessions.

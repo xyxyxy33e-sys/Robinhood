@@ -15,7 +15,7 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
 | ~9:45 AM | Entry — confirm momentum after the open, buy call | `runbooks/entry.md` |
-| ~3:30 PM | Exit — take profit / stop loss / forced flat by 3:55 | `runbooks/exit.md` |
+| ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
 
 Scheduled via Claude Code Routines (cron is UTC — see README for DST note). Every runbook
 begins with a market-open check and a time check; if fired at the wrong time it reschedules
@@ -65,11 +65,17 @@ Rank multiple qualifiers by: catalyst strength > relative volume > cleanest tape
 - Cash account: option sale proceeds settle **T+1**. The exit run's proceeds fund the
   *next* day's entry; never plan on same-day recycling of proceeds.
 
-## 6. Exit rules (checked at the 3:30 PM run; position never held overnight)
+## 6. Exit rules (checked at midday and the 3:30 PM run; position never held overnight)
 
-- **Take profit:** mark ≥ +50% over entry premium → sell-to-close at mid.
-- **Stop loss:** mark ≤ −30% under entry premium → sell-to-close immediately, at mid,
-  repricing toward the bid every 5 minutes until filled.
+- **Profit-taking is discretionary — no hard take-profit cap.** The agent decides when a
+  winner is done, weighing: is the underlying still making higher highs and holding VWAP?
+  Is relative volume sustaining or fading? How much theta/time remains before the forced
+  close? Guidance, not rules: let a strong trend run into the afternoon; sell into an
+  obvious exhaustion spike (parabolic move on peak volume); if the gain is large and
+  momentum stalls (lower highs, VWAP lost), take it rather than round-trip it. Record the
+  reasoning in the journal every time.
+- **Stop loss (hard floor):** mark ≤ −30% under entry premium → sell-to-close immediately,
+  at mid, repricing toward the bid every 5 minutes until filled. Losers get no discretion.
 - **Forced flat:** whatever remains is closed starting 3:40 ET: limit at mid → reprice toward
   bid at 3:48 → by 3:53, cross the spread (limit at bid) to guarantee the fill. All open
   option orders from the strategy are cancelled after the position is flat.
@@ -94,8 +100,8 @@ lesson. Committed and pushed after every run — the journal is the system's mem
 ## 9. Known limitations & warnings
 
 - Long calls lose to theta and IV crush even when direction is right. Expect many small
-  losses; the edge, if any, comes from cutting losers fast and letting the daily winner run
-  to +50%. This is a high-risk strategy — size it with money you can lose.
+  losses; the edge, if any, comes from cutting losers fast and exercising good judgment on
+  when winners are done. This is a high-risk strategy — size it with money you can lose.
 - Level 2 = no spreads; there is no defined-risk vertical available to cap IV exposure.
 - Scanner % change filter reads ~0 outside regular hours; pre-market candidate work relies
   on news + prior-day closes, and the 9:45 run re-validates with live data.
