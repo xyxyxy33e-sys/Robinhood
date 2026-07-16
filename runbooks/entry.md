@@ -1,11 +1,11 @@
-# Runbook: Entry (9:30 AM ET at the open, Mon–Fri; re-checks every 15 min until 11:30 on no-trade)
+# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 15 min until 11:30 on no-trade)
 
 Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
 All times US/Eastern. Account = `account_number` from config.
 
 ## 0. Guards — every one must pass or the day is a no-trade
 1. Trading day check (same as premarket). Market closed → journal, push, stop.
-2. Time check: if before 9:30 ET, schedule a self check-in (`send_later`) for 9:30 ET and
+2. Time check: if before 9:35 ET, schedule a self check-in (`send_later`) for 9:35 ET and
    stop; if after 11:30 ET, skip the day (momentum entries decay) — journal why.
 3. `get_option_positions` (nonzero=true): if open positions ≥ `max_open_positions`, stop.
 4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
