@@ -14,8 +14,10 @@ work the close until flat or 4:00 ET.
    no open position and no working orders → journal "flat, nothing to do", push, stop.
 
 ## 1. Cancel stale orders
-Any working entry order from this strategy still unfilled → `cancel_option_order` (this is
-part of the user's standing daily-flat instruction).
+Any working strategy order still open → `cancel_option_order` (part of the user's standing
+daily-flat instruction). This includes BOTH unfilled entry orders AND the resting
+take-profit sell — the take-profit MUST be cancelled before placing any close order in §2,
+or the close will be rejected / double-sell.
 
 ## 2. Evaluate and close (per open contract from this strategy)
 1. `get_option_quotes` → mark vs entry premium (entry price from today's journal / the

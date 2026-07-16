@@ -76,12 +76,13 @@ Rank multiple qualifiers by: catalyst strength > relative volume > cleanest tape
 
 ## 6. Exit rules (enforced by the 5-minute monitor loop and the 3:30 PM run; position never held overnight)
 
-- **Profit-taking is discretionary — no hard take-profit cap.** The agent decides when a
-  winner is done, weighing: is the underlying still making higher highs and holding VWAP?
-  Is relative volume sustaining or fading? How much theta/time remains before the forced
-  close? Guidance, not rules: let a strong trend run into the afternoon; sell into an
-  obvious exhaustion spike (parabolic move on peak volume); if the gain is large and
-  momentum stalls (lower highs, VWAP lost), take it rather than round-trip it. Record the
+- **Resting take-profit order:** immediately after every entry fill, a sell-to-close limit
+  at entry × (1 + `take_profit_pct`/100) is placed GFD. It captures the win automatically
+  even if monitoring is interrupted (the failure mode observed 2026-07-16). Any other close
+  (stop, discretionary, forced flat) must cancel it first.
+- **Discretionary profit-taking below the cap:** the agent may still sell a winner before
+  the take-profit level when momentum breaks (lower highs, VWAP lost, volume faded) or into
+  an obvious exhaustion spike — take the gain rather than round-trip it. Record the
   reasoning in the journal every time.
 - **Stop loss (hard floor):** mark ≤ −30% under entry premium → sell-to-close immediately,
   at mid, repricing toward the bid every 5 minutes until filled. Losers get no discretion.

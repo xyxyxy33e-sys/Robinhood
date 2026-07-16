@@ -6,12 +6,16 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
 ## Each firing
 1. `git pull` the branch (config may have changed), read config + today's journal.
 2. `get_option_positions` (nonzero=true) for `account_number`; match against the
-   strategy's positions recorded in today's journal.
+   strategy's positions recorded in today's journal. Check the resting take-profit order
+   (`get_option_orders` by its id from the journal): if it FILLED, the position closed at
+   +take_profit_pct% — journal the win and treat as flat.
 3. For each open strategy position, `get_option_quotes`:
-   - **mark ≤ entry premium × (1 + stop_loss_pct/100)** → close NOW per exit runbook §2
-     (limit at mid, reprice to bid after 3 min, no discretion). Journal the stop-out.
+   - **mark ≤ entry premium × (1 + stop_loss_pct/100)** → CANCEL the resting take-profit
+     order first, then close NOW per exit runbook §2 (limit at mid, reprice to bid after
+     3 min, no discretion). Journal the stop-out.
    - **in profit, momentum broken** (5-min bars: lower highs, VWAP lost, volume faded) →
-     discretionary sell-to-close per STRATEGY.md §6. Journal the reasoning.
+     discretionary sell-to-close per STRATEGY.md §6 — CANCEL the resting take-profit order
+     first. Journal the reasoning.
    - otherwise hold; log a one-line mark update in the journal (batch-commit these —
      push at most every ~30 min to avoid commit spam, and always push after a trade).
 4. **Re-entry check** (only if all of: now < 1:30 PM ET; open positions < `max_open_positions`;
