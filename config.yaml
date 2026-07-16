@@ -7,7 +7,7 @@ scan_id: "5399dce3-8430-476c-ba65-89ac920af0bf"   # saved Robinhood scanner "Dai
 
 # --- Execution authorization -------------------------------------------------
 # entry_auto_execute=true is your standing instruction to buy without asking.
-entry_auto_execute: false   # false: review order + ask for confirmation before buying
+entry_auto_execute: true   # false: review order + ask for confirmation before buying
 exit_auto_execute: true     # true: closes (TP/SL/forced flat) execute without asking
 
 # --- Position sizing ---------------------------------------------------------
