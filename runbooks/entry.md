@@ -1,4 +1,4 @@
-# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 15 min until 1:30 PM on no-trade)
+# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 5 min until 1:30 PM on no-trade)
 
 Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
 All times US/Eastern. Account = `account_number` from config.
@@ -70,7 +70,7 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
      close must CANCEL this order first.
   2. Start the **monitor loop**: `send_later` in 5 minutes to execute
      `runbooks/monitor.md` (the software side of stop/TP, discretion, re-entries).
-- **No trade** → arm a **re-check**: `send_later` in 15 minutes to re-run this runbook
+- **No trade** → arm a **re-check**: `send_later` in 5 minutes to re-run this runbook
   from §0 (guards apply fresh each time; journal only changes, not full re-writes).
   Re-checks stop at 1:30 PM ET or when an entry fills, whichever comes first. A late
   qualifier must pass the same gates — no loosening because the morning was quiet.

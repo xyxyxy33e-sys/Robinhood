@@ -13,7 +13,7 @@ Three Claude Code Routines fire into the trading session every weekday (times ET
 2. **9:35 — Entry** (`runbooks/entry.md`): live momentum confirmation via the saved
    "Daily Momentum Calls" scanner + tape check → ATM calls, 7–21 DTE, limit at mid.
    Sized and authorized per `config.yaml`, always reviewed via `review_option_order`.
-   On a no-trade, re-checks every 15 minutes until 1:30 PM ET.
+   On a no-trade, re-checks every 5 minutes until 1:30 PM ET.
 3. **Every 5 min while a position is open — Monitor** (`runbooks/monitor.md`):
    self-re-arming check-in loop — hard stop enforcement, discretionary profit-taking,
    and re-entries up to the daily limits (until 1:30 PM ET).
