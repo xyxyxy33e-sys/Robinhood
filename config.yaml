@@ -21,7 +21,10 @@ max_new_positions_per_day: 30
 
 # --- Contract selection ------------------------------------------------------
 dte_min: 1                       # 0DTE excluded: never buy a contract expiring today
-dte_max: 21
+dte_max: 21                      # preferred window...
+dte_max_no_weekly: 45            # ...but when an underlying has NO expiry in [dte_min,
+                                 # dte_max] (monthly-only chains like TRV), the nearest
+                                 # monthly up to this DTE is allowed (user-approved 2026-07-17)
 min_open_interest: 500
 max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
 
