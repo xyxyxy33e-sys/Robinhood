@@ -68,11 +68,12 @@ underlying, each independently passing every sizing and liquidity gate.
 
 ## 5. Position sizing & risk limits (config.yaml is the source of truth)
 
-- Premium per trade ≤ `max_premium_pct_of_bp`% of **live settled buying power at the
-  moment of that trade** (re-read between fills — each buy consumes settled cash, so the
-  cap shrinks for the next fill in the same pass). Quantity = floor(cap / (premium × 100)),
-  min 1 — multiple contracts of the same call allowed. No averaging down; never re-buy a
-  symbol stopped out today; one position per underlying.
+- Premium per trade ≤ `max_premium_per_trade`, limited only by live settled buying power
+  at the moment of that trade (re-read between fills — each buy consumes settled cash, so
+  the effective cap shrinks for the next fill in the same pass). Quantity =
+  floor(min(max_premium_per_trade, live buying power) / (premium × 100)), min 1 —
+  multiple contracts of the same call allowed. No averaging down; never re-buy a symbol
+  stopped out today; one position per underlying.
 - At most `max_open_positions` concurrent positions and `max_new_positions_per_day`
   entries per day (initial entry at 9:35; 10-min re-checks on no-trade and monitor-loop
   re-entries both end at 1:30 PM ET).
