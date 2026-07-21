@@ -42,7 +42,9 @@ All times US/Eastern. Account = `account_number` from config.
    direction — each independently passing every gate in §2–§3. Re-entering a symbol
    already open, or one closed earlier today (including after a stop-out), is allowed —
    the only same-symbol restriction is never both a call and a put on the same underlying
-   at once. A position MAY hold multiple contracts — see §2 sizing. No qualifier → no
+   at once. A symbol closed earlier today for a PROFIT ranks first among qualifiers
+   (leader re-entry, STRATEGY.md §3) — but only on a volume-confirmed resumption after
+   its pullback, never on the dip itself, and funded by settled cash only. A position MAY hold multiple contracts — see §2 sizing. No qualifier → no
    trade; journal it.
 
 ## 2. Select the contract (per chosen underlying)

@@ -75,6 +75,17 @@ liquidity gate. Re-entering a symbol already open (or closed earlier today, incl
 after a stop-out) is allowed; the only same-symbol restriction is that a symbol can't hold
 a call and a put at the same time.
 
+**Leader re-entry (added 2026-07-21):** a symbol closed earlier today for a PROFIT (hard
+take-profit, ratcheted stop above breakeven, or discretionary win) stays FIRST in the
+re-check rotation until the 1:30 PM entry cutoff — it has already proven its catalyst,
+liquidity, and tape, which makes it a better-than-random candidate for a second leg. The
+trigger is a **resumption, never a dip**: the pullback must stabilize (higher low), then
+resume with the full late-re-check volume bar above (consecutive directional closes on
+rising/elevated volume, 15+ min). All standard gates re-apply, and — cash account — the
+re-entry can only be funded by remaining settled cash, never by the just-banked proceeds
+(T+1). Expect the second entry to be structurally worse than the first (pumped IV,
+heavier theta): the volume bar is the compensation, not optional.
+
 ## 4. Contract selection
 
 - **Type:** call for a bullish qualifier, put for a bearish qualifier; always buy-to-open

@@ -36,9 +36,13 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
 4. **Re-entry check** (only if all of: now < 1:30 PM ET; open calls < `max_open_calls` OR
    open puts < `max_open_puts`; today's entry count < `max_new_positions_per_day`; options
    buying power ≥ `min_buying_power_to_trade`): run the entry runbook §1–§4 for a NEW
-   candidate in whichever bucket has room. Re-buying a symbol closed earlier today
-   (including after a stop-out) is allowed. Cash-account note: proceeds from any sale
-   today settle T+1 and cannot fund a re-entry; only remaining settled cash can.
+   candidate in whichever bucket has room. **Check leader re-entries FIRST** (STRATEGY.md
+   §3): any symbol closed earlier today for a profit is the top-priority candidate — but
+   only on a resumption signal (pullback stabilized at a higher low, then a fresh
+   volume-confirmed push per the late-re-check bar), never on the dip itself. Re-buying a
+   symbol closed earlier today (including after a stop-out) is allowed. Cash-account note:
+   proceeds from any sale today settle T+1 and cannot fund a re-entry; only remaining
+   settled cash can.
 
 ## Re-arm or stop
 - **Re-arm** (`send_later`, 5 min) if any strategy position is open and it's before
