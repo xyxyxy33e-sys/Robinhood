@@ -51,6 +51,12 @@ take_profit_pct: 50              # ratchet trigger: when the mark first touches 
                                  # (1 + this%), the stop ratchet arms (see below) — the
                                  # winner keeps running under discretion, no forced sale
 stop_loss_pct: -30               # hard floor: entry premium × (1 + this%)
+hard_take_profit_pct: 100        # instant sale: mark ≥ entry × (1 + this%) → cancel the
+                                 # resting stop and sell-to-close at mid NOW, no
+                                 # discretion (added 2026-07-21 per user: lock the profit
+                                 # the moment a position doubles). Software-side via the
+                                 # monitor loop — Robinhood holds only one resting sell
+                                 # per contract and the stop keeps that slot.
 stop_ratchet_trail_pct: 30       # once armed (mark touched the take_profit level), the
                                  # resting stop is raised to max(breakeven, high-water
                                  # mark × (1 − this%/100)), rounded to tick, and only ever

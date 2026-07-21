@@ -16,6 +16,10 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
    - **mark ≤ entry × (1 + stop_loss_pct/100)** (when the stop is software-side) → CANCEL
      the resting order first, then close NOW per exit runbook §2 (limit at mid, reprice to
      bid after 3 min, no discretion). Journal the stop-out.
+   - **mark ≥ entry × (1 + hard_take_profit_pct/100)** (position doubled) → CANCEL the
+     resting stop first (verify cancelled), then sell-to-close at mid immediately — NO
+     discretion, winners get capped as mechanically as losers get stopped. If unfilled in
+     3 min, reprice toward the bid. Journal the win ("hard TP: doubled, sold at $X").
    - **mark ≥ entry × (1 + take_profit_pct/100)** → the ratchet ARMS (no forced sale).
      While armed: required stop = max(breakeven entry, high-water mark × (1 −
      stop_ratchet_trail_pct/100)), rounded to tick — track the high-water mark from the
