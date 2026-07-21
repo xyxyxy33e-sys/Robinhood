@@ -1,8 +1,10 @@
 # Daily Momentum Calls — Strategy Specification
 
-**Objective:** Buy calls on stocks showing confirmed intraday momentum, hold intraday only,
-and be flat by the close. News is gathered pre-market every trading day to build a candidate
-thesis before any money moves.
+**Objective:** Buy calls on stocks showing confirmed intraday bullish momentum, and puts on
+stocks showing confirmed intraday bearish momentum (`enable_puts`, added 2026-07-21), hold
+intraday only, and be flat by the close. News is gathered pre-market every trading day to
+build a candidate thesis before any money moves. The name predates the puts addition; it
+still trades both directions under it.
 
 **Account:** Robinhood "Agentic" cash account `576391551` (agentic_allowed, options Level 2 —
 single-leg only: long calls/puts, covered calls, cash-secured puts).
@@ -14,7 +16,7 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 | Time (ET) | Phase | Runbook |
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
-| 9:35 AM | Entry — confirm momentum after the open, buy call | `runbooks/entry.md` |
+| 9:35 AM | Entry — confirm momentum after the open, buy call or put | `runbooks/entry.md` |
 | every 10 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
 | every 5 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries | `runbooks/monitor.md` |
 | ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
@@ -28,41 +30,57 @@ itself rather than acting.
 
 ## 2. Universe & candidate discovery
 
-Saved Robinhood scanner **"Daily Momentum Calls"** (`5399dce3-8430-476c-ba65-89ac920af0bf`):
+Two saved Robinhood scanners, run every pass:
 
-- % change vs prior close > +2% (1d)
-- 30-day average volume > 5M shares
-- 5-day average options volume > 10,000 contracts
-- RSI(14, 1d) between 55 and 80 (uptrend, not blow-off overbought)
-- Last price between $5 and $250 (keeps one ATM call affordable)
-- Market cap > $2B (no illiquid junk)
+- **Calls — "Daily Momentum Calls"** (`scan_id`, `5399dce3-8430-476c-ba65-89ac920af0bf`):
+  % change vs prior close > +2% (1d); RSI(14, 1d) between 55 and 80 (uptrend, not
+  blow-off overbought).
+- **Puts — "Daily Momentum Puts"** (`scan_id_puts`, `1849aba7-1d06-4269-b58f-b4e42d9bfb02`,
+  added 2026-07-21, gated by `enable_puts`): % change vs prior close < −2% (1d);
+  RSI(14, 1d) between 20 and 45 (downtrend, not oversold-bounce territory).
 
-Supplemented by pre-market news: fresh catalysts (earnings beats, guidance raises, upgrades,
-product/regulatory news) rank a candidate up; binary-event risk ranks it down.
+Both scanners share: 30-day average volume > 5M shares; 5-day average options volume >
+10,000 contracts; last price between $5 and $250 (keeps one ATM contract affordable);
+market cap > $2B (no illiquid junk).
+
+Supplemented by pre-market news: fresh catalysts (earnings beats/misses, guidance
+raises/cuts, upgrades/downgrades, product/regulatory news) rank a candidate up in its
+direction; binary-event risk ranks it down.
 
 ## 3. Momentum signal (all must hold at entry time)
 
-1. Appears in the scanner **or** was a top pre-market candidate now up ≥2%.
-2. Tape confirmation scaled to session age: in the first 10 minutes, above the opening
-   print with no immediate reversal (1-minute bars); after 9:40, above open and holding
-   above VWAP on 5-minute bars with no full gap-fade.
-4. **No earnings between now and the option's expiry** (check `get_earnings_results`) —
+1. Appears in the relevant scanner **or** was a top pre-market candidate now moved ≥2% in
+   its direction.
+2. Tape confirmation scaled to session age, direction-aware:
+   - **Calls**: first 10 minutes — above the opening print with no immediate reversal
+     (1-minute bars); after 9:40 — above open and holding above VWAP on 5-minute bars,
+     no full gap-fade.
+   - **Puts**: first 10 minutes — below the opening print with no immediate reversal
+     (1-minute bars); after 9:40 — below open and holding below VWAP on 5-minute bars,
+     no full gap-fill-back-to-open.
+3. **No earnings between now and the option's expiry** (check `get_earnings_results`) —
    we trade momentum, not event lotteries.
-5. A concrete catalyst or sector tailwind identified in the pre-market journal entry.
+4. A concrete catalyst or sector tailwind identified in the pre-market journal entry.
 
-Rank qualifiers by: catalyst strength > relative volume > cleanest tape. Take up to
-(`max_open_positions` − currently open) of them in one pass, best first — one contract per
-underlying, each independently passing every sizing and liquidity gate.
+Rank qualifiers by: catalyst strength > relative volume > cleanest tape, calls and puts
+candidates ranked together on the same list. Take up to (`max_open_positions` − currently
+open) of them in one pass, best first — one position per underlying regardless of
+direction (never a call and a put on the same symbol at once), each independently passing
+every sizing and liquidity gate.
 
 ## 4. Contract selection
 
-- **Type:** call, buy-to-open. **Expiry:** nearest expiration 1–21 DTE (never 0 DTE — no
-  contracts expiring the same day). Monthly-only chains (no expiry in window): nearest
-  monthly up to `dte_max_no_weekly` (45) is allowed. Short-dated (1–7 DTE) contracts are cheapest but carry
-  violent gamma/theta; the forced same-day close caps expiry risk, not premium risk.
-- **Strike:** at-the-money or the first strike above spot.
+- **Type:** call for a bullish qualifier, put for a bearish qualifier; always buy-to-open
+  (long only — no short options). **Expiry:** nearest expiration 1–21 DTE (never 0 DTE —
+  no contracts expiring the same day). Monthly-only chains (no expiry in window): nearest
+  monthly up to `dte_max_no_weekly` (45) is allowed. Short-dated (1–7 DTE) contracts are
+  cheapest but carry violent gamma/theta; the forced same-day close caps expiry risk, not
+  premium risk.
+- **Strike:** at-the-money, or the first strike beyond spot in the direction of the trade
+  (above spot for calls, below spot for puts).
 - **Liquidity gates:** open interest ≥ 500; bid-ask spread ≤ 10% of mid. If ATM fails the
-  gates, step one strike out; if still failing, skip the underlying.
+  gates, step one strike out (further out-of-the-money); if still failing, skip the
+  underlying.
 - **Order:** limit buy at mid, GFD, regular hours. If unfilled in 10 min, reprice once to
   mid + 40% of half-spread. Never market-buy an option.
 
@@ -71,9 +89,9 @@ underlying, each independently passing every sizing and liquidity gate.
 - Premium per trade ≤ `max_premium_per_trade` — a flat cap, not scaled or capped by live
   buying power (removed 2026-07-21 per user instruction; the broker rejects the order if
   settled cash is actually insufficient). Quantity = floor(max_premium_per_trade /
-  (premium × 100)), min 1 — multiple contracts of the same call allowed. No averaging
-  down; never re-buy a symbol
-  stopped out today; one position per underlying.
+  (premium × 100)), min 1 — multiple contracts of the same call or put allowed. No
+  averaging down; never re-buy a symbol stopped out today; one position per underlying
+  regardless of direction (never a call and a put on the same symbol at once).
 - At most `max_open_positions` concurrent positions and `max_new_positions_per_day`
   entries per day (initial entry at 9:35; 10-min re-checks on no-trade and monitor-loop
   re-entries both end at 1:30 PM ET).
@@ -119,10 +137,15 @@ lesson. Committed and pushed after every run — the journal is the system's mem
 
 ## 9. Known limitations & warnings
 
-- Long calls lose to theta and IV crush even when direction is right. Expect many small
-  losses; the edge, if any, comes from cutting losers fast and exercising good judgment on
-  when winners are done. This is a high-risk strategy — size it with money you can lose.
-- Level 2 = no spreads; there is no defined-risk vertical available to cap IV exposure.
+- Long calls and puts both lose to theta and IV crush even when direction is right. Expect
+  many small losses; the edge, if any, comes from cutting losers fast and exercising good
+  judgment on when winners are done. This is a high-risk strategy — size it with money you
+  can lose.
+- Level 2 = no spreads; there is no defined-risk vertical available to cap IV exposure on
+  either side.
 - Scanner % change filter reads ~0 outside regular hours; pre-market candidate work relies
   on news + prior-day closes, and the 9:45 run re-validates with live data.
+- Puts are newer (added 2026-07-21) and have no live track record yet in this system —
+  watch the first several put trades closely for anything the calls-only design didn't
+  anticipate (e.g. downside gap risk behaves differently from upside chasing).
 - Nothing here is financial advice; the user owns every parameter in `config.yaml`.

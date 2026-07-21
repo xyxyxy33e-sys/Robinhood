@@ -16,34 +16,43 @@ All times US/Eastern. Account = `account_number` from config.
    journal already flagged it), stop.
 
 ## 1. Confirm momentum (live)
-1. `run_scan` on `scan_id` — live matches now meaningful.
-2. Merge with pre-market candidates (top 10); drop anything that hit its "disqualify if".
+1. `run_scan` on `scan_id` (calls) and, if `enable_puts` is true, `scan_id_puts` (puts) —
+   live matches now meaningful.
+2. Merge both scan results with pre-market candidates (top 10, each tagged call/put); drop
+   anything that hit its "disqualify if".
 3. For each surviving candidate (check the best-ranked first), tape check scaled to how
-   much session exists:
-   - **9:30–9:40:** `get_equity_historicals` interval=minute — require last > opening
-     print, last ≥ prior close × (1 + min_day_change_pct/100), and no immediate reversal
-     (not below the session low of the first bars). Accept that this window trades on
-     pre-market conviction with less confirmation.
-   - **after 9:40:** interval=5minute from 9:30 — require price > open, price > VWAP,
-     and no full gap-fade (above the 9:30–9:40 low).
+   much session exists, direction-aware:
+   - **Calls — 9:30–9:40:** `get_equity_historicals` interval=minute — require last >
+     opening print, last ≥ prior close × (1 + min_day_change_pct/100), and no immediate
+     reversal (not below the session low of the first bars).
+   - **Calls — after 9:40:** interval=5minute from 9:30 — require price > open, price >
+     VWAP, and no full gap-fade (above the 9:30–9:40 low).
+   - **Puts — 9:30–9:40:** require last < opening print, last ≤ prior close ×
+     (1 − min_day_change_pct/100), and no immediate reversal (not above the session high
+     of the first bars).
+   - **Puts — after 9:40:** require price < open, price < VWAP, and no full gap-fill back
+     above the 9:30–9:40 high.
+   Accept that the 9:30–9:40 window trades on pre-market conviction with less confirmation.
 4. `get_earnings_results` on finalists — reject if earnings before option expiry.
-5. Rank the qualifiers (catalyst > relative volume > tape) and take **up to
-   (max_open_positions − currently open)** of them, best first — each independently
-   passing every gate in §2–§3. Re-read live options buying power between fills (each buy
-   consumes settled cash). One underlying = one position (never a second entry on the same
-   symbol), but a position MAY hold multiple contracts — see §2 sizing. No qualifier → no
-   trade; journal it.
+5. Rank the qualifiers (catalyst > relative volume > tape), calls and puts together, and
+   take **up to (max_open_positions − currently open)** of them, best first — each
+   independently passing every gate in §2–§3. One underlying = one position (never a
+   second entry on the same symbol, and never both a call and a put on it at once), but a
+   position MAY hold multiple contracts — see §2 sizing. No qualifier → no trade; journal
+   it.
 
 ## 2. Select the contract (per chosen underlying)
 1. `get_option_chains` (underlying_symbol) → pick expiration in [dte_min, dte_max].
-2. `get_option_instruments` (chain, expiration, type=call) → ATM or first strike above spot.
+2. `get_option_instruments` (chain, expiration, type=call for a bullish qualifier / put for
+   a bearish qualifier) → ATM or first strike beyond spot in the trade's direction (above
+   spot for calls, below spot for puts).
 3. `get_option_quotes` → gates: open_interest ≥ `min_open_interest`; spread ≤
    `max_spread_pct_of_mid`% of mid. **Quantity** = floor(`max_premium_per_trade` /
-   (mid × 100)), minimum 1 — multiple contracts of the same call are allowed. Not capped
-   or scaled by live buying power; if settled cash is actually insufficient the order will
-   be rejected at placement — treat that as a hard stop for the underlying, don't chase a
-   smaller size.
-   Gates fail ATM → next strike up once → otherwise next candidate.
+   (mid × 100)), minimum 1 — multiple contracts of the same call or put are allowed. Not
+   capped or scaled by live buying power; if settled cash is actually insufficient the
+   order will be rejected at placement — treat that as a hard stop for the underlying,
+   don't chase a smaller size.
+   Gates fail ATM → next strike further out-of-the-money once → otherwise next candidate.
 
 ## 3. Review → authorize → place (per chosen underlying, best-ranked first)
 1. `review_option_order`: limit buy-to-open at mid, GFD, regular hours, with chain_symbol +

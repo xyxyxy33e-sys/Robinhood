@@ -3,7 +3,9 @@
 # scheduled run picks it up automatically.
 
 account_number: "576391551"                       # "Agentic" cash account (the only agentic_allowed account)
-scan_id: "5399dce3-8430-476c-ba65-89ac920af0bf"   # saved Robinhood scanner "Daily Momentum Calls"
+scan_id: "5399dce3-8430-476c-ba65-89ac920af0bf"   # saved Robinhood scanner "Daily Momentum Calls" (bullish, % change > +2%)
+scan_id_puts: "1849aba7-1d06-4269-b58f-b4e42d9bfb02"  # saved scanner "Daily Momentum Puts" (bearish, % change < -2%, RSI 20-45)
+enable_puts: true                                 # true: also trade puts on confirmed bearish momentum (added 2026-07-21)
 
 # --- Execution authorization -------------------------------------------------
 # entry_auto_execute=true is your standing instruction to buy without asking.
@@ -17,7 +19,7 @@ max_premium_per_trade: 1500       # USD flat cap per position — sizing uses th
                                  # If actual settled cash is insufficient the order will
                                  # simply be rejected/fail at the broker.
 # Contracts per trade: quantity = floor(max_premium_per_trade / (premium × 100)),
-# minimum 1 — multiple contracts of the same call are allowed.
+# minimum 1 — multiple contracts of the same call (or put) are allowed.
 max_open_positions: 5
 max_new_positions_per_day: 30
 
@@ -42,4 +44,5 @@ forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 
 # --- Signal thresholds -------------------------------------------------------
-min_day_change_pct: 2            # underlying must be up at least this at entry check
+min_day_change_pct: 2            # underlying must move at least this % (up for calls,
+                                 # down for puts) at entry check

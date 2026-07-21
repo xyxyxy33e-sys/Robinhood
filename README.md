@@ -1,19 +1,22 @@
 # Robinhood — Daily Momentum Calls
 
-An agentic day-trading system for long calls on Robinhood's agentic account, executed by
-scheduled Claude Code sessions. It gathers news before the open, buys one momentum call
-after the open, and is always flat by the close.
+An agentic day-trading system for long options on Robinhood's agentic account, executed by
+scheduled Claude Code sessions. It gathers news before the open, buys calls on confirmed
+bullish momentum and puts on confirmed bearish momentum (`enable_puts`, added 2026-07-21),
+and is always flat by the close. The name predates the puts addition; it still trades both
+directions under it.
 
 ## How it works
 
 Three Claude Code Routines fire into the trading session every weekday (times ET):
 
 1. **~8:00 — Pre-market** (`runbooks/premarket.md`): news, earnings calendar, top-10
-   ranked candidates → journal.
+   ranked candidates (calls and puts together) → journal.
 2. **9:35 — Entry** (`runbooks/entry.md`): live momentum confirmation via the saved
-   "Daily Momentum Calls" scanner + tape check → ATM calls, 7–21 DTE, limit at mid.
-   Sized and authorized per `config.yaml`, always reviewed via `review_option_order`.
-   On a no-trade, re-checks every 10 minutes until 1:30 PM ET.
+   "Daily Momentum Calls" and "Daily Momentum Puts" scanners + direction-aware tape check
+   → ATM calls or puts, 1–21 DTE, limit at mid. Sized and authorized per `config.yaml`,
+   always reviewed via `review_option_order`. On a no-trade, re-checks every 10 minutes
+   until 1:30 PM ET.
 3. **Every 5 min while a position is open — Monitor** (`runbooks/monitor.md`):
    self-re-arming check-in loop — hard stop enforcement, discretionary profit-taking,
    and re-entries up to the daily limits (until 1:30 PM ET).
