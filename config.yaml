@@ -12,7 +12,7 @@ exit_auto_execute: true     # true: closes (TP/SL/forced flat) execute without a
 
 # --- Position sizing ---------------------------------------------------------
 min_buying_power_to_trade: 10    # USD; below this the entry run skips the day
-max_premium_pct_of_bp: 50         # cap per position = this % of LIVE settled buying power
+max_premium_pct_of_bp: 75         # cap per position = this % of LIVE settled buying power
                                  # at the moment of that trade (re-read between fills, so
                                  # it shrinks as concurrent positions consume cash)
 # Contracts per trade: cap = live buying power × max_premium_pct_of_bp / 100;
