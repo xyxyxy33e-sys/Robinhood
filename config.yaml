@@ -12,13 +12,12 @@ exit_auto_execute: true     # true: closes (TP/SL/forced flat) execute without a
 
 # --- Position sizing ---------------------------------------------------------
 min_buying_power_to_trade: 10    # USD; below this the entry run skips the day
-max_premium_per_trade: 1500       # USD flat cap per position, limited only by this cap
-                                 # and live settled buying power at the moment of that
-                                 # trade (re-read between fills, so it shrinks as
-                                 # concurrent positions consume cash)
-# Contracts per trade: cap = min(max_premium_per_trade, live buying power);
-# quantity = floor(cap / (premium × 100)), minimum 1 — multiple contracts of the same
-# call are allowed.
+max_premium_per_trade: 1500       # USD flat cap per position — sizing uses this figure
+                                 # alone, not live buying power (user-removed 2026-07-21).
+                                 # If actual settled cash is insufficient the order will
+                                 # simply be rejected/fail at the broker.
+# Contracts per trade: quantity = floor(max_premium_per_trade / (premium × 100)),
+# minimum 1 — multiple contracts of the same call are allowed.
 max_open_positions: 5
 max_new_positions_per_day: 30
 

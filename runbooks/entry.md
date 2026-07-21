@@ -38,10 +38,11 @@ All times US/Eastern. Account = `account_number` from config.
 1. `get_option_chains` (underlying_symbol) → pick expiration in [dte_min, dte_max].
 2. `get_option_instruments` (chain, expiration, type=call) → ATM or first strike above spot.
 3. `get_option_quotes` → gates: open_interest ≥ `min_open_interest`; spread ≤
-   `max_spread_pct_of_mid`% of mid. Compute **cap** = min(`max_premium_per_trade`, live
-   options buying power) (re-read buying power fresh for each underlying — prior fills in
-   this pass already consumed cash). **Quantity** = floor(cap / (mid × 100)),
-   minimum 1 — multiple contracts of the same call are allowed; skip if cap < one contract.
+   `max_spread_pct_of_mid`% of mid. **Quantity** = floor(`max_premium_per_trade` /
+   (mid × 100)), minimum 1 — multiple contracts of the same call are allowed. Not capped
+   or scaled by live buying power; if settled cash is actually insufficient the order will
+   be rejected at placement — treat that as a hard stop for the underlying, don't chase a
+   smaller size.
    Gates fail ATM → next strike up once → otherwise next candidate.
 
 ## 3. Review → authorize → place (per chosen underlying, best-ranked first)
