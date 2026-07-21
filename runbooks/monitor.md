@@ -16,11 +16,17 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
    - **mark ≤ entry × (1 + stop_loss_pct/100)** (when the stop is software-side) → CANCEL
      the resting order first, then close NOW per exit runbook §2 (limit at mid, reprice to
      bid after 3 min, no discretion). Journal the stop-out.
-   - **mark ≥ entry × (1 + take_profit_pct/100)** (when the TP is software-side) → CANCEL
-     the resting order first, then sell-to-close at mid. Journal the win.
+   - **mark ≥ entry × (1 + take_profit_pct/100)** → the ratchet ARMS (no forced sale).
+     While armed: required stop = max(breakeven entry, high-water mark × (1 −
+     stop_ratchet_trail_pct/100)), rounded to tick — track the high-water mark from the
+     journal's mark history plus this check's quote. If the required stop exceeds the
+     current resting stop, CANCEL the resting stop and place the new higher stop_market
+     (fresh ref_id, verify `state: confirmed`, record the new order id). Stops only ever
+     move UP. Journal each ratchet ("ratchet: stop $X → $Y, HWM $Z").
    - **in profit, momentum broken** (5-min bars: lower highs, VWAP lost, volume faded) →
      discretionary sell-to-close per STRATEGY.md §6 — CANCEL the resting order first.
-     Journal the reasoning.
+     Journal the reasoning. (Applies armed or not — the ratchet is a floor, not a reason
+     to hold through a confirmed breakdown.)
    - otherwise hold; log a one-line mark update in the journal (batch-commit these —
      push at most every ~30 min to avoid commit spam, and always push after a trade).
 4. **Re-entry check** (only if all of: now < 1:30 PM ET; open calls < `max_open_calls` OR

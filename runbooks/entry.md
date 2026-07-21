@@ -80,6 +80,11 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
        rounded to tick, GFD. Monitor loop handles profit-taking in software.
      - `take_profit`: limit sell-to-close at entry × (1 + take_profit_pct/100), rounded to
        tick, GFD. Monitor loop handles the stop in software.
+     **9:30–9:45 blackout:** Robinhood rejects stop_market before 9:45 ET
+     (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`). If the fill lands before 9:45, do
+     NOT end the turn unprotected — run ~1-minute software stop checks (get_option_quotes;
+     mark ≤ stop level → sell-to-close at mid immediately), then place the resting stop at
+     9:45 sharp and confirm it before proceeding.
      Quantity = the full filled position quantity. Fresh ref_id; covered by the same
      standing authorization as the entry. Record the order id in the journal — every later
      close must CANCEL this order first.
@@ -88,4 +93,7 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
 - **No trade** → arm a **re-check**: `send_later` in 10 minutes to re-run this runbook
   from §0 (guards apply fresh each time; journal only changes, not full re-writes).
   Re-checks stop at 1:30 PM ET or when an entry fills, whichever comes first. A late
-  qualifier must pass the same gates — no loosening because the morning was quiet.
+  qualifier must pass the same gates — no loosening because the morning was quiet — PLUS
+  the late-re-check volume bar (STRATEGY.md §3): several consecutive closes in the trade
+  direction on rising/elevated volume, sustained 15+ minutes. A quiet low-volume reclaim
+  of the open does not qualify.

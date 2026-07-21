@@ -58,6 +58,11 @@ direction; binary-event risk ranks it down.
    - **Puts**: first 10 minutes — below the opening print with no immediate reversal
      (1-minute bars); after 9:40 — below open and holding below VWAP on 5-minute bars,
      no full gap-fill-back-to-open.
+   - **Late re-checks (any entry after the initial 9:35 pass):** price beyond the open is
+     necessary but NOT sufficient — require a volume-confirmed breakout: several
+     consecutive closes in the trade direction on rising/elevated volume, sustained for
+     15+ minutes. A quiet, low-volume grind back through the open does not qualify
+     (codified 2026-07-21 from the NVS-declined / TSM-declined-then-accepted precedents).
 3. **No earnings between now and the option's expiry** (check `get_earnings_results`) —
    we trade momentum, not event lotteries.
 4. A concrete catalyst or sector tailwind identified in the pre-market journal entry.
@@ -73,11 +78,13 @@ a call and a put at the same time.
 ## 4. Contract selection
 
 - **Type:** call for a bullish qualifier, put for a bearish qualifier; always buy-to-open
-  (long only — no short options). **Expiry:** nearest expiration 1–21 DTE (never 0 DTE —
-  no contracts expiring the same day). Monthly-only chains (no expiry in window): nearest
-  monthly up to `dte_max_no_weekly` (45) is allowed. Short-dated (1–7 DTE) contracts are
-  cheapest but carry violent gamma/theta; the forced same-day close caps expiry risk, not
-  premium risk.
+  (long only — no short options). **Expiry:** nearest expiration 2–21 DTE — never 0 or 1
+  DTE (raised from 1 on 2026-07-21: a 1-DTE MU contract with theta −9.9 hit the −30%
+  floor in 20 minutes on a modest underlying pullback; the contract structure, not the
+  thesis, drove the speed of the loss). Monthly-only chains (no expiry in window): nearest
+  monthly up to `dte_max_no_weekly` (45) is allowed. Short-dated contracts are cheapest
+  but carry violent gamma/theta; the forced same-day close caps expiry risk, not premium
+  risk.
 - **Strike:** at-the-money, or the first strike beyond spot in the direction of the trade
   (above spot for calls, below spot for puts).
 - **Liquidity gates:** open interest ≥ 500; bid-ask spread ≤ 10% of mid. If ATM fails the
@@ -114,10 +121,26 @@ a call and a put at the same time.
   interrupted (failure mode observed 2026-07-16). Alternative `take_profit`: a sell limit
   at entry × (1 + `take_profit_pct`/100). The monitor loop enforces whichever side is not
   resting, in software. Any other close must cancel the resting order first.
-- **Discretionary profit-taking below the target:** the agent may sell a winner before the
-  take-profit level when momentum breaks (lower highs, VWAP lost, volume faded) or into an
-  obvious exhaustion spike — take the gain rather than round-trip it. Record the reasoning
-  in the journal every time.
+- **9:30–9:45 stop blackout:** Robinhood rejects stop_market orders in the first 15
+  minutes after the open (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`, observed
+  2026-07-21). An entry filled before 9:45 is protected in software until then: the entry
+  run does NOT end its turn — it runs ~1-minute quote checks and sells-to-close at mid
+  immediately if the mark crosses the stop level, then places the resting stop at 9:45
+  sharp and hands off to the normal 5-minute monitor loop.
+- **Stop ratchet on winners (added 2026-07-21):** touching entry × (1 +
+  `take_profit_pct`/100) does not force a sale — it ARMS the ratchet. From then on the
+  resting stop must sit at max(breakeven entry price, high-water mark × (1 −
+  `stop_ratchet_trail_pct`/100)), rounded to tick; whenever the required level exceeds
+  the current resting stop, the monitor loop cancels-and-replaces it (verify the new stop
+  is confirmed). The stop only ever moves UP. The winner keeps running under the
+  discretionary rules below, but can no longer round-trip below breakeven even if
+  monitoring is interrupted (motivated by NBIS peaking +113% intraday with the stop still
+  at −30%).
+- **Discretionary profit-taking:** the agent may sell a winner at any gain level — before
+  or after the ratchet arms — when momentum breaks (lower highs, VWAP lost, volume faded)
+  or into an obvious exhaustion spike — take the gain rather than round-trip it. The
+  ratchet is a floor, never a reason to hold through a confirmed breakdown. Record the
+  reasoning in the journal every time.
 - **Stop loss (hard floor):** mark ≤ −30% under entry premium → sell-to-close immediately,
   at mid, repricing toward the bid every 5 minutes until filled. Losers get no discretion.
 - **Forced flat:** whatever remains is closed starting 3:40 ET: limit at mid → reprice toward

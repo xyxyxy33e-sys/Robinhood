@@ -30,7 +30,10 @@ max_open_puts: 5                 # ...and up to 5 concurrent put positions (up t
 max_new_positions_per_day: 30
 
 # --- Contract selection ------------------------------------------------------
-dte_min: 1                       # 0DTE excluded: never buy a contract expiring today
+dte_min: 2                       # 0 and 1 DTE excluded (raised from 1 on 2026-07-21: a
+                                 # 1-DTE MU contract hit the -30% floor in 20 minutes on a
+                                 # modest pullback — extreme theta/gamma, not the thesis,
+                                 # drove the speed of the loss)
 dte_max: 21                      # preferred window...
 dte_max_no_weekly: 45            # ...but when an underlying has NO expiry in [dte_min,
                                  # dte_max] (monthly-only chains like TRV), the nearest
@@ -44,8 +47,16 @@ max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
 resting_order_type: "stop_loss"  # "stop_loss" (default: resting stop_market at the stop
                                  # level; monitor handles profit-taking) or "take_profit"
                                  # (resting sell limit at the target; monitor handles stops)
-take_profit_pct: 50              # profit target: entry premium × (1 + this%)
+take_profit_pct: 50              # ratchet trigger: when the mark first touches entry ×
+                                 # (1 + this%), the stop ratchet arms (see below) — the
+                                 # winner keeps running under discretion, no forced sale
 stop_loss_pct: -30               # hard floor: entry premium × (1 + this%)
+stop_ratchet_trail_pct: 30       # once armed (mark touched the take_profit level), the
+                                 # resting stop is raised to max(breakeven, high-water
+                                 # mark × (1 − this%/100)), rounded to tick, and only ever
+                                 # moves UP — a big winner can no longer round-trip below
+                                 # breakeven (added 2026-07-21 after NBIS peaked +113%
+                                 # with the stop still at −30%)
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 
