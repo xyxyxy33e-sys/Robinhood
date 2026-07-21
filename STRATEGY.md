@@ -98,7 +98,7 @@ a call and a put at the same time.
   2026-07-21 per user instruction). The only same-symbol restriction: never hold a call
   and a put on the same underlying at the same time.
 - At most `max_open_calls` concurrent call positions AND `max_open_puts` concurrent put
-  positions (up to both at once — e.g. 3 calls + 3 puts = 6 total), plus
+  positions (up to both at once — e.g. 5 calls + 5 puts = 10 total), plus
   `max_new_positions_per_day` entries per day (initial entry at 9:35; 10-min re-checks on
   no-trade and monitor-loop re-entries both end at 1:30 PM ET).
 - Skip entries while options buying power < `min_buying_power_to_trade` — log why.
