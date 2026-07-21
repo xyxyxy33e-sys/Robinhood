@@ -20,7 +20,13 @@ max_premium_per_trade: 1500       # USD flat cap per position — sizing uses th
                                  # simply be rejected/fail at the broker.
 # Contracts per trade: quantity = floor(max_premium_per_trade / (premium × 100)),
 # minimum 1 — multiple contracts of the same call (or put) are allowed.
-max_open_positions: 5
+max_open_calls: 3                # up to 3 concurrent call positions...
+max_open_puts: 3                 # ...and up to 3 concurrent put positions (up to 6 total).
+                                 # Re-entering the same underlying is allowed — no
+                                 # one-position-per-symbol limit and no "never re-buy after
+                                 # a stop-out" rule (both removed 2026-07-21 per user
+                                 # instruction). A symbol still can't hold a call AND a put
+                                 # at the same time.
 max_new_positions_per_day: 30
 
 # --- Contract selection ------------------------------------------------------

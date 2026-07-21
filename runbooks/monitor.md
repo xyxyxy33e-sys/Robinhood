@@ -23,10 +23,11 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
      Journal the reasoning.
    - otherwise hold; log a one-line mark update in the journal (batch-commit these —
      push at most every ~30 min to avoid commit spam, and always push after a trade).
-4. **Re-entry check** (only if all of: now < 1:30 PM ET; open positions < `max_open_positions`;
-   today's entry count < `max_new_positions_per_day`; options buying power ≥
-   `min_buying_power_to_trade`): run the entry runbook §1–§4 for a NEW candidate —
-   never re-buy a symbol stopped out today. Cash-account note: proceeds from any sale
+4. **Re-entry check** (only if all of: now < 1:30 PM ET; open calls < `max_open_calls` OR
+   open puts < `max_open_puts`; today's entry count < `max_new_positions_per_day`; options
+   buying power ≥ `min_buying_power_to_trade`): run the entry runbook §1–§4 for a NEW
+   candidate in whichever bucket has room. Re-buying a symbol closed earlier today
+   (including after a stop-out) is allowed. Cash-account note: proceeds from any sale
    today settle T+1 and cannot fund a re-entry; only remaining settled cash can.
 
 ## Re-arm or stop

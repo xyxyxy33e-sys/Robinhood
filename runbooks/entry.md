@@ -7,7 +7,9 @@ All times US/Eastern. Account = `account_number` from config.
 1. Trading day check (same as premarket). Market closed → journal, push, stop.
 2. Time check: if before 9:35 ET, schedule a self check-in (`send_later`) for 9:35 ET and
    stop; if after 1:30 PM ET, skip the day (momentum entries decay) — journal why.
-3. `get_option_positions` (nonzero=true): if open positions ≥ `max_open_positions`, stop.
+3. `get_option_positions` (nonzero=true): split by option_type. If open calls ≥
+   `max_open_calls` AND open puts ≥ `max_open_puts`, stop (no room in either bucket).
+   Otherwise continue — the surviving bucket(s) may still take a new entry.
 4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
    order is already working. Also check today's journal — if an entry was already made
    today (max_new_positions_per_day), stop.
@@ -35,11 +37,13 @@ All times US/Eastern. Account = `account_number` from config.
    Accept that the 9:30–9:40 window trades on pre-market conviction with less confirmation.
 4. `get_earnings_results` on finalists — reject if earnings before option expiry.
 5. Rank the qualifiers (catalyst > relative volume > tape), calls and puts together, and
-   take **up to (max_open_positions − currently open)** of them, best first — each
-   independently passing every gate in §2–§3. One underlying = one position (never a
-   second entry on the same symbol, and never both a call and a put on it at once), but a
-   position MAY hold multiple contracts — see §2 sizing. No qualifier → no trade; journal
-   it.
+   take **up to (max_open_calls − currently open calls)** call qualifiers and **up to
+   (max_open_puts − currently open puts)** put qualifiers, best first within each
+   direction — each independently passing every gate in §2–§3. Re-entering a symbol
+   already open, or one closed earlier today (including after a stop-out), is allowed —
+   the only same-symbol restriction is never both a call and a put on the same underlying
+   at once. A position MAY hold multiple contracts — see §2 sizing. No qualifier → no
+   trade; journal it.
 
 ## 2. Select the contract (per chosen underlying)
 1. `get_option_chains` (underlying_symbol) → pick expiration in [dte_min, dte_max].

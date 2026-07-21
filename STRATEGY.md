@@ -63,10 +63,12 @@ direction; binary-event risk ranks it down.
 4. A concrete catalyst or sector tailwind identified in the pre-market journal entry.
 
 Rank qualifiers by: catalyst strength > relative volume > cleanest tape, calls and puts
-candidates ranked together on the same list. Take up to (`max_open_positions` − currently
-open) of them in one pass, best first — one position per underlying regardless of
-direction (never a call and a put on the same symbol at once), each independently passing
-every sizing and liquidity gate.
+candidates ranked together on the same list. Take up to (`max_open_calls` − currently open
+calls) call qualifiers and up to (`max_open_puts` − currently open puts) put qualifiers in
+one pass, best first within each direction — each independently passing every sizing and
+liquidity gate. Re-entering a symbol already open (or closed earlier today, including
+after a stop-out) is allowed; the only same-symbol restriction is that a symbol can't hold
+a call and a put at the same time.
 
 ## 4. Contract selection
 
@@ -90,11 +92,15 @@ every sizing and liquidity gate.
   buying power (removed 2026-07-21 per user instruction; the broker rejects the order if
   settled cash is actually insufficient). Quantity = floor(max_premium_per_trade /
   (premium × 100)), min 1 — multiple contracts of the same call or put allowed. No
-  averaging down; never re-buy a symbol stopped out today; one position per underlying
-  regardless of direction (never a call and a put on the same symbol at once).
-- At most `max_open_positions` concurrent positions and `max_new_positions_per_day`
-  entries per day (initial entry at 9:35; 10-min re-checks on no-trade and monitor-loop
-  re-entries both end at 1:30 PM ET).
+  averaging down (don't add to a position that's currently open and red).
+- Re-entering the same underlying is allowed — no one-position-per-symbol cap, and no
+  restriction on re-buying a symbol that was stopped out earlier today (both removed
+  2026-07-21 per user instruction). The only same-symbol restriction: never hold a call
+  and a put on the same underlying at the same time.
+- At most `max_open_calls` concurrent call positions AND `max_open_puts` concurrent put
+  positions (up to both at once — e.g. 3 calls + 3 puts = 6 total), plus
+  `max_new_positions_per_day` entries per day (initial entry at 9:35; 10-min re-checks on
+  no-trade and monitor-loop re-entries both end at 1:30 PM ET).
 - Skip entries while options buying power < `min_buying_power_to_trade` — log why.
 - Cash account: option sale proceeds settle **T+1**. The exit run's proceeds fund the
   *next* day's entry; never plan on same-day recycling of proceeds.
