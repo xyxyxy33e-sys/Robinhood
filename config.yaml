@@ -14,7 +14,8 @@ exit_auto_execute: true     # true: closes (TP/SL/forced flat) execute without a
 
 # --- Position sizing ---------------------------------------------------------
 min_buying_power_to_trade: 10    # USD; below this the entry run skips the day
-max_premium_per_trade: 1500       # USD flat cap per position — sizing uses this figure
+max_premium_per_trade: 2000       # USD flat cap per position (raised from 1500 on
+                                 # 2026-07-22 per user) — sizing uses this figure
                                  # alone, not live buying power (user-removed 2026-07-21).
                                  # If actual settled cash is insufficient the order will
                                  # simply be rejected/fail at the broker.
