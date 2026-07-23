@@ -138,6 +138,19 @@ heavier theta): the volume bar is the compensation, not optional.
   run does NOT end its turn — it runs ~1-minute quote checks and sells-to-close at mid
   immediately if the mark crosses the stop level, then places the resting stop at 9:45
   sharp and hands off to the normal 5-minute monitor loop.
+- **Partial scale-out at +40% (added 2026-07-23):** on a position holding 2+ contracts,
+  the first touch of entry × (1 + `scale_out_pct`/100) sells floor(quantity/3) contracts
+  (min 1) at mid; the rest keeps the ratchet path. Once per position per day; 1-lot
+  positions skip (nothing to split). Mechanics mirror every other close: cancel the
+  resting stop, place the partial sell, confirm the fill, re-place the stop for the
+  remaining quantity. Checked after the hard take-profit, before the ratchet arm.
+  Motivation: GOOGL 2026-07-23 peaked +44.1% — under the +50% ratchet arm — then
+  round-tripped to −3.9% with nothing locked; a one-third sale at +40% both banks the
+  mid-size winner and insures the round-trip. The cost is a slice of uncapped runners
+  (SMCI 2026-07-22 would have made ~$104 less), accepted as the insurance premium. An
+  earlier trailing arm (+35%) was evaluated against the same data and REJECTED: it
+  would have stopped GOOGL out at ~+1% in the midday dip instead of the +21.3% actual
+  exit — trailing early punishes exactly the choppy winner it tries to protect.
 - **Stop ratchet on winners (added 2026-07-21):** touching entry × (1 +
   `take_profit_pct`/100) does not force a sale — it ARMS the ratchet. From then on the
   resting stop must sit at max(breakeven entry price, high-water mark × (1 −

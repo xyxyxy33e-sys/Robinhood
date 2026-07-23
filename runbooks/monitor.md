@@ -20,6 +20,15 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
      resting stop first (verify cancelled), then sell-to-close at mid immediately — NO
      discretion, winners get capped as mechanically as losers get stopped. If unfilled in
      3 min, reprice toward the bid. Journal the win ("hard TP: doubled, sold at $X").
+   - **mark ≥ entry × (1 + scale_out_pct/100), quantity ≥ 2, not yet scaled out today**
+     (check the journal for a "SCALED OUT" entry on this position) → partial profit lock
+     (added 2026-07-23): CANCEL the resting stop (verify cancelled), sell floor(qty/3)
+     contracts (min 1) limit at mid — reprice toward the bid after 3 min if unfilled —
+     then re-place the resting stop for the REMAINING quantity at the same stop price
+     (or the ratcheted price if the ratchet also triggers this cycle). Fresh ref_ids
+     throughout; verify the new stop is `confirmed`. Journal "SCALED OUT: sold N of M
+     @ $X, stop re-placed for remainder". Once per position per day; 1-contract
+     positions skip. Checked AFTER hard-TP, BEFORE the ratchet.
    - **mark ≥ entry × (1 + take_profit_pct/100)** → the ratchet ARMS (no forced sale).
      While armed: required stop = max(breakeven entry, high-water mark × (1 −
      stop_ratchet_trail_pct/100)), rounded to tick — track the high-water mark from the

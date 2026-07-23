@@ -61,6 +61,16 @@ max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
 resting_order_type: "stop_loss"  # "stop_loss" (default: resting stop_market at the stop
                                  # level; monitor handles profit-taking) or "take_profit"
                                  # (resting sell limit at the target; monitor handles stops)
+scale_out_pct: 40                # partial profit lock (added 2026-07-23 per user, after
+                                 # GOOGL peaked +44.1% — under the +50% ratchet arm — and
+                                 # round-tripped to −3.9%): on positions holding 2+
+                                 # contracts, when the mark FIRST touches entry ×
+                                 # (1 + this%), sell floor(quantity/3) contracts (min 1)
+                                 # at mid. Once per position per day. Mechanics: cancel
+                                 # the resting stop, place the partial sell, confirm the
+                                 # fill, re-place the resting stop for the REMAINING
+                                 # quantity at the same (or ratcheted) stop price.
+                                 # 1-contract positions skip this — nothing to split.
 take_profit_pct: 50              # ratchet trigger: when the mark first touches entry ×
                                  # (1 + this%), the stop ratchet arms (see below) — the
                                  # winner keeps running under discretion, no forced sale
