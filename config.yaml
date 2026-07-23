@@ -14,11 +14,24 @@ exit_auto_execute: true     # true: closes (TP/SL/forced flat) execute without a
 
 # --- Position sizing ---------------------------------------------------------
 min_buying_power_to_trade: 10    # USD; below this the entry run skips the day
-max_premium_per_trade: 2000       # USD flat cap per position (raised from 1500 on
-                                 # 2026-07-22 per user) — sizing uses this figure
-                                 # alone, not live buying power (user-removed 2026-07-21).
-                                 # If actual settled cash is insufficient the order will
-                                 # simply be rejected/fail at the broker.
+max_premium_per_trade_pct_of_daily_start: 25
+                                 # Cap per position = this % of the account's total_value
+                                 # at the START of today's trading day (changed from a
+                                 # flat $2000 cap on 2026-07-23 per user). "Daily start" =
+                                 # prior session's closing account value (this is a cash
+                                 # account, flat on options overnight, so last night's
+                                 # close IS this morning's open) — captured via
+                                 # get_portfolio in the premarket runbook, before any
+                                 # entries, and journaled as `daily_start_balance` +
+                                 # `max_premium_per_trade` (the computed dollar figure)
+                                 # for entry.md to read. Recomputed fresh every morning;
+                                 # sizing still uses this computed figure alone, not live
+                                 # buying power. If actual settled cash is insufficient the
+                                 # order will simply be rejected/fail at the broker.
+                                 # Today (2026-07-23): daily_start_balance $10,286.87 (per
+                                 # 2026-07-22 EOD report, captured retroactively since
+                                 # today's premarket run predates this rule) -> effective
+                                 # max_premium_per_trade = $2,571.72 for the rest of today.
 # Contracts per trade: quantity = floor(max_premium_per_trade / (premium × 100)),
 # minimum 1 — multiple contracts of the same call (or put) are allowed.
 max_open_calls: 5                # up to 5 concurrent call positions...

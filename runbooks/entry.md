@@ -54,10 +54,12 @@ All times US/Eastern. Account = `account_number` from config.
    spot for calls, below spot for puts).
 3. `get_option_quotes` → gates: open_interest ≥ `min_open_interest`; spread ≤
    `max_spread_pct_of_mid`% of mid. **Quantity** = floor(`max_premium_per_trade` /
-   (mid × 100)), minimum 1 — multiple contracts of the same call or put are allowed. Not
-   capped or scaled by live buying power; if settled cash is actually insufficient the
-   order will be rejected at placement — treat that as a hard stop for the underlying,
-   don't chase a smaller size.
+   (mid × 100)), minimum 1 — multiple contracts of the same call or put are allowed.
+   `max_premium_per_trade` is the dollar figure computed once in today's premarket run
+   (`daily_start_balance × max_premium_per_trade_pct_of_daily_start / 100`, from today's
+   journal) — read it from there, don't recompute mid-day. Not capped or scaled by live
+   buying power; if settled cash is actually insufficient the order will be rejected at
+   placement — treat that as a hard stop for the underlying, don't chase a smaller size.
    Gates fail ATM → next strike further out-of-the-money once → otherwise next candidate.
 
 ## 3. Review → authorize → place (per chosen underlying, best-ranked first)
