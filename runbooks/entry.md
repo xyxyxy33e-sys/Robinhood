@@ -70,8 +70,8 @@ All times US/Eastern. Account = `account_number` from config.
    quote, alerts, cost) via AskUserQuestion and wait. No approval → no trade; journal it.
    If **true**: config records the user's standing authorization — proceed.
 3. `place_option_order` with a fresh UUID ref_id (reuse the same ref_id only on transport
-   retries). If unfilled after 10 min (`get_option_orders`), cancel and re-place once at
-   mid + 40% of half-spread. Still unfilled after 10 more min → cancel, no-trade day.
+   retries). If unfilled after 5 min (`get_option_orders`), cancel and re-place once at
+   mid + 40% of half-spread. Still unfilled after 5 more min → cancel, no-trade day.
 
 ## 4. Record
 Journal the entry: contract, fill price (from the filled order), thesis, planned exits

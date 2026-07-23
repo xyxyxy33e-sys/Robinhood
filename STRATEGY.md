@@ -101,7 +101,7 @@ heavier theta): the volume bar is the compensation, not optional.
 - **Liquidity gates:** open interest ≥ 500; bid-ask spread ≤ 10% of mid. If ATM fails the
   gates, step one strike out (further out-of-the-money); if still failing, skip the
   underlying.
-- **Order:** limit buy at mid, GFD, regular hours. If unfilled in 10 min, reprice once to
+- **Order:** limit buy at mid, GFD, regular hours. If unfilled in 5 min, reprice once to
   mid + 40% of half-spread. Never market-buy an option.
 
 ## 5. Position sizing & risk limits (config.yaml is the source of truth)
