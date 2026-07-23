@@ -151,6 +151,20 @@ heavier theta): the volume bar is the compensation, not optional.
   earlier trailing arm (+35%) was evaluated against the same data and REJECTED: it
   would have stopped GOOGL out at ~+1% in the midday dip instead of the +21.3% actual
   exit — trailing early punishes exactly the choppy winner it tries to protect.
+  **Post-scale-out floor (added 2026-07-23):** once the scale-out fills, the
+  remainder's stop rises to at least entry × (1 + `scale_out_floor_pct`/100) (−15%,
+  keyed to original entry, tick-rounded, stops only move up) — guaranteeing the whole
+  trade nets positive after the scale-out banks (⅓ × 40% > ⅔ × 15%) while sitting
+  below ordinary chop; a breakeven floor was evaluated and rejected (would have cut
+  GOOGL's remainder in the −3.9% dip). The ratchet's breakeven+ trail supersedes it at
+  +50%. **Scaled-out tranche re-buy (user-approved 2026-07-23):** while the remainder
+  is open, the sold tranche may be re-bought — same contract, up to the scaled-out
+  quantity, once per position per day, before 3:00 PM ET, settled cash only — on a
+  LIGHTER signal than leader re-entry: a 5-minute close with the underlying back on
+  the trade-direction side of VWAP, with no volume or sustain requirement. The
+  position may not exceed its original size, and the resting stop is re-placed for
+  the full quantity at the unchanged level after the fill. (Agent's strict-bar
+  recommendation was declined; risks accepted: chop re-buys and double spread cost.)
 - **Stop ratchet on winners (added 2026-07-21):** touching entry × (1 +
   `take_profit_pct`/100) does not force a sale — it ARMS the ratchet. From then on the
   resting stop must sit at max(breakeven entry price, high-water mark × (1 −

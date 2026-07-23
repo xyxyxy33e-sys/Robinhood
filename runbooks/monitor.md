@@ -24,11 +24,23 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
      (check the journal for a "SCALED OUT" entry on this position) → partial profit lock
      (added 2026-07-23): CANCEL the resting stop (verify cancelled), sell floor(qty/3)
      contracts (min 1) limit at mid — reprice toward the bid after 3 min if unfilled —
-     then re-place the resting stop for the REMAINING quantity at the same stop price
-     (or the ratcheted price if the ratchet also triggers this cycle). Fresh ref_ids
-     throughout; verify the new stop is `confirmed`. Journal "SCALED OUT: sold N of M
-     @ $X, stop re-placed for remainder". Once per position per day; 1-contract
-     positions skip. Checked AFTER hard-TP, BEFORE the ratchet.
+     then re-place the resting stop for the REMAINING quantity at max(previous stop,
+     entry × (1 + scale_out_floor_pct/100)) rounded to tick — the −15% floor keyed to
+     ORIGINAL entry (or the ratcheted price if the ratchet also triggers this cycle;
+     stops only move up). Fresh ref_ids throughout; verify the new stop is `confirmed`.
+     Journal "SCALED OUT: sold N of M @ $X, stop raised to $Y for remainder". Once per
+     position per day; 1-contract positions skip. Checked AFTER hard-TP, BEFORE the
+     ratchet.
+   - **Scaled-out tranche RE-BUY** (lighter bar, user-approved 2026-07-23; check each
+     cycle while a "SCALED OUT" position is still open, not yet re-bought today, and
+     it's before 3:00 PM ET): if the latest 5-min bar closed with the underlying back
+     on the trade-direction side of VWAP (put: below; call: above) — no volume or
+     15-minute-sustain requirement — buy back up to the scaled-out quantity of the SAME
+     contract, limit at mid, funded by settled cash only (scale-out proceeds are T+1
+     and cannot fund it). Position may not exceed its original size. After the fill,
+     cancel the resting stop and re-place it for the full new quantity at the SAME
+     stop level (unchanged — floors stay keyed to original entry). Journal
+     "RE-ENTERED tranche: bought N @ $X (sold @ $Y), stop re-placed for full qty".
    - **mark ≥ entry × (1 + take_profit_pct/100)** → the ratchet ARMS (no forced sale).
      While armed: required stop = max(breakeven entry, high-water mark × (1 −
      stop_ratchet_trail_pct/100)), rounded to tick — track the high-water mark from the
