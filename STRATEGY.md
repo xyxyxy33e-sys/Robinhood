@@ -52,11 +52,11 @@ direction; binary-event risk ranks it down.
 1. Appears in the relevant scanner **or** was a top pre-market candidate now moved ≥2% in
    its direction.
 2. Tape confirmation scaled to session age, direction-aware:
-   - **Calls**: first 10 minutes — above the opening print with no immediate reversal
-     (1-minute bars); after 9:40 — above open and holding above VWAP on 5-minute bars,
+   - **Calls**: first 5 minutes — above the opening print with no immediate reversal
+     (1-minute bars); after 9:35 — above open and holding above VWAP on 5-minute bars,
      no full gap-fade.
-   - **Puts**: first 10 minutes — below the opening print with no immediate reversal
-     (1-minute bars); after 9:40 — below open and holding below VWAP on 5-minute bars,
+   - **Puts**: first 5 minutes — below the opening print with no immediate reversal
+     (1-minute bars); after 9:35 — below open and holding below VWAP on 5-minute bars,
      no full gap-fill-back-to-open.
    - **Late re-checks (any entry after the initial 9:35 pass):** price beyond the open is
      necessary but NOT sufficient — require a volume-confirmed breakout: several

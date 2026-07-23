@@ -24,17 +24,17 @@ All times US/Eastern. Account = `account_number` from config.
    anything that hit its "disqualify if".
 3. For each surviving candidate (check the best-ranked first), tape check scaled to how
    much session exists, direction-aware:
-   - **Calls — 9:30–9:40:** `get_equity_historicals` interval=minute — require last >
+   - **Calls — 9:30–9:35:** `get_equity_historicals` interval=minute — require last >
      opening print, last ≥ prior close × (1 + min_day_change_pct/100), and no immediate
      reversal (not below the session low of the first bars).
-   - **Calls — after 9:40:** interval=5minute from 9:30 — require price > open, price >
-     VWAP, and no full gap-fade (above the 9:30–9:40 low).
-   - **Puts — 9:30–9:40:** require last < opening print, last ≤ prior close ×
+   - **Calls — after 9:35:** interval=5minute from 9:30 — require price > open, price >
+     VWAP, and no full gap-fade (above the 9:30–9:35 low).
+   - **Puts — 9:30–9:35:** require last < opening print, last ≤ prior close ×
      (1 − min_day_change_pct/100), and no immediate reversal (not above the session high
      of the first bars).
-   - **Puts — after 9:40:** require price < open, price < VWAP, and no full gap-fill back
-     above the 9:30–9:40 high.
-   Accept that the 9:30–9:40 window trades on pre-market conviction with less confirmation.
+   - **Puts — after 9:35:** require price < open, price < VWAP, and no full gap-fill back
+     above the 9:30–9:35 high.
+   Accept that the 9:30–9:35 window trades on pre-market conviction with less confirmation.
 4. `get_earnings_results` on finalists — reject if earnings before option expiry.
 5. Rank the qualifiers (catalyst > relative volume > tape), calls and puts together, and
    take **up to (max_open_calls − currently open calls)** call qualifiers and **up to
