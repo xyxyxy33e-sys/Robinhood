@@ -17,7 +17,7 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
 | 9:35 AM | Entry — confirm momentum after the open, buy call or put | `runbooks/entry.md` |
-| every 10 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
+| every 5 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
 | every 5 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries | `runbooks/monitor.md` |
 | ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
 
