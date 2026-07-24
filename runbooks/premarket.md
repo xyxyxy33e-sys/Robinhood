@@ -33,9 +33,23 @@ Read `config.yaml` first. All times US/Eastern.
 ## 2. Build the candidate list
 Rank the **top 10** candidates, calls and puts together on one list, by: catalyst
 strength > liquidity (stock + options) > cleanliness of the setup. For each: symbol,
-direction (call/put), catalyst (one line), prior close, pre-market price, and a
-"disqualify if" condition for the entry check. Explicitly list names REJECTED for
-earnings-before-expiry or binary-event risk.
+direction (call/put), catalyst (one line), prior close, pre-market price, ATM OI/spread
+(from the pre-screen below), and a "disqualify if" condition for the entry check.
+Explicitly list names REJECTED for earnings-before-expiry or binary-event risk.
+
+**Options-chain pre-screen (added 2026-07-24):** for each ranked candidate, pull the
+likely trade contract's quote — `get_option_chains` → expiration per the entry rules
+([dte_min, dte_max], or nearest monthly to dte_max_no_weekly) → `get_option_instruments`
+at the strike nearest the pre-market price → `get_option_quotes` — and record open
+interest + spread in the candidate table. **OI is an end-of-day figure; it will not
+change during the session**, so this pre-market reading is authoritative all day: a name
+whose ATM and first step-out strikes both sit far below `min_open_interest` cannot pass
+the entry liquidity gate today no matter what its tape does. Flag those names
+"chain dead" and rank them below every candidate with a live chain (or reject outright
+when no plausible strike clears) — don't spend entry-window cycles discovering
+illiquidity the pre-screen already proved. Spreads DO move intraday, so a name failing
+only on spread is not dead — note it as "spread-watch" instead. (Motivated 2026-07-24:
+all five tape qualifiers failed entry on OI that was knowable at 8 AM.)
 
 ## 3. Journal & handoff
 - Create `journal/YYYY-MM-DD.md` from `journal/TEMPLATE.md`; fill the **Pre-market** section

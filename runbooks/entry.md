@@ -61,6 +61,14 @@ All times US/Eastern. Account = `account_number` from config.
    buying power; if settled cash is actually insufficient the order will be rejected at
    placement — treat that as a hard stop for the underlying, don't chase a smaller size.
    Gates fail ATM → next strike further out-of-the-money once → otherwise next candidate.
+4. **OI is static intraday (learned 2026-07-24):** open interest updates once daily,
+   after settlement — a strike that fails the OI gate stays failed ALL DAY no matter how
+   strong the tape gets; only the spread can improve intraday. On re-checks, do NOT
+   re-pull quotes for a contract that already failed on OI today. A name whose ATM and
+   step-out strikes have both failed on OI is dead for the day UNLESS spot has moved far
+   enough that the ATM shifts to a strike not yet checked. The premarket journal records
+   each candidate's ATM OI (chain pre-screen) — trust it; a "chain dead" flag from
+   premarket means skip contract selection for that name entirely.
 
 ## 3. Review → authorize → place (per chosen underlying, best-ranked first)
 1. `review_option_order`: limit buy-to-open at mid, GFD, regular hours, with chain_symbol +

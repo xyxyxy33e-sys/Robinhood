@@ -45,7 +45,10 @@ market cap > $2B (no illiquid junk).
 
 Supplemented by pre-market news: fresh catalysts (earnings beats/misses, guidance
 raises/cuts, upgrades/downgrades, product/regulatory news) rank a candidate up in its
-direction; binary-event risk ranks it down.
+direction; binary-event risk ranks it down. Each ranked candidate's ATM option OI and
+spread are pre-screened during the premarket run (added 2026-07-24): OI is static
+intraday, so a chain that's dead at 8 AM is dead all day — those names rank below every
+candidate with a live chain.
 
 ## 3. Momentum signal (all must hold at entry time)
 
@@ -100,7 +103,12 @@ heavier theta): the volume bar is the compensation, not optional.
   (above spot for calls, below spot for puts).
 - **Liquidity gates:** open interest ≥ 500; bid-ask spread ≤ 10% of mid. If ATM fails the
   gates, step one strike out (further out-of-the-money); if still failing, skip the
-  underlying.
+  underlying. **OI updates only once daily (after settlement) — it cannot improve
+  intraday**, so a strike that fails the OI gate at first check stays failed for the day
+  (only spreads move intraday); re-checks must not re-pull quotes on OI-failed contracts
+  unless spot has shifted the ATM to an unchecked strike. The premarket run pre-screens
+  each candidate's ATM OI for exactly this reason (both added 2026-07-24, after all five
+  tape qualifiers burned the whole entry window failing on OI that was knowable at 8 AM).
 - **Order:** limit buy at mid, GFD, regular hours. If unfilled in 5 min, reprice once to
   mid + 40% of half-spread. Never market-buy an option.
 

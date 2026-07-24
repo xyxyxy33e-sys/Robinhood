@@ -5,8 +5,8 @@
 - **Earnings today/tomorrow (excluded names):**
 - **News digest:** catalyst headlines that matter
 - **Candidates (ranked):**
-  | # | Symbol | Catalyst | Prior close | Pre-mkt | Disqualify if |
-  |---|--------|----------|-------------|---------|---------------|
+  | # | Symbol | Catalyst | Prior close | Pre-mkt | ATM OI/spread | Disqualify if |
+  |---|--------|----------|-------------|---------|---------------|---------------|
 - **Rejected:** symbol — reason (earnings risk, binary event, illiquid options…)
 
 ## Entry (~9:45 ET)
