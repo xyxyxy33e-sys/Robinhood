@@ -71,5 +71,3 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
 - **Stop the loop** when: flat with no re-entry possible (past 1:30 PM ET or daily entry
   limit reached), or it's 3:25 PM ET or later (the 3:30 exit Routine owns the close from
   here — never leave both racing). On stopping, journal a final marks summary, commit, push.
-- Never run two monitor loops at once: if the journal shows a monitor check-in within the
-  last 3 minutes (another live loop), log and end without re-arming.
