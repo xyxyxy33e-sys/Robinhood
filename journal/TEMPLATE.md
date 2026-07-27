@@ -9,6 +9,11 @@
   |---|--------|----------|-------------|---------|---------------|---------------|
 - **Rejected:** symbol — reason (earnings risk, binary event, illiquid options…)
 
+## Pre-market update (~9:00 ET)
+- **Candidate moves vs 8 AM read:** symbol — strengthening/fading/reversed/unchanged
+- **Re-ranked order:**
+- **Read:** one-sentence overall sentiment-shift summary
+
 ## Entry (~9:45 ET)
 - **Buying power (options):** $
 - **Scan results vs candidates:**

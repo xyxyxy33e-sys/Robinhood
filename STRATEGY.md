@@ -16,6 +16,7 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 | Time (ET) | Phase | Runbook |
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
+| ~9:00 AM | Pre-entry sentiment-shift check (added 2026-07-27) — re-reads the same candidates against the 8 AM read to catch reversals/fades before 9:35 | `runbooks/premarket_confirm.md` |
 | 9:35 AM | Entry — confirm momentum after the open, buy call or put | `runbooks/entry.md` |
 | every 5 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
 | every 5 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries | `runbooks/monitor.md` |
