@@ -1,7 +1,8 @@
-# Runbook: Monitor loop (every 5 minutes while a position is open)
+# Runbook: Monitor loop (every 3 minutes while a position is open)
 
 Started by the entry runbook after a fill; self-perpetuating via `send_later`
-(delay_minutes=5). Read `config.yaml` and today's journal first. All times US/Eastern.
+(delay_minutes=3, tightened from 5 on 2026-07-28 per user). Read `config.yaml` and
+today's journal first. All times US/Eastern.
 
 ## Each firing
 1. `git pull` the branch (config may have changed), read config + today's journal.
@@ -74,7 +75,7 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
    settled cash can.
 
 ## Re-arm or stop
-- **Re-arm** (`send_later`, 5 min) if any strategy position is open and it's before
+- **Re-arm** (`send_later`, 3 min) if any strategy position is open and it's before
   3:25 PM ET.
 - **Stop the loop** when: flat with no re-entry possible (past 1:30 PM ET or daily entry
   limit reached), or it's 3:25 PM ET or later (the 3:30 exit Routine owns the close from

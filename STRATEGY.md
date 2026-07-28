@@ -18,12 +18,13 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
 | ~9:00 AM | Pre-entry sentiment-shift check (added 2026-07-27) — re-reads the same candidates against the 8 AM read to catch reversals/fades before 9:35 | `runbooks/premarket_confirm.md` |
 | 9:35 AM | Entry — confirm momentum after the open, buy call or put | `runbooks/entry.md` |
-| every 5 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
-| every 5 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries | `runbooks/monitor.md` |
+| every 3 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
+| every 3 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries | `runbooks/monitor.md` |
 | ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
 
-The 8:00/9:45/3:30 phases are cron Routines; the 5-minute monitor is a self-re-arming
-`send_later` loop started by a fill and stood down at 3:25 ET when the exit run takes over.
+The 8:00/9:45/3:30 phases are cron Routines; the 3-minute monitor (tightened from 5 min
+on 2026-07-28 per user) is a self-re-arming `send_later` loop started by a fill and stood
+down at 3:25 ET when the exit run takes over.
 
 Scheduled via Claude Code Routines (cron is UTC — see README for DST note). Every runbook
 begins with a market-open check and a time check; if fired at the wrong time it reschedules
@@ -133,7 +134,7 @@ heavier theta): the volume bar is the compensation, not optional.
 - Cash account: option sale proceeds settle **T+1**. The exit run's proceeds fund the
   *next* day's entry; never plan on same-day recycling of proceeds.
 
-## 6. Exit rules (enforced by the 5-minute monitor loop and the 3:30 PM run; position never held overnight)
+## 6. Exit rules (enforced by the 3-minute monitor loop and the 3:30 PM run; position never held overnight)
 
 - **Resting protective order (broker-side):** immediately after every entry fill, ONE
   protective sell rests at the broker per `resting_order_type` — Robinhood holds only one
@@ -147,7 +148,7 @@ heavier theta): the volume bar is the compensation, not optional.
   2026-07-21). An entry filled before 9:45 is protected in software until then: the entry
   run does NOT end its turn — it runs ~1-minute quote checks and sells-to-close at mid
   immediately if the mark crosses the stop level, then places the resting stop at 9:45
-  sharp and hands off to the normal 5-minute monitor loop.
+  sharp and hands off to the normal 3-minute monitor loop.
 - **Partial scale-out at +40% (added 2026-07-23):** on a position holding 2+ contracts,
   the first touch of entry × (1 + `scale_out_pct`/100) sells floor(quantity/3) contracts
   (min 1) at mid; the rest keeps the ratchet path. Once per position per day; 1-lot
@@ -192,7 +193,8 @@ heavier theta): the volume bar is the compensation, not optional.
 - **Hard take-profit — instant sale at +30% (lowered 2026-07-28, was +100%):** mark ≥
   entry × (1 + `hard_take_profit_pct`/100) → cancel the resting stop and sell-to-close at
   mid immediately, no discretion — the profit is locked the moment it's seen. Enforced
-  software-side by the monitor loop (5-minute granularity): Robinhood holds only one
+  software-side by the monitor loop (3-minute granularity, tightened from 5 min on
+  2026-07-28): Robinhood holds only one
   resting sell per contract and that slot belongs to the stop, so the cap cannot rest
   broker-side. Checked BEFORE the ratchet logic each cycle. Motivated by 2026-07-28: MU,
   AMD, and MRVL puts each peaked between +21% and +35% intraday, then round-tripped to
@@ -206,7 +208,7 @@ heavier theta): the volume bar is the compensation, not optional.
   ratchet is a floor, never a reason to hold through a confirmed breakdown. Record the
   reasoning in the journal every time.
 - **Stop loss (hard floor):** mark ≤ −30% under entry premium → sell-to-close immediately,
-  at mid, repricing toward the bid every 5 minutes until filled. Losers get no discretion.
+  at mid, repricing toward the bid every 3 minutes until filled. Losers get no discretion.
 - **Forced flat:** whatever remains is closed starting 3:40 ET: limit at mid → reprice toward
   bid at 3:48 → by 3:53, cross the spread (limit at bid) to guarantee the fill. All open
   option orders from the strategy are cancelled after the position is flat.

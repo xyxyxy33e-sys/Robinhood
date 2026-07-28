@@ -8,7 +8,7 @@ work the close until flat or 4:00 ET.
 1. Market closed today / half-day: on half-days (1:00 PM close) this must run by 12:30 —
    the premarket run flags half-days in the journal; honor `send_later` reschedules from it.
 2. If fired before 3:25 ET, `send_later` to 3:30 ET and stop. If after 3:55 ET, go straight
-   to §3 crossing logic. The 5-minute monitor loop stands down at 3:25 ET — this runbook
+   to §3 crossing logic. The 3-minute monitor loop stands down at 3:25 ET — this runbook
    owns the position from here; ignore/cancel any monitor re-arm that slips through.
 3. `get_option_positions` (nonzero=true) + `get_option_orders` (today, open states):
    no open position and no working orders → journal "flat, nothing to do", push, stop.
