@@ -59,6 +59,21 @@ today's journal first. All times US/Eastern.
      entry, trailed 30%, computes below the +10% floor) — but as the position runs further
      toward +50%, the HWM-trail component can overtake the floor and raise the stop above
      +10%. Both are expected, not a bug.
+     **Stall-trail (added 2026-07-28, secondary layer, checked every cycle while armed):**
+     classify this cycle's 5-min bar on the underlying as EXTENDING (new local high, still
+     on the trade-direction side of VWAP, volume steady/rising) or STALLING (anything
+     short of that — a lighter bar than the full momentum-broken check below, which needs
+     ALL three conditions against it together). On a STALLING read, also compute HWM × (1
+     − stop_ratchet_stall_trail_pct/100) (10%, vs. the normal 30% trail) and take the
+     higher of it vs. the normal required stop from above. This reacts to a pause the
+     moment it happens rather than waiting for the wider trail or the +10% floor to
+     eventually be crossed. If the resulting level is already at or above the current
+     mark (a sharp single-cycle pullback jumped past it before a stop could be placed),
+     don't attempt to place a stop_market above the live price — instead CANCEL the
+     resting stop and sell-to-close at mid immediately this cycle (same mechanic as the
+     hard-TP cap). Journal which classification applied each cycle while armed ("stall
+     check: EXTENDING/STALLING, tightened stop $X → $Y" or "... sold at mid, stop already
+     breached").
    - **in profit, momentum broken** (5-min bars: lower highs, VWAP lost, volume faded) →
      discretionary sell-to-close per STRATEGY.md §6 — CANCEL the resting order first.
      Journal the reasoning. (Applies armed or not — the ratchet is a floor, not a reason

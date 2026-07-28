@@ -191,6 +191,22 @@ heavier theta): the volume bar is the compensation, not optional.
   position runs further toward +50% the high-water-mark trail can overtake the floor and
   lock in more. The winner keeps running under the discretionary rules below in the
   meantime (motivated by NBIS peaking +113% intraday with the stop still at −30%).
+  **Stall-trail (added 2026-07-28, secondary layer):** every cycle while armed, also
+  classify the latest bar as EXTENDING (new local high, correct side of VWAP, volume
+  steady/rising) or STALLING (anything short of that — a lighter bar than the full
+  momentum-broken check below, which needs lower highs AND VWAP lost AND volume faded
+  together). On a STALLING read, compute HWM × (1 − `stop_ratchet_stall_trail_pct`/100)
+  (10%, vs. the 30% trail above) and take the higher of it vs. the normal required
+  stop — reacting to a pause immediately instead of waiting for the wider trail or the
+  floor to eventually be crossed. If that level is already at/above the current mark,
+  sell to close at mid now rather than trying to rest an unplaceable stop above the
+  live price. Motivation: reconstructing today's own MU/AMD trades against the
+  checkpoint data showed this would have caught MU's stall at 10:26 ET (peaked +35.4%
+  at 10:16, essentially flat at 10:26) and exited ~+22% instead of riding the wider
+  trail/floor down further — an estimated +$538 better across MU+AMD versus the
+  ratchet alone in that reconstruction. Does not replace the discretionary check below,
+  which can still force a full exit on a fully confirmed reversal regardless of where
+  the tightened stop sits.
 - **Hard take-profit — instant sale at +50% (raised 2026-07-28, was +30% for a few
   hours, originally +100%):** mark ≥ entry × (1 + `hard_take_profit_pct`/100) → cancel
   the resting stop and sell-to-close at mid immediately, no discretion — the profit is

@@ -150,6 +150,39 @@ stop_ratchet_trail_pct: 30       # once armed (mark touched the take_profit leve
                                  # longer round-trip below the floor (added 2026-07-21
                                  # after NBIS peaked +113% with the stop still at −30%;
                                  # floor raised from breakeven to +10% on 2026-07-28)
+stop_ratchet_stall_trail_pct: 10 # added 2026-07-28 per user (secondary layer, once
+                                 # armed): at EACH check, classify the latest bar on the
+                                 # underlying as extending (new high, still on the
+                                 # trade-direction side of VWAP, volume steady/rising) or
+                                 # stalling (anything short of that — a lighter bar than
+                                 # the full "momentum broken" discretionary check, which
+                                 # requires ALL of lower highs + VWAP lost + volume faded
+                                 # together). On a stalling read, ALSO compute high-water
+                                 # mark × (1 − this%/100) and take the higher of it vs.
+                                 # the normal required stop (max(take_profit_floor_pct
+                                 # level, HWM × (1 − stop_ratchet_trail_pct/100))) — a much
+                                 # tighter 10% trail instead of 30%, reacting to a pause
+                                 # immediately rather than waiting for the wider trail or
+                                 # the +10% floor to eventually be breached. Stops only
+                                 # move up, so a tightening from one stalling cycle sticks
+                                 # even if the next cycle looks strong again. If the
+                                 # computed level is already at/above the current mark
+                                 # (a sharp single-cycle pullback jumped past it), a
+                                 # stop_market can't be placed above the live price — sell
+                                 # to close at mid immediately instead (same mechanic as
+                                 # the hard-TP cap), cancelling the resting stop first.
+                                 # Motivation: a same-day backtest of today's own MU/AMD
+                                 # trades (using the actual monitor checkpoints) showed
+                                 # this would have caught MU's stall at 10:26 ET (peaked
+                                 # +35.4% at 10:16, essentially flat at 10:26) and exited
+                                 # ~+22% instead of waiting for the 30%-trail/floor-based
+                                 # stop to eventually catch a much larger round-trip down
+                                 # to +10% (or, as actually happened before these rules
+                                 # existed, into a loss) — roughly +$538 better across
+                                 # MU+AMD in that reconstruction. Does not replace the
+                                 # discretionary momentum-broken check below, which can
+                                 # still force a full exit on a fully confirmed reversal
+                                 # even if the tightened stop hasn't been touched yet.
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 
