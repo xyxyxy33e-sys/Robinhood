@@ -20,9 +20,9 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
      was +100%) → CANCEL the resting stop first (verify cancelled), then sell-to-close at
      mid immediately — NO discretion, winners get capped as mechanically as losers get
      stopped. If unfilled in 3 min, reprice toward the bid. Journal the win ("hard TP:
-     sold at $X, +Y%"). **Note:** at +30% this now fires before scale_out_pct (40%) and
-     take_profit_pct (50%) can ever be reached, so those two rules below are effectively
-     dormant unless hard_take_profit_pct is raised again — left in place for that case.
+     sold at $X, +Y%"). **Note:** at +30% this still fires before scale_out_pct (40%) can
+     ever be reached, so that rule stays dormant — but NOT before take_profit_pct (now
+     20%, see below), which arms first and is live.
    - **mark ≥ entry × (1 + scale_out_pct/100), quantity ≥ 2, not yet scaled out today**
      (check the journal for a "SCALED OUT" entry on this position) → partial profit lock
      (added 2026-07-23): CANCEL the resting stop (verify cancelled), sell floor(qty/3)
@@ -44,13 +44,17 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
      cancel the resting stop and re-place it for the full new quantity at the SAME
      stop level (unchanged — floors stay keyed to original entry). Journal
      "RE-ENTERED tranche: bought N @ $X (sold @ $Y), stop re-placed for full qty".
-   - **mark ≥ entry × (1 + take_profit_pct/100)** → the ratchet ARMS (no forced sale).
-     While armed: required stop = max(breakeven entry, high-water mark × (1 −
+   - **mark ≥ entry × (1 + take_profit_pct/100)** (lowered to +20% on 2026-07-28, was
+     50% — "start considering sale") → the ratchet ARMS (no forced sale). While armed:
+     required stop = max(breakeven entry, high-water mark × (1 −
      stop_ratchet_trail_pct/100)), rounded to tick — track the high-water mark from the
      journal's mark history plus this check's quote. If the required stop exceeds the
      current resting stop, CANCEL the resting stop and place the new higher stop_market
      (fresh ref_id, verify `state: confirmed`, record the new order id). Stops only ever
-     move UP. Journal each ratchet ("ratchet: stop $X → $Y, HWM $Z").
+     move UP. Journal each ratchet ("ratchet: stop $X → $Y, HWM $Z"). With only a 20-30%
+     window before the hard-TP cap above, this will typically ratchet straight to
+     breakeven on arming (a HWM at most +30% above entry, trailed 30%, computes below
+     breakeven) — treat that as expected, not a bug.
    - **in profit, momentum broken** (5-min bars: lower highs, VWAP lost, volume faded) →
      discretionary sell-to-close per STRATEGY.md §6 — CANCEL the resting order first.
      Journal the reasoning. (Applies armed or not — the ratchet is a floor, not a reason

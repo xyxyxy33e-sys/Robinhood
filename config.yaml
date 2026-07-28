@@ -95,28 +95,32 @@ scale_out_floor_pct: -15         # after a scale-out fills, the remainder's stop
                                  # most its original size. After the re-buy, the resting
                                  # stop is cancelled and re-placed for the full new
                                  # quantity at the same (unchanged) stop level.
-take_profit_pct: 50              # ratchet trigger: when the mark first touches entry ×
-                                 # (1 + this%), the stop ratchet arms (see below) — the
-                                 # winner keeps running under discretion, no forced sale.
-                                 # NOTE (2026-07-28): with hard_take_profit_pct now at 30
-                                 # (below this level), the ratchet is effectively dead —
-                                 # a position hits the hard-TP instant sale before it can
-                                 # ever reach 50% and arm. Left in place in case
-                                 # hard_take_profit_pct is raised again later.
+take_profit_pct: 20              # ratchet trigger (lowered from 50 to 20 on 2026-07-28
+                                 # per user, same day as the hard-TP change below —
+                                 # "start considering sale" at +20%): when the mark first
+                                 # touches entry × (1 + this%), the stop ratchet arms (see
+                                 # below) — required stop rises toward the high-water
+                                 # mark, tightening the leash, but no forced sale yet. The
+                                 # winner can keep running under this discretion/trailing
+                                 # window between +20% and the +30% hard cap, where it is
+                                 # forced out regardless. Un-dormants the ratchet from
+                                 # its brief window at 50% (which the +30% hard-TP had
+                                 # made unreachable).
 stop_loss_pct: -30               # hard floor: entry premium × (1 + this%)
 hard_take_profit_pct: 30         # instant sale: mark ≥ entry × (1 + this%) → cancel the
                                  # resting stop and sell-to-close at mid NOW, no
                                  # discretion (lowered from 100 to 30 on 2026-07-28 per
                                  # user — today's MU/AMD/MRVL puts each peaked +21% to
                                  # +35% intraday, then round-tripped to breakeven/red
-                                 # before the 50%-ratchet or 100%-hard-TP ever engaged;
-                                 # capturing a solid +30% mechanically, before it can
-                                 # evaporate, was judged more reliable than letting
-                                 # winners run). Software-side via the monitor loop —
+                                 # before the old 50%-ratchet or 100%-hard-TP ever
+                                 # engaged). Software-side via the monitor loop —
                                  # Robinhood holds only one resting sell per contract and
                                  # the stop keeps that slot. Checked BEFORE scale-out and
                                  # the ratchet in the monitor loop, since it now fires
-                                 # first and closes the FULL position.
+                                 # first and closes the FULL position once reached. The
+                                 # +20% ratchet-arm above now gives a live 20%-30% window
+                                 # to trail before the hard cap fires. `scale_out_pct`
+                                 # (40%) remains above the hard cap and is still dormant.
 stop_ratchet_trail_pct: 30       # once armed (mark touched the take_profit level), the
                                  # resting stop is raised to max(breakeven, high-water
                                  # mark × (1 − this%/100)), rounded to tick, and only ever

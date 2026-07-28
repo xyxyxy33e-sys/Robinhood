@@ -175,15 +175,18 @@ heavier theta): the volume bar is the compensation, not optional.
   position may not exceed its original size, and the resting stop is re-placed for
   the full quantity at the unchanged level after the fill. (Agent's strict-bar
   recommendation was declined; risks accepted: chop re-buys and double spread cost.)
-- **Stop ratchet on winners (added 2026-07-21):** touching entry × (1 +
-  `take_profit_pct`/100) does not force a sale — it ARMS the ratchet. From then on the
-  resting stop must sit at max(breakeven entry price, high-water mark × (1 −
-  `stop_ratchet_trail_pct`/100)), rounded to tick; whenever the required level exceeds
-  the current resting stop, the monitor loop cancels-and-replaces it (verify the new stop
-  is confirmed). The stop only ever moves UP. The winner keeps running under the
-  discretionary rules below, but can no longer round-trip below breakeven even if
-  monitoring is interrupted (motivated by NBIS peaking +113% intraday with the stop still
-  at −30%).
+- **Stop ratchet on winners — arms at +20% (lowered from 50% on 2026-07-28, "start
+  considering sale"):** touching entry × (1 + `take_profit_pct`/100) does not force a
+  sale — it ARMS the ratchet. From then on the resting stop must sit at max(breakeven
+  entry price, high-water mark × (1 − `stop_ratchet_trail_pct`/100)), rounded to tick;
+  whenever the required level exceeds the current resting stop, the monitor loop
+  cancels-and-replaces it (verify the new stop is confirmed). The stop only ever moves
+  UP. In practice, with only a 20%-30% window before the hard cap below, a 30% trail off
+  a high-water mark that's at most +30% above entry works out to at or below breakeven —
+  so arming the ratchet effectively guarantees breakeven-or-better the moment a position
+  is up 20%, while the hard cap two steps below still bounds the upside. The winner keeps
+  running under the discretionary rules below in the meantime (motivated by NBIS peaking
+  +113% intraday with the stop still at −30%).
 - **Hard take-profit — instant sale at +30% (lowered 2026-07-28, was +100%):** mark ≥
   entry × (1 + `hard_take_profit_pct`/100) → cancel the resting stop and sell-to-close at
   mid immediately, no discretion — the profit is locked the moment it's seen. Enforced
@@ -193,9 +196,8 @@ heavier theta): the volume bar is the compensation, not optional.
   AMD, and MRVL puts each peaked between +21% and +35% intraday, then round-tripped to
   breakeven or red well before the old +50%/+100% thresholds ever engaged — capturing a
   solid +30% mechanically was judged more reliable than letting winners run through that
-  kind of intraday whipsaw. At +30%, this now fires before `scale_out_pct` (40%) or
-  `take_profit_pct` (50%) can be reached, so the scale-out and ratchet mechanisms below
-  are effectively dormant unless `hard_take_profit_pct` is raised again.
+  kind of intraday whipsaw. `scale_out_pct` (40%) remains above this hard cap and stays
+  dormant — a position is always forced out at +30% before it can reach 40%.
 - **Discretionary profit-taking:** the agent may sell a winner at any gain level — before
   or after the ratchet arms — when momentum breaks (lower highs, VWAP lost, volume faded)
   or into an obvious exhaustion spike — take the gain rather than round-trip it. The
