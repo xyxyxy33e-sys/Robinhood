@@ -74,6 +74,9 @@ scale_out_pct: 40                # partial profit lock (added 2026-07-23 per use
                                  # fill, re-place the resting stop for the REMAINING
                                  # quantity at the same (or ratcheted) stop price.
                                  # 1-contract positions skip this — nothing to split.
+                                 # Re-activated 2026-07-28 (had been dormant while
+                                 # hard_take_profit_pct sat below 40; now the cascade is
+                                 # ratchet-arm 20% → scale-out 40% (qty≥2) → hard-TP 50%).
 scale_out_floor_pct: -15         # after a scale-out fills, the remainder's stop is raised
                                  # to at least entry × (1 + this%/100) (rounded to tick,
                                  # keyed to ORIGINAL entry; stops only move up). Guarantees
@@ -96,43 +99,50 @@ scale_out_floor_pct: -15         # after a scale-out fills, the remainder's stop
                                  # stop is cancelled and re-placed for the full new
                                  # quantity at the same (unchanged) stop level.
 take_profit_pct: 20              # ratchet trigger (lowered from 50 to 20 on 2026-07-28
-                                 # per user, same day as the hard-TP change below —
-                                 # "start considering sale" at +20%): when the mark first
-                                 # touches entry × (1 + this%), the stop ratchet arms (see
-                                 # below) — required stop rises toward the high-water
-                                 # mark, tightening the leash, but no forced sale yet. The
-                                 # winner can keep running under this discretion/trailing
-                                 # window between +20% and the +30% hard cap, where it is
-                                 # forced out regardless. Un-dormants the ratchet from
-                                 # its brief window at 50% (which the +30% hard-TP had
-                                 # made unreachable).
+                                 # per user — "start considering sale" at +20%): when the
+                                 # mark first touches entry × (1 + this%), the stop
+                                 # ratchet arms (see below) — required stop rises toward
+                                 # the high-water mark, tightening the leash, but no
+                                 # forced sale yet. The winner can keep running under this
+                                 # discretion/trailing window between +20% and the hard
+                                 # cap below, where it is forced out regardless.
 stop_loss_pct: -30               # hard floor: entry premium × (1 + this%)
-hard_take_profit_pct: 30         # instant sale: mark ≥ entry × (1 + this%) → cancel the
+hard_take_profit_pct: 50         # instant sale: mark ≥ entry × (1 + this%) → cancel the
                                  # resting stop and sell-to-close at mid NOW, no
-                                 # discretion (lowered from 100 to 30 on 2026-07-28 per
-                                 # user — today's MU/AMD/MRVL puts each peaked +21% to
-                                 # +35% intraday, then round-tripped to breakeven/red
-                                 # before the old 50%-ratchet or 100%-hard-TP ever
-                                 # engaged). Software-side via the monitor loop —
-                                 # Robinhood holds only one resting sell per contract and
-                                 # the stop keeps that slot. Checked BEFORE scale-out and
-                                 # the ratchet in the monitor loop, since it now fires
-                                 # first and closes the FULL position once reached. The
-                                 # +20% ratchet-arm above now gives a live 20%-30% window
-                                 # to trail before the hard cap fires. `scale_out_pct`
-                                 # (40%) remains above the hard cap and is still dormant.
+                                 # discretion. Raised from 30 to 50 on 2026-07-28 per user
+                                 # — a backtest of the prior week's trades showed the
+                                 # +30% cap would have cut several big winners (NBIS ×2,
+                                 # TSLA, SMCI) far short of their eventual/actual exits
+                                 # (e.g. NBIS 7/21: capped at +33% vs the +80% actually
+                                 # banked), costing roughly $1,050 net over the week vs.
+                                 # what a +30% cap would have produced — +30% only clearly
+                                 # helped on 2026-07-28 itself, where MU/AMD/MRVL peaked
+                                 # +21-35% and round-tripped fast. +50% is a middle ground:
+                                 # still well below the old +100% cap that let NBIS run to
+                                 # +113% unprotected on 7/21, but wide enough to not choke
+                                 # off genuine multi-session-type runners. Software-side
+                                 # via the monitor loop — Robinhood holds only one resting
+                                 # sell per contract and the stop keeps that slot. Checked
+                                 # BEFORE scale-out and the ratchet in the monitor loop,
+                                 # since it fires first and closes the FULL position once
+                                 # reached. The +20% ratchet-arm above now gives a live
+                                 # 20%-50% window to trail before the hard cap fires, and
+                                 # `scale_out_pct` (40%) sits live inside that window too.
 take_profit_floor_pct: 10        # added 2026-07-28 per user: once the ratchet is armed
                                  # (mark ≥ entry × (1 + take_profit_pct/100), i.e. +20%),
                                  # the floor is entry × (1 + this%/100) — +10% — instead
                                  # of plain breakeven. Combined with stop_ratchet_trail_pct
                                  # below: required stop = max(entry × 1.10, high-water mark
-                                 # × (1 − stop_ratchet_trail_pct/100)). In the live 20%-30%
-                                 # window (bounded above by hard_take_profit_pct), the HWM
-                                 # can be at most ~30% above entry, so the trail component
-                                 # (≤ entry × 0.91) rarely if ever exceeds this floor — in
-                                 # practice, crossing +20% snaps the stop straight to
-                                 # entry × 1.10 and holds it there until either a +30%
-                                 # hard-TP full exit or a stop-out at +10%.
+                                 # × (1 − stop_ratchet_trail_pct/100)). Even with the
+                                 # 20%-50% window (hard_take_profit_pct raised to 50 the
+                                 # same day), the HWM tops out at +50% above entry, so the
+                                 # trail component (≤ entry × 1.05) still rarely exceeds
+                                 # this +10% floor until the position is well into ratchet
+                                 # territory — in practice, crossing +20% snaps the stop
+                                 # close to entry × 1.10 first, then the HWM trail takes
+                                 # over as the position extends further, until either the
+                                 # +50% hard-TP full exit or a stop-out at the trailed
+                                 # level (floor +10% minimum).
 stop_ratchet_trail_pct: 30       # once armed (mark touched the take_profit level), the
                                  # resting stop is raised to max(take_profit_floor_pct
                                  # level, high-water mark × (1 − this%/100)), rounded to

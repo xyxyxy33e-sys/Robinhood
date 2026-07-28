@@ -149,12 +149,13 @@ heavier theta): the volume bar is the compensation, not optional.
   run does NOT end its turn — it runs ~1-minute quote checks and sells-to-close at mid
   immediately if the mark crosses the stop level, then places the resting stop at 9:45
   sharp and hands off to the normal 3-minute monitor loop.
-- **Partial scale-out at +40% (added 2026-07-23):** on a position holding 2+ contracts,
-  the first touch of entry × (1 + `scale_out_pct`/100) sells floor(quantity/3) contracts
-  (min 1) at mid; the rest keeps the ratchet path. Once per position per day; 1-lot
-  positions skip (nothing to split). Mechanics mirror every other close: cancel the
-  resting stop, place the partial sell, confirm the fill, re-place the stop for the
-  remaining quantity. Checked after the hard take-profit, before the ratchet arm.
+- **Partial scale-out at +40% (added 2026-07-23; re-activated 2026-07-28 now that the
+  hard cap sits above it again):** on a position holding 2+ contracts, the first touch
+  of entry × (1 + `scale_out_pct`/100) sells floor(quantity/3) contracts (min 1) at mid;
+  the rest keeps the ratchet path. Once per position per day; 1-lot positions skip
+  (nothing to split). Mechanics mirror every other close: cancel the resting stop, place
+  the partial sell, confirm the fill, re-place the stop for the remaining quantity.
+  Checked after the hard take-profit, before the ratchet arm.
   Motivation: GOOGL 2026-07-23 peaked +44.1% — under the +50% ratchet arm — then
   round-tripped to −3.9% with nothing locked; a one-third sale at +40% both banks the
   mid-size winner and insures the round-trip. The cost is a slice of uncapped runners
@@ -184,24 +185,30 @@ heavier theta): the volume bar is the compensation, not optional.
   the current resting stop, the monitor loop cancels-and-replaces it (verify the new stop
   is confirmed). The stop only ever moves UP. The floor was raised from plain breakeven
   to +10% on 2026-07-28 (per user) — once a position is up 20%, the worst outcome is now
-  a +10% win, not a scratch. In practice, with only a 20%-30% window before the hard cap
-  below, a 30% trail off a high-water mark that's at most +30% above entry rarely if
-  ever exceeds the +10% floor — so arming the ratchet effectively snaps the stop straight
-  to entry × 1.10 and holds it there, while the hard cap two steps above still bounds the
-  upside. The winner keeps running under the discretionary rules below in the meantime
-  (motivated by NBIS peaking +113% intraday with the stop still at −30%).
-- **Hard take-profit — instant sale at +30% (lowered 2026-07-28, was +100%):** mark ≥
-  entry × (1 + `hard_take_profit_pct`/100) → cancel the resting stop and sell-to-close at
-  mid immediately, no discretion — the profit is locked the moment it's seen. Enforced
-  software-side by the monitor loop (3-minute granularity, tightened from 5 min on
-  2026-07-28): Robinhood holds only one
-  resting sell per contract and that slot belongs to the stop, so the cap cannot rest
-  broker-side. Checked BEFORE the ratchet logic each cycle. Motivated by 2026-07-28: MU,
-  AMD, and MRVL puts each peaked between +21% and +35% intraday, then round-tripped to
-  breakeven or red well before the old +50%/+100% thresholds ever engaged — capturing a
-  solid +30% mechanically was judged more reliable than letting winners run through that
-  kind of intraday whipsaw. `scale_out_pct` (40%) remains above this hard cap and stays
-  dormant — a position is always forced out at +30% before it can reach 40%.
+  a +10% win, not a scratch. With the hard cap now at +50% (raised same day, see below),
+  the live window is 20%-50%: early in that range the +10% floor dominates the required
+  stop (a 30% trail off a HWM only modestly above entry computes below +10%), but as the
+  position runs further toward +50% the high-water-mark trail can overtake the floor and
+  lock in more. The winner keeps running under the discretionary rules below in the
+  meantime (motivated by NBIS peaking +113% intraday with the stop still at −30%).
+- **Hard take-profit — instant sale at +50% (raised 2026-07-28, was +30% for a few
+  hours, originally +100%):** mark ≥ entry × (1 + `hard_take_profit_pct`/100) → cancel
+  the resting stop and sell-to-close at mid immediately, no discretion — the profit is
+  locked the moment it's seen. Enforced software-side by the monitor loop (3-minute
+  granularity): Robinhood holds only one resting sell per contract and that slot belongs
+  to the stop, so the cap cannot rest broker-side. Checked BEFORE scale-out and the
+  ratchet logic each cycle. History: dropped from +100% to +30% earlier on 2026-07-28
+  after MU/AMD/MRVL puts each peaked +21-35% intraday then round-tripped to breakeven/red
+  before the old thresholds ever engaged. But a same-day backtest against the prior
+  week's trades (7/20-7/24) showed +30% would have cut several big winners far short of
+  their actual/eventual exits (NBIS 7/21: capped ~+33% vs. the +80% actually banked;
+  TSLA 7/23: ~+44% vs. +87%; SMCI 7/22: ~+38% vs. +67%) — a net shortfall of roughly
+  $1,050 over that week versus what actually happened, since most big winners kept
+  extending well past +30% before any real reversal. **+50% is the compromise**: still a
+  meaningful improvement over the old +100% cap (which let NBIS run to +113% completely
+  unprotected on 7/21), while giving genuine multi-session-type runners more room than
+  +30% before being forced out. `scale_out_pct` (40%) now sits live inside the 20%-50%
+  window (no longer dormant) and is checked between hard-TP and the ratchet.
 - **Discretionary profit-taking:** the agent may sell a winner at any gain level — before
   or after the ratchet arms — when momentum breaks (lower highs, VWAP lost, volume faded)
   or into an obvious exhaustion spike — take the gain rather than round-trip it. The

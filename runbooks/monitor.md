@@ -17,16 +17,17 @@ today's journal first. All times US/Eastern.
    - **mark ≤ entry × (1 + stop_loss_pct/100)** (when the stop is software-side) → CANCEL
      the resting order first, then close NOW per exit runbook §2 (limit at mid, reprice to
      bid after 3 min, no discretion). Journal the stop-out.
-   - **mark ≥ entry × (1 + hard_take_profit_pct/100)** (lowered to +30% on 2026-07-28,
-     was +100%) → CANCEL the resting stop first (verify cancelled), then sell-to-close at
-     mid immediately — NO discretion, winners get capped as mechanically as losers get
-     stopped. If unfilled in 3 min, reprice toward the bid. Journal the win ("hard TP:
-     sold at $X, +Y%"). **Note:** at +30% this still fires before scale_out_pct (40%) can
-     ever be reached, so that rule stays dormant — but NOT before take_profit_pct (now
-     20%, see below), which arms first and is live.
+   - **mark ≥ entry × (1 + hard_take_profit_pct/100)** (raised to +50% on 2026-07-28,
+     briefly +30% earlier that day, originally +100%) → CANCEL the resting stop first
+     (verify cancelled), then sell-to-close at mid immediately — NO discretion, winners
+     get capped as mechanically as losers get stopped. If unfilled in 3 min, reprice
+     toward the bid. Journal the win ("hard TP: sold at $X, +Y%"). **Note:** at +50% both
+     `take_profit_pct` (20%, arms the ratchet) and `scale_out_pct` (40%) sit live inside
+     this window and are checked before the position could ever reach the hard cap.
    - **mark ≥ entry × (1 + scale_out_pct/100), quantity ≥ 2, not yet scaled out today**
      (check the journal for a "SCALED OUT" entry on this position) → partial profit lock
-     (added 2026-07-23): CANCEL the resting stop (verify cancelled), sell floor(qty/3)
+     (added 2026-07-23, re-activated 2026-07-28): CANCEL the resting stop (verify
+     cancelled), sell floor(qty/3)
      contracts (min 1) limit at mid — reprice toward the bid after 3 min if unfilled —
      then re-place the resting stop for the REMAINING quantity at max(previous stop,
      entry × (1 + scale_out_floor_pct/100)) rounded to tick — the −15% floor keyed to
@@ -53,10 +54,11 @@ today's journal first. All times US/Eastern.
      check's quote. If the required stop exceeds the current resting stop, CANCEL the
      resting stop and place the new higher stop_market (fresh ref_id, verify `state:
      confirmed`, record the new order id). Stops only ever move UP. Journal each ratchet
-     ("ratchet: stop $X → $Y, HWM $Z"). With only a 20-30% window before the hard-TP cap
-     above, this will typically ratchet straight to entry × 1.10 on arming (a HWM at most
-     +30% above entry, trailed 30%, computes below the +10% floor) — treat that as
-     expected, not a bug.
+     ("ratchet: stop $X → $Y, HWM $Z"). With a 20-50% window before the hard-TP cap above,
+     arming typically snaps the stop to entry × 1.10 first (a HWM only modestly above
+     entry, trailed 30%, computes below the +10% floor) — but as the position runs further
+     toward +50%, the HWM-trail component can overtake the floor and raise the stop above
+     +10%. Both are expected, not a bug.
    - **in profit, momentum broken** (5-min bars: lower highs, VWAP lost, volume faded) →
      discretionary sell-to-close per STRATEGY.md §6 — CANCEL the resting order first.
      Journal the reasoning. (Applies armed or not — the ratchet is a floor, not a reason
