@@ -7,9 +7,8 @@ All times US/Eastern. Account = `account_number` from config.
 1. Trading day check (same as premarket). Market closed → journal, push, stop.
 2. Time check: if before 9:35 ET, schedule a self check-in (`send_later`) for 9:35 ET and
    stop; if after 1:30 PM ET, skip the day (momentum entries decay) — journal why.
-3. `get_option_positions` (nonzero=true): split by option_type. If open calls ≥
-   `max_open_calls` AND open puts ≥ `max_open_puts`, stop (no room in either bucket).
-   Otherwise continue — the surviving bucket(s) may still take a new entry.
+3. `get_option_positions` (nonzero=true): count total open positions (calls + puts
+   combined). If total ≥ `max_open_positions`, stop (no room). Otherwise continue.
 4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
    order is already working. Also check today's journal — if an entry was already made
    today (max_new_positions_per_day), stop.
@@ -37,9 +36,9 @@ All times US/Eastern. Account = `account_number` from config.
    Accept that the 9:30–9:35 window trades on pre-market conviction with less confirmation.
 4. `get_earnings_results` on finalists — reject if earnings before option expiry.
 5. Rank the qualifiers (catalyst > relative volume > tape), calls and puts together, and
-   take **up to (max_open_calls − currently open calls)** call qualifiers and **up to
-   (max_open_puts − currently open puts)** put qualifiers, best first within each
-   direction — each independently passing every gate in §2–§3. Re-entering a symbol
+   take **up to (max_open_positions − currently open positions total)** qualifiers, best
+   first across BOTH directions combined (no fixed split between calls and puts) — each
+   independently passing every gate in §2–§3. Re-entering a symbol
    already open, or one closed earlier today (including after a stop-out), is allowed —
    the only same-symbol restriction is never both a call and a put on the same underlying
    at once. A symbol closed earlier today for a PROFIT ranks first among qualifiers

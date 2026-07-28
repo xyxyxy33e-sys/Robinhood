@@ -34,8 +34,11 @@ max_premium_per_trade_pct_of_daily_start: 25
                                  # max_premium_per_trade = $2,571.72 for the rest of today.
 # Contracts per trade: quantity = floor(max_premium_per_trade / (premium × 100)),
 # minimum 1 — multiple contracts of the same call (or put) are allowed.
-max_open_calls: 5                # up to 5 concurrent call positions...
-max_open_puts: 5                 # ...and up to 5 concurrent put positions (up to 10 total).
+max_open_positions: 6            # combined cap across calls AND puts together (changed
+                                 # 2026-07-28 per user from separate max_open_calls=5 /
+                                 # max_open_puts=5 [10 total] back to a single combined
+                                 # limit — up to 6 total open positions, any mix of calls
+                                 # and puts, no fixed split between the two).
                                  # Re-entering the same underlying is allowed — no
                                  # one-position-per-symbol limit and no "never re-buy after
                                  # a stop-out" rule (both removed 2026-07-21 per user
