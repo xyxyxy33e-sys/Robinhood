@@ -16,10 +16,13 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
    - **mark ≤ entry × (1 + stop_loss_pct/100)** (when the stop is software-side) → CANCEL
      the resting order first, then close NOW per exit runbook §2 (limit at mid, reprice to
      bid after 3 min, no discretion). Journal the stop-out.
-   - **mark ≥ entry × (1 + hard_take_profit_pct/100)** (position doubled) → CANCEL the
-     resting stop first (verify cancelled), then sell-to-close at mid immediately — NO
-     discretion, winners get capped as mechanically as losers get stopped. If unfilled in
-     3 min, reprice toward the bid. Journal the win ("hard TP: doubled, sold at $X").
+   - **mark ≥ entry × (1 + hard_take_profit_pct/100)** (lowered to +30% on 2026-07-28,
+     was +100%) → CANCEL the resting stop first (verify cancelled), then sell-to-close at
+     mid immediately — NO discretion, winners get capped as mechanically as losers get
+     stopped. If unfilled in 3 min, reprice toward the bid. Journal the win ("hard TP:
+     sold at $X, +Y%"). **Note:** at +30% this now fires before scale_out_pct (40%) and
+     take_profit_pct (50%) can ever be reached, so those two rules below are effectively
+     dormant unless hard_take_profit_pct is raised again — left in place for that case.
    - **mark ≥ entry × (1 + scale_out_pct/100), quantity ≥ 2, not yet scaled out today**
      (check the journal for a "SCALED OUT" entry on this position) → partial profit lock
      (added 2026-07-23): CANCEL the resting stop (verify cancelled), sell floor(qty/3)

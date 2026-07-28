@@ -97,14 +97,26 @@ scale_out_floor_pct: -15         # after a scale-out fills, the remainder's stop
                                  # quantity at the same (unchanged) stop level.
 take_profit_pct: 50              # ratchet trigger: when the mark first touches entry ×
                                  # (1 + this%), the stop ratchet arms (see below) — the
-                                 # winner keeps running under discretion, no forced sale
+                                 # winner keeps running under discretion, no forced sale.
+                                 # NOTE (2026-07-28): with hard_take_profit_pct now at 30
+                                 # (below this level), the ratchet is effectively dead —
+                                 # a position hits the hard-TP instant sale before it can
+                                 # ever reach 50% and arm. Left in place in case
+                                 # hard_take_profit_pct is raised again later.
 stop_loss_pct: -30               # hard floor: entry premium × (1 + this%)
-hard_take_profit_pct: 100        # instant sale: mark ≥ entry × (1 + this%) → cancel the
+hard_take_profit_pct: 30         # instant sale: mark ≥ entry × (1 + this%) → cancel the
                                  # resting stop and sell-to-close at mid NOW, no
-                                 # discretion (added 2026-07-21 per user: lock the profit
-                                 # the moment a position doubles). Software-side via the
-                                 # monitor loop — Robinhood holds only one resting sell
-                                 # per contract and the stop keeps that slot.
+                                 # discretion (lowered from 100 to 30 on 2026-07-28 per
+                                 # user — today's MU/AMD/MRVL puts each peaked +21% to
+                                 # +35% intraday, then round-tripped to breakeven/red
+                                 # before the 50%-ratchet or 100%-hard-TP ever engaged;
+                                 # capturing a solid +30% mechanically, before it can
+                                 # evaporate, was judged more reliable than letting
+                                 # winners run). Software-side via the monitor loop —
+                                 # Robinhood holds only one resting sell per contract and
+                                 # the stop keeps that slot. Checked BEFORE scale-out and
+                                 # the ratchet in the monitor loop, since it now fires
+                                 # first and closes the FULL position.
 stop_ratchet_trail_pct: 30       # once armed (mark touched the take_profit level), the
                                  # resting stop is raised to max(breakeven, high-water
                                  # mark × (1 − this%/100)), rounded to tick, and only ever

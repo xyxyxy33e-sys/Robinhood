@@ -184,12 +184,18 @@ heavier theta): the volume bar is the compensation, not optional.
   discretionary rules below, but can no longer round-trip below breakeven even if
   monitoring is interrupted (motivated by NBIS peaking +113% intraday with the stop still
   at −30%).
-- **Hard take-profit — instant sale on a double (added 2026-07-21):** mark ≥ entry ×
-  (1 + `hard_take_profit_pct`/100) → cancel the resting stop and sell-to-close at mid
-  immediately, no discretion — the profit is locked the moment it's seen. Enforced
+- **Hard take-profit — instant sale at +30% (lowered 2026-07-28, was +100%):** mark ≥
+  entry × (1 + `hard_take_profit_pct`/100) → cancel the resting stop and sell-to-close at
+  mid immediately, no discretion — the profit is locked the moment it's seen. Enforced
   software-side by the monitor loop (5-minute granularity): Robinhood holds only one
   resting sell per contract and that slot belongs to the stop, so the cap cannot rest
-  broker-side. Checked BEFORE the ratchet logic each cycle.
+  broker-side. Checked BEFORE the ratchet logic each cycle. Motivated by 2026-07-28: MU,
+  AMD, and MRVL puts each peaked between +21% and +35% intraday, then round-tripped to
+  breakeven or red well before the old +50%/+100% thresholds ever engaged — capturing a
+  solid +30% mechanically was judged more reliable than letting winners run through that
+  kind of intraday whipsaw. At +30%, this now fires before `scale_out_pct` (40%) or
+  `take_profit_pct` (50%) can be reached, so the scale-out and ratchet mechanisms below
+  are effectively dormant unless `hard_take_profit_pct` is raised again.
 - **Discretionary profit-taking:** the agent may sell a winner at any gain level — before
   or after the ratchet arms — when momentum breaks (lower highs, VWAP lost, volume faded)
   or into an obvious exhaustion spike — take the gain rather than round-trip it. The
