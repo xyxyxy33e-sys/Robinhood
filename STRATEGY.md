@@ -177,16 +177,18 @@ heavier theta): the volume bar is the compensation, not optional.
   recommendation was declined; risks accepted: chop re-buys and double spread cost.)
 - **Stop ratchet on winners — arms at +20% (lowered from 50% on 2026-07-28, "start
   considering sale"):** touching entry × (1 + `take_profit_pct`/100) does not force a
-  sale — it ARMS the ratchet. From then on the resting stop must sit at max(breakeven
-  entry price, high-water mark × (1 − `stop_ratchet_trail_pct`/100)), rounded to tick;
-  whenever the required level exceeds the current resting stop, the monitor loop
-  cancels-and-replaces it (verify the new stop is confirmed). The stop only ever moves
-  UP. In practice, with only a 20%-30% window before the hard cap below, a 30% trail off
-  a high-water mark that's at most +30% above entry works out to at or below breakeven —
-  so arming the ratchet effectively guarantees breakeven-or-better the moment a position
-  is up 20%, while the hard cap two steps below still bounds the upside. The winner keeps
-  running under the discretionary rules below in the meantime (motivated by NBIS peaking
-  +113% intraday with the stop still at −30%).
+  sale — it ARMS the ratchet. From then on the resting stop must sit at
+  max(entry × (1 + `take_profit_floor_pct`/100), high-water mark × (1 −
+  `stop_ratchet_trail_pct`/100)), rounded to tick; whenever the required level exceeds
+  the current resting stop, the monitor loop cancels-and-replaces it (verify the new stop
+  is confirmed). The stop only ever moves UP. The floor was raised from plain breakeven
+  to +10% on 2026-07-28 (per user) — once a position is up 20%, the worst outcome is now
+  a +10% win, not a scratch. In practice, with only a 20%-30% window before the hard cap
+  below, a 30% trail off a high-water mark that's at most +30% above entry rarely if
+  ever exceeds the +10% floor — so arming the ratchet effectively snaps the stop straight
+  to entry × 1.10 and holds it there, while the hard cap two steps above still bounds the
+  upside. The winner keeps running under the discretionary rules below in the meantime
+  (motivated by NBIS peaking +113% intraday with the stop still at −30%).
 - **Hard take-profit — instant sale at +30% (lowered 2026-07-28, was +100%):** mark ≥
   entry × (1 + `hard_take_profit_pct`/100) → cancel the resting stop and sell-to-close at
   mid immediately, no discretion — the profit is locked the moment it's seen. Enforced

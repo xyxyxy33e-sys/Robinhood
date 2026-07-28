@@ -121,12 +121,25 @@ hard_take_profit_pct: 30         # instant sale: mark ≥ entry × (1 + this%) �
                                  # +20% ratchet-arm above now gives a live 20%-30% window
                                  # to trail before the hard cap fires. `scale_out_pct`
                                  # (40%) remains above the hard cap and is still dormant.
+take_profit_floor_pct: 10        # added 2026-07-28 per user: once the ratchet is armed
+                                 # (mark ≥ entry × (1 + take_profit_pct/100), i.e. +20%),
+                                 # the floor is entry × (1 + this%/100) — +10% — instead
+                                 # of plain breakeven. Combined with stop_ratchet_trail_pct
+                                 # below: required stop = max(entry × 1.10, high-water mark
+                                 # × (1 − stop_ratchet_trail_pct/100)). In the live 20%-30%
+                                 # window (bounded above by hard_take_profit_pct), the HWM
+                                 # can be at most ~30% above entry, so the trail component
+                                 # (≤ entry × 0.91) rarely if ever exceeds this floor — in
+                                 # practice, crossing +20% snaps the stop straight to
+                                 # entry × 1.10 and holds it there until either a +30%
+                                 # hard-TP full exit or a stop-out at +10%.
 stop_ratchet_trail_pct: 30       # once armed (mark touched the take_profit level), the
-                                 # resting stop is raised to max(breakeven, high-water
-                                 # mark × (1 − this%/100)), rounded to tick, and only ever
-                                 # moves UP — a big winner can no longer round-trip below
-                                 # breakeven (added 2026-07-21 after NBIS peaked +113%
-                                 # with the stop still at −30%)
+                                 # resting stop is raised to max(take_profit_floor_pct
+                                 # level, high-water mark × (1 − this%/100)), rounded to
+                                 # tick, and only ever moves UP — a big winner can no
+                                 # longer round-trip below the floor (added 2026-07-21
+                                 # after NBIS peaked +113% with the stop still at −30%;
+                                 # floor raised from breakeven to +10% on 2026-07-28)
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 
