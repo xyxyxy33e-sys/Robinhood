@@ -55,7 +55,31 @@ dte_max: 21                      # preferred window...
 dte_max_no_weekly: 45            # ...but when an underlying has NO expiry in [dte_min,
                                  # dte_max] (monthly-only chains like TRV), the nearest
                                  # monthly up to this DTE is allowed (user-approved 2026-07-17)
-min_open_interest: 500
+min_open_interest: 500           # NOTE (added 2026-07-29): open interest visibly LAGS on
+                                 # earnings-reaction names — it updates once daily after
+                                 # settlement, so a name that gapped hard this morning on
+                                 # a real catalyst can still be sitting on yesterday's
+                                 # (pre-earnings-expectation) OI all session. Observed
+                                 # repeatedly on 2026-07-28/29: GNRC OI 7, VRT 33-65,
+                                 # GEHC 25-171, STX 23-93, BIIB 23-35 — all well-covered,
+                                 # real, catalyst-confirmed tape moves (STX even cleared
+                                 # its session open on rising volume by 1 PM ET) but with
+                                 # option chains that never came close to this gate.
+                                 # Checked whether lowering this threshold would help:
+                                 # in every single observed case, the SAME contract also
+                                 # failed `max_spread_pct_of_mid` (10%) independently —
+                                 # e.g. GEHC $71C 53% spread, BIIB $210C 81%, STX's
+                                 # various strikes 16-28% — often much more dramatically
+                                 # than it failed OI. Thin OI and wide spreads move
+                                 # together (both reflect the same lack of market-maker
+                                 # interest in that specific contract); lowering this gate
+                                 # alone would not have unlocked any of these trades, only
+                                 # admitted worse execution (thin quoted size, real
+                                 # slippage/market-impact risk sizing a position against
+                                 # single/low-double-digit bid/ask sizes, worse odds of a
+                                 # clean exit later). Left at 500 — revisit only if a case
+                                 # emerges where OI fails but spread would independently
+                                 # clear, which hasn't happened yet.
 max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
 
 # --- Intraday risk -----------------------------------------------------------
