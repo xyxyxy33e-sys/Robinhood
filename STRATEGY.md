@@ -207,6 +207,17 @@ heavier theta): the volume bar is the compensation, not optional.
   ratchet alone in that reconstruction. Does not replace the discretionary check below,
   which can still force a full exit on a fully confirmed reversal regardless of where
   the tightened stop sits.
+- **Early floor, pre-arm (added 2026-07-30):** covers the gap below the +20% ratchet
+  entirely. Once the mark first touches entry × (1 + `early_floor_trigger_pct`/100)
+  (+8%), the required stop rises to entry × (1 + `early_floor_pct`/100) (−3%, just
+  below breakeven to leave slippage room) — far short of the full ratchet's +10%
+  floor, but enough to stop a genuine early pop from fully round-tripping into a loss.
+  Stops only move up; superseded the moment the +20% ratchet arms (its floor is
+  already higher). Motivation: on 2026-07-30, AMD peaked +11.5% and MSFT's second
+  entry peaked +8.44% — both real, thesis-confirming moves — then ground down on
+  theta for close to an hour without ever reaching +20%, giving back the entire move
+  plus more before the stop_loss floor finally caught them (-$1,020 and -$1,280).
+  Nothing between 0% and +20% existed to protect either.
 - **Hard take-profit — instant sale at +50% (raised 2026-07-28, was +30% for a few
   hours, originally +100%):** mark ≥ entry × (1 + `hard_take_profit_pct`/100) → cancel
   the resting stop and sell-to-close at mid immediately, no discretion — the profit is

@@ -74,6 +74,17 @@ today's journal first. All times US/Eastern.
      hard-TP cap). Journal which classification applied each cycle while armed ("stall
      check: EXTENDING/STALLING, tightened stop $X → $Y" or "... sold at mid, stop already
      breached").
+   - **Early floor (added 2026-07-30, pre-arm only — a no-op once the ratchet above has
+     armed): mark ≥ entry × (1 + early_floor_trigger_pct/100)** (+8%, first touch) →
+     required stop = entry × (1 + early_floor_pct/100) (-3%, i.e. just below breakeven).
+     If this exceeds the current resting stop, CANCEL and place the new higher
+     stop_market same as the ratchet (fresh ref_id, verify confirmed). Stops only ever
+     move UP. Motivated by AMD and MSFT's failed leader re-entry on 2026-07-30, both of
+     which peaked +8-11.5% — real, thesis-confirming pops — then ground down on theta for
+     nearly an hour without ever reaching the +20% arm level, round-tripping all the way
+     to the stop_loss floor with zero protection in between. Journal ("early floor: stop
+     $X → $Y"). Once take_profit_pct (+20%) arms, its floor (+10%) is already higher than
+     this one, so no conflict — just check the ratchet first each cycle.
    - **in profit, momentum broken** (5-min bars: lower highs, VWAP lost, volume faded) →
      discretionary sell-to-close per STRATEGY.md §6 — CANCEL the resting order first.
      Journal the reasoning. (Applies armed or not — the ratchet is a floor, not a reason

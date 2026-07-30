@@ -215,6 +215,27 @@ stop_ratchet_stall_trail_pct: 10 # added 2026-07-28 per user (secondary layer, o
                                  # discretionary momentum-broken check below, which can
                                  # still force a full exit on a fully confirmed reversal
                                  # even if the tightened stop hasn't been touched yet.
+early_floor_trigger_pct: 8       # added 2026-07-30 per user, after AMD (peaked +11.5%,
+                                 # never armed the +20% ratchet, ground down on theta for
+                                 # ~an hour, round-tripped to a full stop-out) and MSFT's
+                                 # failed leader re-entry (peaked +8.44%, same story) both
+                                 # gave back a real early gain with zero protection between
+                                 # 0% and the +20% arm level. Once the mark FIRST touches
+                                 # entry × (1 + this%/100), raise the required stop to
+                                 # entry × (1 + early_floor_pct/100) (see below) — a much
+                                 # lower bar than the full ratchet, just enough to stop a
+                                 # genuine early pop from fully round-tripping into a loss.
+                                 # Stops only move up, same as the ratchet; superseded once
+                                 # take_profit_pct (+20%) arms the full ratchet/stall-trail,
+                                 # whose floor (take_profit_floor_pct, +10%) is higher
+                                 # anyway. Checked in the monitor loop after hard-TP/
+                                 # scale-out/ratchet-arm but before plain "otherwise hold" —
+                                 # only applies pre-arm; a no-op once armed.
+early_floor_pct: -3              # floor level once early_floor_trigger_pct is touched —
+                                 # set slightly below breakeven (not exactly 0) to leave
+                                 # slippage room so the stop_market mechanism itself
+                                 # doesn't whipsaw the position out right at the breakeven
+                                 # knife-edge (same slippage lesson as stop_loss_pct above).
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 
