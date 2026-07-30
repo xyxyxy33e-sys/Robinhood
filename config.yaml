@@ -130,7 +130,15 @@ take_profit_pct: 20              # ratchet trigger (lowered from 50 to 20 on 202
                                  # forced sale yet. The winner can keep running under this
                                  # discretion/trailing window between +20% and the hard
                                  # cap below, where it is forced out regardless.
-stop_loss_pct: -30               # hard floor: entry premium × (1 + this%)
+stop_loss_pct: -25               # hard floor: entry premium × (1 + this%). Tightened from
+                                 # -30 to -25 on 2026-07-30 per user, after discussing
+                                 # today's MSFT #2 stop-out: the stop_market trigger fired
+                                 # correctly at exactly -30% ($5.60) but filled at $4.80
+                                 # (-40%) due to ordinary slippage on a fast-moving
+                                 # underlying — stop_market guarantees the exit, not the
+                                 # fill price. Tightening the trigger to -25% gives more
+                                 # cushion against that gap before the position reaches an
+                                 # unacceptable actual loss.
 hard_take_profit_pct: 50         # instant sale: mark ≥ entry × (1 + this%) → cancel the
                                  # resting stop and sell-to-close at mid NOW, no
                                  # discretion. Raised from 30 to 50 on 2026-07-28 per user
