@@ -59,6 +59,11 @@ All times US/Eastern. Account = `account_number` from config.
    journal) — read it from there, don't recompute mid-day. Not capped or scaled by live
    buying power; if settled cash is actually insufficient the order will be rejected at
    placement — treat that as a hard stop for the underlying, don't chase a smaller size.
+   **Notify the user directly** when this happens for a candidate that otherwise fully
+   qualified (tape + liquidity gates both passed) — don't just log it in the journal and
+   move on silently (added 2026-07-30, after a genuine MSFT setup was rejected on
+   `OPTION_NOT_ENOUGH_BP_FOR_PREMIUM` with buying power tied up in T+1-settling proceeds
+   from earlier same-day closes). Journal it either way.
    Gates fail ATM → next strike further out-of-the-money once → otherwise next candidate.
 4. **OI is static intraday (learned 2026-07-24):** open interest updates once daily,
    after settlement — a strike that fails the OI gate stays failed ALL DAY no matter how
