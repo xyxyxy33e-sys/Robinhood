@@ -236,6 +236,16 @@ early_floor_pct: -3              # floor level once early_floor_trigger_pct is t
                                  # slippage room so the stop_market mechanism itself
                                  # doesn't whipsaw the position out right at the breakeven
                                  # knife-edge (same slippage lesson as stop_loss_pct above).
+                                 # Backtested 2026-07-30 against the prior two weeks (19
+                                 # trades, 07/16-07/30): would have improved 4 trades that
+                                 # touched +8% but never armed the ratchet before round-
+                                 # tripping into a loss (IREN 7/21, NBIS 7/22, and the two
+                                 # motivating trades AMD + MSFT 7/30) for +$2,423 combined
+                                 # (2% slippage assumed past trigger), with 11 other trades
+                                 # unaffected (already governed by the ratchet at +20%+)
+                                 # and zero winners found where the floor would have clipped
+                                 # a later recovery — every early dip below -3% in the
+                                 # sample happened before the position ever touched +8%.
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 
