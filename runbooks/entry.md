@@ -98,9 +98,15 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
        tick, GFD. Monitor loop handles the stop in software.
      **9:30–9:45 blackout:** Robinhood rejects stop_market before 9:45 ET
      (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`). If the fill lands before 9:45, do
-     NOT end the turn unprotected — run ~1-minute software stop checks (get_option_quotes;
-     mark ≤ stop level → sell-to-close at mid immediately), then place the resting stop at
-     9:45 sharp and confirm it before proceeding.
+     NOT end the turn unprotected — run software stop checks every
+     `blackout_stop_check_interval_sec` (get_option_quotes; mark ≤ stop level →
+     sell-to-close at mid immediately) rather than waiting for the next full monitor
+     cycle, then place the resting stop at 9:45 sharp and confirm it before proceeding.
+     Tightened from ~60s to 30s on 2026-07-31 after AAPL entered at 9:39:46, reversed
+     hard, and had already blown through -25% to -39.6% by the time a check could act —
+     the same blackout-window gap that caused MSFT's slippage earlier in the week. A
+     faster check narrows the window between breach and reaction; it does not eliminate
+     ordinary stop_market slippage (fill vs. trigger price) once a sell is placed.
      Quantity = the full filled position quantity. Fresh ref_id; covered by the same
      standing authorization as the entry. Record the order id in the journal — every later
      close must CANCEL this order first.

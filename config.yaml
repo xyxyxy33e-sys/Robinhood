@@ -85,6 +85,15 @@ max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
 # --- Intraday risk -----------------------------------------------------------
 # Robinhood holds only ONE sell order per contract (no OCO for options), so only one of
 # the two protective orders can rest broker-side; the monitor loop enforces the other.
+blackout_stop_check_interval_sec: 30
+                                 # Tightened from ~60 to 30 on 2026-07-31: during the
+                                 # 9:30-9:45 stop_market blackout (Robinhood rejects the
+                                 # resting stop until 9:45), entry.md §4 runs software-side
+                                 # stop checks at this cadence instead of waiting a full
+                                 # minute. Motivated by AAPL (2026-07-31): entered 9:39:46,
+                                 # reversed hard, already at -39.6% by the next check —
+                                 # a faster loop narrows breach-to-reaction time. Does not
+                                 # remove ordinary stop_market slippage once a sell fires.
 resting_order_type: "stop_loss"  # "stop_loss" (default: resting stop_market at the stop
                                  # level; monitor handles profit-taking) or "take_profit"
                                  # (resting sell limit at the target; monitor handles stops)

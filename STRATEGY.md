@@ -146,9 +146,12 @@ heavier theta): the volume bar is the compensation, not optional.
 - **9:30–9:45 stop blackout:** Robinhood rejects stop_market orders in the first 15
   minutes after the open (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`, observed
   2026-07-21). An entry filled before 9:45 is protected in software until then: the entry
-  run does NOT end its turn — it runs ~1-minute quote checks and sells-to-close at mid
-  immediately if the mark crosses the stop level, then places the resting stop at 9:45
-  sharp and hands off to the normal 3-minute monitor loop.
+  run does NOT end its turn — it runs quote checks every `blackout_stop_check_interval_sec`
+  (tightened from ~60s to 30s on 2026-07-31, after AAPL entered 9:39:46, reversed hard, and
+  was already at -39.6% before a ~60s-cadence check could catch it) and sells-to-close at
+  mid immediately if the mark crosses the stop level, then places the resting stop at 9:45
+  sharp and hands off to the normal 3-minute monitor loop. A faster check narrows the
+  breach-to-reaction gap; it does not remove ordinary stop_market slippage once a sell fires.
 - **Partial scale-out at +40% (added 2026-07-23; re-activated 2026-07-28 now that the
   hard cap sits above it again):** on a position holding 2+ contracts, the first touch
   of entry × (1 + `scale_out_pct`/100) sells floor(quantity/3) contracts (min 1) at mid;
