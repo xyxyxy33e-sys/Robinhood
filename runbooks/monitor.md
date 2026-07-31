@@ -14,6 +14,26 @@ today's journal first. All times US/Eastern.
    cancel the resting order, journal the user's fill from get_option_orders, treat as flat.
 3. For each open strategy position, `get_option_quotes`. Software-side of whichever
    protection is NOT resting (per `resting_order_type`):
+   **Quote-depth gate (added 2026-07-31, applies to every stop_market cancel+replace
+   below — ratchet-arm, stall-trail, early floor):** immediately before cancelling the
+   resting stop and placing a new one, re-`get_option_quotes` fresh (don't reuse the
+   read from earlier this cycle — it may be stale by the time cancel+place executes)
+   and require `bid_size ≥ min_quote_size_for_stop_update` AND
+   `ask_size ≥ min_quote_size_for_stop_update`. If either side is thinner than that,
+   the quote is too thin to trust for firing a stop_market — do NOT cancel/replace
+   this cycle; leave the current resting stop exactly where it is (it still fully
+   protects the position, just hasn't been raised yet) and journal "ratchet would
+   raise stop to $Y but quote too thin (bid Xc/ask Yc) — holding at $Z, retrying next
+   cycle." Motivated by AMZN (2026-07-31): the ratchet computed a new stop off a mark
+   backed by thin size, and by the time cancel+place executed the quote had already
+   cratered on a print backed by a single-digit contract of depth — the stop_market
+   fired instantly at $3.50 even though the underlying itself was still near its
+   session highs. This gate only ever delays a stop from being raised (never removes
+   protection, since the existing resting stop stays in place) and is a numeric
+   threshold, not a judgment call — the mechanical no-discretion property of the stop
+   system is unchanged. Does NOT apply to the stop_loss/hard-TP/scale-out mark
+   comparisons above (those trigger a LIMIT sell at mid with a reprice window, not a
+   blind stop_market fire, so thin-quote risk doesn't apply the same way).
    - **mark ≤ entry × (1 + stop_loss_pct/100)** (when the stop is software-side) → CANCEL
      the resting order first, then close NOW per exit runbook §2 (limit at mid, reprice to
      bid after 3 min, no discretion). Journal the stop-out.
@@ -30,9 +50,10 @@ today's journal first. All times US/Eastern.
      cancelled), sell floor(qty/3)
      contracts (min 1) limit at mid — reprice toward the bid after 3 min if unfilled —
      then re-place the resting stop for the REMAINING quantity at max(previous stop,
-     entry × (1 + scale_out_floor_pct/100)) rounded to tick — the −15% floor keyed to
-     ORIGINAL entry (or the ratcheted price if the ratchet also triggers this cycle;
-     stops only move up). Fresh ref_ids throughout; verify the new stop is `confirmed`.
+     entry × (1 + scale_out_floor_pct/100)) rounded to tick (depth-gated per above) —
+     the −15% floor keyed to ORIGINAL entry (or the ratcheted price if the ratchet
+     also triggers this cycle; stops only move up). Fresh ref_ids throughout; verify
+     the new stop is `confirmed`.
      Journal "SCALED OUT: sold N of M @ $X, stop raised to $Y for remainder". Once per
      position per day; 1-contract positions skip. Checked AFTER hard-TP, BEFORE the
      ratchet.
@@ -52,8 +73,9 @@ today's journal first. All times US/Eastern.
      stop_ratchet_trail_pct/100)), rounded to tick — floor raised from breakeven to +10%
      on 2026-07-28 — track the high-water mark from the journal's mark history plus this
      check's quote. If the required stop exceeds the current resting stop, CANCEL the
-     resting stop and place the new higher stop_market (fresh ref_id, verify `state:
-     confirmed`, record the new order id). Stops only ever move UP. Journal each ratchet
+     resting stop and place the new higher stop_market (depth-gated per above; fresh
+     ref_id, verify `state: confirmed`, record the new order id). Stops only ever move
+     UP. Journal each ratchet
      ("ratchet: stop $X → $Y, HWM $Z"). With a 20-50% window before the hard-TP cap above,
      arming typically snaps the stop to entry × 1.10 first (a HWM only modestly above
      entry, trailed 30%, computes below the +10% floor) — but as the position runs further
@@ -65,7 +87,8 @@ today's journal first. All times US/Eastern.
      short of that — a lighter bar than the full momentum-broken check below, which needs
      ALL three conditions against it together). On a STALLING read, also compute HWM × (1
      − stop_ratchet_stall_trail_pct/100) (10%, vs. the normal 30% trail) and take the
-     higher of it vs. the normal required stop from above. This reacts to a pause the
+     higher of it vs. the normal required stop from above (this replacement is also
+     depth-gated per above). This reacts to a pause the
      moment it happens rather than waiting for the wider trail or the +10% floor to
      eventually be crossed. If the resulting level is already at or above the current
      mark (a sharp single-cycle pullback jumped past it before a stop could be placed),
@@ -78,8 +101,9 @@ today's journal first. All times US/Eastern.
      armed): mark ≥ entry × (1 + early_floor_trigger_pct/100)** (+8%, first touch) →
      required stop = entry × (1 + early_floor_pct/100) (-3%, i.e. just below breakeven).
      If this exceeds the current resting stop, CANCEL and place the new higher
-     stop_market same as the ratchet (fresh ref_id, verify confirmed). Stops only ever
-     move UP. Motivated by AMD and MSFT's failed leader re-entry on 2026-07-30, both of
+     stop_market same as the ratchet (depth-gated per above; fresh ref_id, verify
+     confirmed). Stops only ever move UP. Motivated by AMD and MSFT's failed leader
+     re-entry on 2026-07-30, both of
      which peaked +8-11.5% — real, thesis-confirming pops — then ground down on theta for
      nearly an hour without ever reaching the +20% arm level, round-tripping all the way
      to the stop_loss floor with zero protection in between. Journal ("early floor: stop

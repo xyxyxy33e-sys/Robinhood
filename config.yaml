@@ -96,6 +96,27 @@ blackout_stop_check_interval_sec: 30
                                  # blackout and get a broker-side resting stop
                                  # immediately. This only applies if a stop_market is
                                  # ever unexpectedly rejected with the blackout error.
+min_quote_size_for_stop_update: 5
+                                 # Added 2026-07-31 per user, after AMZN's ratchet
+                                 # computed a new (higher) stop off a live mark, then
+                                 # cancelled the old resting stop and placed the new
+                                 # stop_market — which filled INSTANTLY at $3.50 (vs. a
+                                 # $3.60 trigger) because the option's own quote had
+                                 # cratered on a print backed by only single-digit
+                                 # contract depth, even though the underlying (AMZN
+                                 # stock) was still sitting near its session highs.
+                                 # Before any ratchet/stall-trail/early-floor/scale-out
+                                 # cancel+replace of the resting stop (monitor.md §3),
+                                 # a FRESH quote must show bid_size AND ask_size both
+                                 # ≥ this value; if either side is thinner, skip the
+                                 # replacement this cycle and hold the current resting
+                                 # stop (journal it, retry next cycle) rather than firing
+                                 # a stop_market off an untrustworthy print. Never removes
+                                 # protection — only delays raising it — and is a plain
+                                 # numeric threshold, not a discretionary override of the
+                                 # stop system. Starting value; revisit if it proves too
+                                 # strict (stops rarely get to raise on this contract) or
+                                 # too loose (another noise-triggered fill slips through).
 resting_order_type: "stop_loss"  # "stop_loss" (default: resting stop_market at the stop
                                  # level; monitor handles profit-taking) or "take_profit"
                                  # (resting sell limit at the target; monitor handles stops)

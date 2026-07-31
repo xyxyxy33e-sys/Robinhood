@@ -153,6 +153,18 @@ heavier theta): the volume bar is the compensation, not optional.
   ever unexpectedly rejected with that error anyway, the entry run does NOT end its turn —
   it runs quote checks every `blackout_stop_check_interval_sec` (30s) and sells-to-close
   at mid if the mark crosses the stop level, until the resting stop is accepted.
+- **Quote-depth gate on stop replacement (added 2026-07-31):** any time the monitor loop
+  needs to cancel the resting stop and place a new (higher) one — ratchet-arm,
+  stall-trail, early floor, or the remainder-stop after a scale-out — it re-checks a
+  FRESH quote first and requires `bid_size` and `ask_size` both ≥
+  `min_quote_size_for_stop_update`. If either side is too thin, the replacement is
+  skipped for that cycle (the existing resting stop stays exactly where it is — never
+  removed, just not yet raised) and retried next cycle. Motivation: AMZN 2026-07-31 —
+  the ratchet computed a new stop off a live mark, but by the time cancel+place
+  executed the quote had cratered on a print backed by single-digit contract depth,
+  firing the stop_market instantly at $3.50 even though the underlying stock itself
+  was still near its session highs. A plain numeric threshold, not a discretionary
+  override — the mechanical no-discretion property of the stop system is unchanged.
 - **Partial scale-out at +40% (added 2026-07-23; re-activated 2026-07-28 now that the
   hard cap sits above it again):** on a position holding 2+ contracts, the first touch
   of entry × (1 + `scale_out_pct`/100) sells floor(quantity/3) contracts (min 1) at mid;
