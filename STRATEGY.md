@@ -16,8 +16,8 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 | Time (ET) | Phase | Runbook |
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
-| ~9:00 AM | Pre-entry sentiment-shift check (added 2026-07-27) — re-reads the same candidates against the 8 AM read to catch reversals/fades before 9:35 | `runbooks/premarket_confirm.md` |
-| 9:35 AM | Entry — confirm momentum after the open, buy call or put | `runbooks/entry.md` |
+| ~9:00 AM | Pre-entry sentiment-shift check (added 2026-07-27) — re-reads the same candidates against the 8 AM read to catch reversals/fades before entry | `runbooks/premarket_confirm.md` |
+| 9:45 AM | Entry — confirm momentum after the open, buy call or put (moved from 9:35 on 2026-07-31: 9:45 is when Robinhood first accepts resting stop_market orders, so every fill is protected broker-side immediately) | `runbooks/entry.md` |
 | every 3 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
 | every 3 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries | `runbooks/monitor.md` |
 | ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
@@ -56,14 +56,14 @@ candidate with a live chain.
 
 1. Appears in the relevant scanner **or** was a top pre-market candidate now moved ≥2% in
    its direction.
-2. Tape confirmation scaled to session age, direction-aware:
-   - **Calls**: first 5 minutes — above the opening print with no immediate reversal
-     (1-minute bars); after 9:35 — above open and holding above VWAP on 5-minute bars,
-     no full gap-fade.
-   - **Puts**: first 5 minutes — below the opening print with no immediate reversal
-     (1-minute bars); after 9:35 — below open and holding below VWAP on 5-minute bars,
-     no full gap-fill-back-to-open.
-   - **Late re-checks (any entry after the initial 9:35 pass):** price beyond the open is
+2. Tape confirmation, direction-aware (entries begin at 9:45, so there are always three
+   5-minute bars of session to confirm against — the opening 15 minutes' whipsaws play
+   out before capital is committed; moved from 9:35 on 2026-07-31):
+   - **Calls**: above open and holding above VWAP on 5-minute bars, no full gap-fade
+     (still above the opening 15 minutes' low).
+   - **Puts**: below open and holding below VWAP on 5-minute bars, no full
+     gap-fill-back-to-open (still below the opening 15 minutes' high).
+   - **Late re-checks (any entry after the initial 9:45 pass):** price beyond the open is
      necessary but NOT sufficient — require a volume-confirmed breakout: several
      consecutive closes in the trade direction on rising/elevated volume, sustained for
      15+ minutes. A quiet, low-volume grind back through the open does not qualify
@@ -128,7 +128,7 @@ heavier theta): the volume bar is the compensation, not optional.
 - At most `max_open_positions` concurrent positions total, any mix of calls and puts
   (changed 2026-07-28 from separate max_open_calls=5/max_open_puts=5 buckets [10 total]
   to one combined 6-total cap), plus `max_new_positions_per_day` entries per day (initial
-  entry at 9:35; 10-min re-checks on no-trade and monitor-loop re-entries both end at
+  entry at 9:45; re-checks on no-trade and monitor-loop re-entries both end at
   1:30 PM ET).
 - Skip entries while options buying power < `min_buying_power_to_trade` — log why.
 - Cash account: option sale proceeds settle **T+1**. The exit run's proceeds fund the
@@ -143,15 +143,16 @@ heavier theta): the volume bar is the compensation, not optional.
   interrupted (failure mode observed 2026-07-16). Alternative `take_profit`: a sell limit
   at entry × (1 + `take_profit_pct`/100). The monitor loop enforces whichever side is not
   resting, in software. Any other close must cancel the resting order first.
-- **9:30–9:45 stop blackout:** Robinhood rejects stop_market orders in the first 15
-  minutes after the open (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`, observed
-  2026-07-21). An entry filled before 9:45 is protected in software until then: the entry
-  run does NOT end its turn — it runs quote checks every `blackout_stop_check_interval_sec`
-  (tightened from ~60s to 30s on 2026-07-31, after AAPL entered 9:39:46, reversed hard, and
-  was already at -39.6% before a ~60s-cadence check could catch it) and sells-to-close at
-  mid immediately if the mark crosses the stop level, then places the resting stop at 9:45
-  sharp and hands off to the normal 3-minute monitor loop. A faster check narrows the
-  breach-to-reaction gap; it does not remove ordinary stop_market slippage once a sell fires.
+- **9:30–9:45 stop blackout (structurally avoided since 2026-07-31):** Robinhood rejects
+  stop_market orders in the first 15 minutes after the open
+  (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`, observed 2026-07-21). This is WHY entry
+  moved to 9:45: with fills landing after the blackout, every position gets its
+  broker-side resting stop immediately, and the software-only protection window that
+  produced AAPL's -39.6% stop-out on 2026-07-31 (entered 9:39:46, reversed before a
+  ~60s-cadence check could act) no longer exists in normal operation. If a stop_market is
+  ever unexpectedly rejected with that error anyway, the entry run does NOT end its turn —
+  it runs quote checks every `blackout_stop_check_interval_sec` (30s) and sells-to-close
+  at mid if the mark crosses the stop level, until the resting stop is accepted.
 - **Partial scale-out at +40% (added 2026-07-23; re-activated 2026-07-28 now that the
   hard cap sits above it again):** on a position holding 2+ contracts, the first touch
   of entry × (1 + `scale_out_pct`/100) sells floor(quantity/3) contracts (min 1) at mid;

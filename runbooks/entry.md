@@ -1,12 +1,16 @@
-# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 3 min until 1:30 PM on no-trade)
+# Runbook: Entry (9:45 AM ET, Mon–Fri; re-checks every 3 min until 1:30 PM on no-trade)
 
 Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
 All times US/Eastern. Account = `account_number` from config.
 
 ## 0. Guards — every one must pass or the day is a no-trade
 1. Trading day check (same as premarket). Market closed → journal, push, stop.
-2. Time check: if before 9:35 ET, schedule a self check-in (`send_later`) for 9:35 ET and
+2. Time check: if before 9:45 ET, schedule a self check-in (`send_later`) for 9:45 ET and
    stop; if after 1:30 PM ET, skip the day (momentum entries decay) — journal why.
+   (Entry moved from 9:35 to 9:45 on 2026-07-31 per user: 9:45 is when Robinhood first
+   accepts resting stop_market orders, so every fill is now protected broker-side
+   immediately — no software-only window. Cost: gives up the first 15 minutes of the
+   move; on 2026-07-31 that window produced two of the day's three whipsaw stop-outs.)
 3. `get_option_positions` (nonzero=true): count total open positions (calls + puts
    combined). If total ≥ `max_open_positions`, stop (no room). Otherwise continue.
 4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
@@ -23,17 +27,14 @@ All times US/Eastern. Account = `account_number` from config.
    anything that hit its "disqualify if".
 3. For each surviving candidate (check the best-ranked first), tape check scaled to how
    much session exists, direction-aware:
-   - **Calls — 9:30–9:35:** `get_equity_historicals` interval=minute — require last >
-     opening print, last ≥ prior close × (1 + min_day_change_pct/100), and no immediate
-     reversal (not below the session low of the first bars).
-   - **Calls — after 9:35:** interval=5minute from 9:30 — require price > open, price >
-     VWAP, and no full gap-fade (above the 9:30–9:35 low).
-   - **Puts — 9:30–9:35:** require last < opening print, last ≤ prior close ×
-     (1 − min_day_change_pct/100), and no immediate reversal (not above the session high
-     of the first bars).
-   - **Puts — after 9:35:** require price < open, price < VWAP, and no full gap-fill back
-     above the 9:30–9:35 high.
-   Accept that the 9:30–9:35 window trades on pre-market conviction with less confirmation.
+   - **Calls:** `get_equity_historicals` interval=5minute from 9:30 — require price >
+     open, price ≥ prior close × (1 + min_day_change_pct/100), price > VWAP, and no
+     full gap-fade (still above the low of the opening 15 minutes).
+   - **Puts:** require price < open, price ≤ prior close × (1 − min_day_change_pct/100),
+     price < VWAP, and no full gap-fill (still below the high of the opening 15 minutes).
+   (The old 9:30–9:35 minute-bar branch was removed 2026-07-31 when entry moved to 9:45 —
+   there are now always three 5-minute bars of session to confirm against, which is the
+   point: the opening 15 minutes' whipsaws get to play out before capital is committed.)
 4. `get_earnings_results` on finalists — reject if earnings before option expiry.
 5. Rank the qualifiers (catalyst > relative volume > tape), calls and puts together, and
    take **up to (max_open_positions − currently open positions total)** qualifiers, best
@@ -96,17 +97,18 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
        rounded to tick, GFD. Monitor loop handles profit-taking in software.
      - `take_profit`: limit sell-to-close at entry × (1 + take_profit_pct/100), rounded to
        tick, GFD. Monitor loop handles the stop in software.
-     **9:30–9:45 blackout:** Robinhood rejects stop_market before 9:45 ET
-     (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`). If the fill lands before 9:45, do
-     NOT end the turn unprotected — run software stop checks every
+     **9:30–9:45 blackout (should no longer apply in normal operation):** Robinhood
+     rejects stop_market before 9:45 ET (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`).
+     Since entry moved to 9:45 (2026-07-31), fills land after the blackout and the
+     resting stop can always be placed immediately — place it and confirm `confirmed`
+     before doing anything else. Kept as a safeguard for edge cases only (clock drift,
+     a fill racing the 9:45 boundary): if a stop_market is ever rejected with that
+     error, do NOT end the turn unprotected — run software stop checks every
      `blackout_stop_check_interval_sec` (get_option_quotes; mark ≤ stop level →
-     sell-to-close at mid immediately) rather than waiting for the next full monitor
-     cycle, then place the resting stop at 9:45 sharp and confirm it before proceeding.
-     Tightened from ~60s to 30s on 2026-07-31 after AAPL entered at 9:39:46, reversed
-     hard, and had already blown through -25% to -39.6% by the time a check could act —
-     the same blackout-window gap that caused MSFT's slippage earlier in the week. A
-     faster check narrows the window between breach and reaction; it does not eliminate
-     ordinary stop_market slippage (fill vs. trigger price) once a sell is placed.
+     sell-to-close at mid immediately), then place the resting stop the moment it's
+     accepted. History: this gap produced MSFT's slippage on 7/28-week and AAPL's
+     -39.6% stop-out on 7/31 (entered 9:39:46, reversed before a ~60s-cadence check
+     could act) — which is why entries now start at 9:45 at all.
      Quantity = the full filled position quantity. Fresh ref_id; covered by the same
      standing authorization as the entry. Record the order id in the journal — every later
      close must CANCEL this order first.
