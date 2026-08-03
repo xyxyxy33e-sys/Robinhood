@@ -117,11 +117,13 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
        until 9:45 (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`, confirmed still true on
        2026-08-03), so place a **stop_limit** sell-to-close instead: stop_price =
        entry × (1 + stop_loss_pct/100) rounded to tick (the same trigger a stop_market
-       would use), limit_price = stop_price × 0.95 rounded to tick (a bounded ~5% buffer
-       below the trigger so the order has a realistic chance of filling if it's touched
-       during the blackout, rather than sitting unmarketable — confirmed acceptable at
-       this time of day via the 2026-08-03 diagnostic test). Record it in the journal as
-       a stop_limit, flagged **"upgrade at 9:45."** **If the fill lands at/after 9:45
+       would use), limit_price = stop_price × 0.85 rounded to tick (widened from a 5%
+       buffer to 15% on 2026-08-03 per user, for a more realistic chance of filling if
+       touched during the blackout — a too-tight limit risks sitting unmarketable on a
+       fast move, defeating the point of resting protection at all; confirmed the order
+       type itself is acceptable at this time of day via the 2026-08-03 diagnostic test).
+       Record it in the journal as a stop_limit, flagged **"upgrade at 9:45."** **If the
+       fill lands at/after 9:45
        ET** (a later same-day re-entry, well past the blackout): place stop_market
        directly, no blackout concern, nothing to upgrade later.
      - `take_profit`: limit sell-to-close at entry × (1 + take_profit_pct/100), rounded to

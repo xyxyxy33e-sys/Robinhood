@@ -154,7 +154,9 @@ heavier theta): the volume bar is the compensation, not optional.
   ARE accepted during the same window (a triggered stop_limit becomes a bounded limit
   order, not the unbounded stop_market the blackout actually targets), so entry moved
   back to 9:35: a fill before 9:45 gets an immediate resting stop_limit (stop_price =
-  entry × (1 + `stop_loss_pct`/100), limit_price = stop_price × 0.95), then the monitor
+  entry × (1 + `stop_loss_pct`/100), limit_price = stop_price × 0.85 — widened from a 5%
+  to a 15% buffer on 2026-08-03 per user, for a more realistic fill chance if touched
+  during the blackout), then the monitor
   loop cancels and replaces it with a stop_market at the same trigger the moment 9:45
   arrives. Residual risk is narrower than the pre-2026-07-31 software-only window that
   produced AAPL's -39.6% stop-out (entered 9:39:46, reversed before a ~60s-cadence check
