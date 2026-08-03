@@ -1,16 +1,24 @@
-# Runbook: Entry (9:45 AM ET, Mon–Fri; re-checks every 3 min until 1:30 PM on no-trade)
+# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 3 min until 1:30 PM on no-trade)
 
 Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
 All times US/Eastern. Account = `account_number` from config.
 
 ## 0. Guards — every one must pass or the day is a no-trade
 1. Trading day check (same as premarket). Market closed → journal, push, stop.
-2. Time check: if before 9:45 ET, schedule a self check-in (`send_later`) for 9:45 ET and
+2. Time check: if before 9:35 ET, schedule a self check-in (`send_later`) for 9:35 ET and
    stop; if after 1:30 PM ET, skip the day (momentum entries decay) — journal why.
-   (Entry moved from 9:35 to 9:45 on 2026-07-31 per user: 9:45 is when Robinhood first
-   accepts resting stop_market orders, so every fill is now protected broker-side
-   immediately — no software-only window. Cost: gives up the first 15 minutes of the
-   move; on 2026-07-31 that window produced two of the day's three whipsaw stop-outs.)
+   (Entry moved 9:35 → 9:45 on 2026-07-31, then back to 9:35 on 2026-08-03 per user, now
+   paired with the stop_limit-then-upgrade mechanism in §4 below instead of just waiting
+   out the blackout. Rationale for going back: the 2026-08-03 diagnostic confirmed
+   stop_limit orders — unlike stop_market — ARE accepted during the 9:30-9:45 blackout,
+   so a fill before 9:45 can still get real resting protection immediately, just not the
+   fully-guaranteed stop_market kind until 9:45. Retroactive check on 2026-08-03's BABA
+   trade found a 9:35 entry would have caught a materially bigger move on a
+   closer-to-the-money strike before the existing ratchet/stall-trail logic exited it
+   for +15.9%, vs. the real 9:45 entry's -26.09% stop-out — though that single day never
+   actually tested the stop_limit fill risk, since price never approached a stop level
+   during 9:35-9:45. A parallel paper-only 9:45 shadow track (see the TEMPORARY section
+   below) runs through Friday 2026-08-07 to build more evidence before this is final.)
 3. `get_option_positions` (nonzero=true): count total open positions (calls + puts
    combined). If total ≥ `max_open_positions`, stop (no room). Otherwise continue.
 4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
@@ -27,14 +35,26 @@ All times US/Eastern. Account = `account_number` from config.
    anything that hit its "disqualify if".
 3. For each surviving candidate (check the best-ranked first), tape check scaled to how
    much session exists, direction-aware:
-   - **Calls:** `get_equity_historicals` interval=5minute from 9:30 — require price >
-     open, price ≥ prior close × (1 + min_day_change_pct/100), price > VWAP, and no
-     full gap-fade (still above the low of the opening 15 minutes).
-   - **Puts:** require price < open, price ≤ prior close × (1 − min_day_change_pct/100),
-     price < VWAP, and no full gap-fill (still below the high of the opening 15 minutes).
-   (The old 9:30–9:35 minute-bar branch was removed 2026-07-31 when entry moved to 9:45 —
-   there are now always three 5-minute bars of session to confirm against, which is the
-   point: the opening 15 minutes' whipsaws get to play out before capital is committed.)
+   - **Initial 9:35 pass (only the single 9:30-9:35 minute bars exist yet):**
+     `get_equity_historicals` interval=minute from 9:30 to now (five 1-minute bars).
+     Compute VWAP from those bars (typical price × volume, summed and divided by total
+     volume) and the opening-window low/high from their low/high.
+     - **Calls:** require price > the 9:30 open, price ≥ prior close × (1 +
+       min_day_change_pct/100), price > this VWAP, and no full gap-fade (still above the
+       low of these five minutes).
+     - **Puts:** require price < the 9:30 open, price ≤ prior close × (1 −
+       min_day_change_pct/100), price < this VWAP, and no full gap-fill (still below the
+       high of these five minutes).
+     This is a thinner read than the 9:45 version below (5 minutes of tape vs. 15) —
+     genuine whipsaws in the last 10 minutes of the blackout won't have played out yet.
+     That's the accepted tradeoff for capturing the move earlier; it's why the resting
+     stop in §4 needs to go on immediately rather than waiting for a stop_market slot.
+   - **Later re-checks (any check at/after 9:45 ET — no qualifier at 9:35, or a position
+     closed and this is hunting for a new one):** `get_equity_historicals`
+     interval=5minute from 9:30 — require price > open, price ≥ prior close × (1 +
+     min_day_change_pct/100), price > VWAP, and no full gap-fade using all available
+     5-minute bars (three or more by 9:45). Same call/put logic, just against the fuller
+     multi-bar read.
 4. `get_earnings_results` on finalists — reject if earnings before option expiry.
 5. Rank the qualifiers (catalyst > relative volume > tape), calls and puts together, and
    take **up to (max_open_positions − currently open positions total)** qualifiers, best
@@ -93,27 +113,26 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
 - **Position opened** → two follow-ups, in order:
   1. **Place the resting protective order** per `resting_order_type` (only one sell order
      can rest per contract — Robinhood has no OCO for options):
-     - `stop_loss`: stop_market sell-to-close, stop_price = entry × (1 + stop_loss_pct/100),
-       rounded to tick, GFD. Monitor loop handles profit-taking in software.
+     - `stop_loss`: **if the fill lands before 9:45 ET** — Robinhood rejects stop_market
+       until 9:45 (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`, confirmed still true on
+       2026-08-03), so place a **stop_limit** sell-to-close instead: stop_price =
+       entry × (1 + stop_loss_pct/100) rounded to tick (the same trigger a stop_market
+       would use), limit_price = stop_price × 0.95 rounded to tick (a bounded ~5% buffer
+       below the trigger so the order has a realistic chance of filling if it's touched
+       during the blackout, rather than sitting unmarketable — confirmed acceptable at
+       this time of day via the 2026-08-03 diagnostic test). Record it in the journal as
+       a stop_limit, flagged **"upgrade at 9:45."** **If the fill lands at/after 9:45
+       ET** (a later same-day re-entry, well past the blackout): place stop_market
+       directly, no blackout concern, nothing to upgrade later.
      - `take_profit`: limit sell-to-close at entry × (1 + take_profit_pct/100), rounded to
        tick, GFD. Monitor loop handles the stop in software.
-     **9:30–9:45 blackout (should no longer apply in normal operation):** Robinhood
-     rejects stop_market before 9:45 ET (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`).
-     Since entry moved to 9:45 (2026-07-31), fills land after the blackout and the
-     resting stop can always be placed immediately — place it and confirm `confirmed`
-     before doing anything else. Kept as a safeguard for edge cases only (clock drift,
-     a fill racing the 9:45 boundary): if a stop_market is ever rejected with that
-     error, do NOT end the turn unprotected — run software stop checks every
-     `blackout_stop_check_interval_sec` (get_option_quotes; mark ≤ stop level →
-     sell-to-close at mid immediately), then place the resting stop the moment it's
-     accepted. History: this gap produced MSFT's slippage on 7/28-week and AAPL's
-     -39.6% stop-out on 7/31 (entered 9:39:46, reversed before a ~60s-cadence check
-     could act) — which is why entries now start at 9:45 at all.
      Quantity = the full filled position quantity. Fresh ref_id; covered by the same
-     standing authorization as the entry. Record the order id in the journal — every later
-     close must CANCEL this order first.
+     standing authorization as the entry. Record the order id (and type — stop_limit or
+     stop_market) in the journal — every later close must CANCEL this order first.
   2. Start the **monitor loop**: `send_later` in 3 minutes to execute
-     `runbooks/monitor.md` (the software side of stop/TP, discretion, re-entries).
+     `runbooks/monitor.md` (the software side of stop/TP, discretion, re-entries, and —
+     while a position's resting order is still the pre-9:45 stop_limit — the upgrade to
+     stop_market once 9:45 arrives).
 - **No trade** → arm a **re-check**: `send_later` in 3 minutes to re-run this runbook
   from §0 (guards apply fresh each time; journal only changes, not full re-writes).
   Re-checks stop at 1:30 PM ET or when an entry fills, whichever comes first. A late
@@ -122,30 +141,32 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
   direction on rising/elevated volume, sustained 15+ minutes. A quiet low-volume reclaim
   of the open does not qualify.
 
-## TEMPORARY: 9:35 shadow-entry tracking (2026-08-04 through 2026-08-07 — review with
+## TEMPORARY: 9:45 shadow-entry tracking (2026-08-04 through 2026-08-07 — review with
 user after Friday 8/7 close, then remove this section)
-Per user request (2026-08-03): 9:45 stays the real entry time this week, but run a
-PAPER-ONLY parallel comparison of what a 9:35 ET entry (using a resting stop_limit,
-confirmed accepted during the 9:30-9:45 blackout on 2026-08-03, unlike stop_market)
-would have done instead. No real orders are ever placed for this track.
-1. At (or shortly after) 9:35 ET, using the day's premarket-ranked candidates and the
-   SAME tape-check rules as §1.3 but with only the single 9:30-9:35 5-minute bar
-   available (the pre-2026-07-31 single-bar check) — determine whether the top
-   candidate would have qualified. If yes: pick the hypothetical contract/strike/
-   quantity exactly per §2's rules (using that moment's spot price — this may differ
-   from the real 9:45 contract if spot has since moved) and journal "9:35 SHADOW ENTRY
-   (paper only): contract, hypothetical entry price (bar mid), quantity, planned
-   exits." If no qualifier at 9:35, journal that too — the comparison needs the "no
-   trade" cases as much as the trades.
+Per user request (2026-08-03): 9:35 is now the real entry time (with the stop_limit
+mechanism above), but run a PAPER-ONLY parallel comparison of what waiting for the old
+9:45, three-bar-confirmed entry would have done instead — the mirror image of the
+tracking done on 2026-08-03 itself (which compared a 9:35 entry against the real 9:45
+one). No real orders are ever placed for this track.
+1. At 9:45 ET each day, using the day's premarket-ranked candidates, run the "Later
+   re-checks" 9:45 three-5-minute-bar tape check from §1.3 above — the fuller-confirmation
+   version — independent of whatever the real 9:35 entry already did. If it would
+   qualify: pick the hypothetical contract/strike/quantity per §2's rules using that
+   moment's spot price (this may differ from the real 9:35 contract if spot has moved,
+   or the 9:45 read may reject a candidate the thinner 9:35 read accepted — that
+   divergence is exactly what this comparison is for) and journal "9:45 SHADOW ENTRY
+   (paper only): contract, hypothetical entry price (mid), quantity, planned exits." If
+   no qualifier at 9:45 (including because the real 9:35 trade already reversed by
+   then), journal that too.
 2. During each 3-min monitor cycle for the rest of the day, ALSO pull
    `get_option_quotes` (or historicals, if catching up after a gap) for the shadow
    contract and apply the exact same cascade from monitor.md §3 (stop_loss, hard-TP,
    scale-out, ratchet-arm + stall-trail, early floor, midday floor) on paper. Journal
-   "SHADOW: mark $X (±Y%) — [action]" alongside the real position's entry each cycle.
-   When the shadow position would exit under any rule, journal the hypothetical fill
-   price and realized P&L, and stop shadow-tracking for the day (one shadow track per
-   day, no shadow re-entry search — keep this lightweight).
-3. On 2026-08-07 (Friday) close, compile a comparison table (real 9:45 trades vs.
-   shadow 9:35 trades: entry price, exit price/reason, P&L) across the week plus
-   today's (8/3) retroactive reconstruction, and review with the user before deciding
-   whether to change the real entry time.
+   "SHADOW (9:45): mark $X (±Y%) — [action]" alongside the real position's entries each
+   cycle. When the shadow position would exit under any rule, journal the hypothetical
+   fill price and realized P&L, and stop shadow-tracking for the day (one shadow track
+   per day, no shadow re-entry search — keep this lightweight).
+3. On 2026-08-07 (Friday) close, compile a comparison table (real 9:35 trades vs.
+   shadow 9:45 trades: entry price, exit price/reason, P&L) across the week plus
+   2026-08-03's own retroactive/live data points, and review with the user before
+   deciding whether 9:35 stays the permanent entry time.

@@ -87,15 +87,19 @@ max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
 # the two protective orders can rest broker-side; the monitor loop enforces the other.
 blackout_stop_check_interval_sec: 30
                                  # Software-side stop-check cadence during the 9:30-9:45
-                                 # stop_market blackout (Robinhood rejects resting stops
-                                 # until 9:45). Added at 30s on 2026-07-31 after AAPL
-                                 # (entered 9:39:46, reversed hard, -39.6% before a
-                                 # ~60s-cadence check could act). NOW AN EDGE-CASE
-                                 # SAFEGUARD ONLY: later the same day, entry time moved
-                                 # from 9:35 to 9:45 per user, so fills land after the
-                                 # blackout and get a broker-side resting stop
-                                 # immediately. This only applies if a stop_market is
-                                 # ever unexpectedly rejected with the blackout error.
+                                 # stop_market blackout (Robinhood rejects resting
+                                 # stop_market orders until 9:45). Added at 30s on
+                                 # 2026-07-31 after AAPL (entered 9:39:46, reversed hard,
+                                 # -39.6% before a ~60s-cadence check could act), when
+                                 # entry briefly moved 9:35→9:45 to dodge the blackout
+                                 # entirely. EDGE-CASE SAFEGUARD ONLY as of 2026-08-03:
+                                 # entry moved back to 9:35 after confirming stop_limit
+                                 # IS accepted during the blackout (unlike stop_market) —
+                                 # a fill before 9:45 now gets a real resting stop_limit
+                                 # immediately (see entry.md §4), upgraded to stop_market
+                                 # at 9:45 (monitor.md). This interval only matters if a
+                                 # stop_market is ever unexpectedly rejected with the
+                                 # blackout error outside that normal flow.
 min_quote_size_for_stop_update: 5
                                  # Added 2026-07-31 per user, after AMZN's ratchet
                                  # computed a new (higher) stop off a live mark, then

@@ -12,7 +12,16 @@ today's journal first. All times US/Eastern.
    (win if take_profit, stop-out if stop_loss) — journal it and treat as flat. If the
    position is gone but the resting order didn't fill, the user closed it manually —
    cancel the resting order, journal the user's fill from get_option_orders, treat as flat.
-3. For each open strategy position, `get_option_quotes`. Software-side of whichever
+3. **Stop_limit → stop_market upgrade (added 2026-08-03, applies while entry is 9:35):**
+   if today's journal flagged this position's resting order as a pre-9:45 stop_limit
+   ("upgrade at 9:45") and current ET time is now ≥ 9:45, cancel it (`get_option_orders`
+   confirms `cancelled`) and place a stop_market at the SAME stop_price, fresh ref_id,
+   verify `state: confirmed`. Update the journal with the new order id/type and drop the
+   "upgrade at 9:45" flag. One-time transition per position — do this before any of the
+   cascade checks below, and skip entirely for positions whose resting order is already
+   a stop_market (either placed that way originally, at/after 9:45, or already upgraded
+   on a prior cycle).
+4. For each open strategy position, `get_option_quotes`. Software-side of whichever
    protection is NOT resting (per `resting_order_type`):
    **Quote-depth gate (added 2026-07-31, applies to every stop_market cancel+replace
    below — ratchet-arm, stall-trail, early floor):** immediately before cancelling the
@@ -126,7 +135,7 @@ today's journal first. All times US/Eastern.
      ones that actually test "does a midday peak keep extending?"); all 3 faded, averaging
      -28% (IREN 7/21, BABA 122C 7/20, BABA 8/03) — zero counterexamples, though n=3 is
      thin. Journal ("midday floor: stop $X → $Y"). No re-entry restriction is tied to
-     this rule — a close it triggers gets the standard §4 re-entry check like any other
+     this rule — a close it triggers gets the standard §5 re-entry check like any other
      exit, still subject to the 1:30 PM cutoff.
    - **in profit, momentum broken** (5-min bars: lower highs, VWAP lost, volume faded) →
      discretionary sell-to-close per STRATEGY.md §6 — CANCEL the resting order first.
@@ -134,7 +143,7 @@ today's journal first. All times US/Eastern.
      to hold through a confirmed breakdown.)
    - otherwise hold; log a one-line mark update in the journal (batch-commit these —
      push at most every ~30 min to avoid commit spam, and always push after a trade).
-4. **Re-entry check** (only if all of: now < 1:30 PM ET; total open positions <
+5. **Re-entry check** (only if all of: now < 1:30 PM ET; total open positions <
    `max_open_positions`; today's entry count < `max_new_positions_per_day`; options
    buying power ≥ `min_buying_power_to_trade`): run the entry runbook §1–§4 for a NEW
    candidate, call or put. **Check leader re-entries FIRST** (STRATEGY.md

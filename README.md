@@ -12,7 +12,7 @@ Three Claude Code Routines fire into the trading session every weekday (times ET
 
 1. **~8:00 — Pre-market** (`runbooks/premarket.md`): news, earnings calendar, top-10
    ranked candidates (calls and puts together) → journal.
-2. **9:45 — Entry** (`runbooks/entry.md`): live momentum confirmation via the saved
+2. **9:35 — Entry** (`runbooks/entry.md`): live momentum confirmation via the saved
    "Daily Momentum Calls" and "Daily Momentum Puts" scanners + direction-aware tape check
    → ATM calls or puts, 1–21 DTE, limit at mid. Sized and authorized per `config.yaml`,
    always reviewed via `review_option_order`. On a no-trade, re-checks every 3 minutes
