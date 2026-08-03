@@ -109,6 +109,25 @@ today's journal first. All times US/Eastern.
      to the stop_loss floor with zero protection in between. Journal ("early floor: stop
      $X → $Y"). Once take_profit_pct (+20%) arms, its floor (+10%) is already higher than
      this one, so no conflict — just check the ratchet first each cycle.
+   - **Midday floor (added 2026-08-03, pre-arm only, checked only while the current ET
+     time is within [`midday_floor_window_start_et`, `midday_floor_window_end_et`] —
+     11:30 AM-1:30 PM ET): mark ≥ entry × (1 + midday_floor_trigger_pct/100)** (+3%,
+     first touch during the window) → required stop = entry × (1 + midday_floor_pct/100)
+     (breakeven). If this exceeds the current resting stop, CANCEL and place the new
+     higher stop_market (depth-gated per above; fresh ref_id, verify confirmed). Stops
+     only ever move UP. Check this AFTER the early floor above each cycle — whenever both
+     are eligible (mark ≥ 8% during the window), this floor (breakeven) is always the
+     higher constraint and supersedes the early floor's -3%. Outside the window, this
+     check is skipped entirely and the early floor alone applies as before. Motivated by
+     BABA (2026-08-03): peaked only +5% at 11:40 ET — below the +8% early-floor trigger,
+     so no protection engaged — then faded through the midday session to a full -25%
+     stop-out. A backtest of 07/16-08/03 (23 trades) found only 3 trades whose
+     high-water mark occurred in this window AND were still open past 1:30 PM (the only
+     ones that actually test "does a midday peak keep extending?"); all 3 faded, averaging
+     -28% (IREN 7/21, BABA 122C 7/20, BABA 8/03) — zero counterexamples, though n=3 is
+     thin. Journal ("midday floor: stop $X → $Y"). No re-entry restriction is tied to
+     this rule — a close it triggers gets the standard §4 re-entry check like any other
+     exit, still subject to the 1:30 PM cutoff.
    - **in profit, momentum broken** (5-min bars: lower highs, VWAP lost, volume faded) →
      discretionary sell-to-close per STRATEGY.md §6 — CANCEL the resting order first.
      Journal the reasoning. (Applies armed or not — the ratchet is a floor, not a reason

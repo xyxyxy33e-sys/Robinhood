@@ -278,6 +278,40 @@ early_floor_pct: -3              # floor level once early_floor_trigger_pct is t
                                  # and zero winners found where the floor would have clipped
                                  # a later recovery — every early dip below -3% in the
                                  # sample happened before the position ever touched +8%.
+midday_floor_window_start_et: "11:30"  # added 2026-08-03 per user, after BABA (8/03) peaked
+                                 # only +5% at 11:40 ET — below early_floor_trigger_pct's 8%,
+                                 # so no protection engaged — then ground down through the
+                                 # midday session to a full -25% stop-out. Backtested against
+                                 # 07/16-08/03 (23 trades): only 3 trades had a high-water
+                                 # mark that occurred in this 11:30-13:30 window AND were
+                                 # still open past 13:30 (the only ones that can actually test
+                                 # "does a midday peak keep extending?") — ALL THREE faded,
+                                 # averaging -28% (IREN 7/21 -30.8%, BABA 122C 7/20 -27.7%,
+                                 # BABA 8/03 -26.09%). Zero counterexamples in the sample, but
+                                 # n=3 is thin — treat as directionally supportive, not proven.
+midday_floor_window_end_et: "13:30"  # window end — matches the existing 1:30 PM entry cutoff
+                                 # for symmetry (the same hour treated as "weak" for new
+                                 # entries is now also treated as "weak" for letting an
+                                 # existing position's gain ride unprotected).
+midday_floor_trigger_pct: 3      # much lower than early_floor_trigger_pct (8) — set low
+                                 # enough to have caught today's BABA (+5% peak). Pre-arm
+                                 # only (no-op once take_profit_pct/20% has armed the full
+                                 # ratchet, same restriction as early_floor_trigger_pct).
+                                 # Checked in the monitor loop only while the current ET time
+                                 # is within [midday_floor_window_start_et,
+                                 # midday_floor_window_end_et]; outside that window this has
+                                 # no effect and early_floor_trigger_pct/early_floor_pct alone
+                                 # apply as before.
+midday_floor_pct: 0              # floor level once midday_floor_trigger_pct is touched during
+                                 # the window — breakeven (per user), tighter than
+                                 # early_floor_pct's -3% since the backtest showed zero
+                                 # midday-peak trades continuing to a new high afterward.
+                                 # Stops only move up; whenever both this and the plain early
+                                 # floor are eligible during the window, this floor (0%) is
+                                 # always the higher constraint and wins. No re-entry
+                                 # restriction is tied to this rule — a close it triggers is
+                                 # followed by the standard §4 re-entry check exactly like any
+                                 # other exit (still subject to the existing 1:30 PM cutoff).
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 

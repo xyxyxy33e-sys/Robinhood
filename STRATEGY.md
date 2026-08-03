@@ -234,6 +234,20 @@ heavier theta): the volume bar is the compensation, not optional.
   theta for close to an hour without ever reaching +20%, giving back the entire move
   plus more before the stop_loss floor finally caught them (-$1,020 and -$1,280).
   Nothing between 0% and +20% existed to protect either.
+- **Midday floor, pre-arm (added 2026-08-03):** while the current ET time is within
+  `midday_floor_window_start_et`-`midday_floor_window_end_et` (11:30 AM-1:30 PM ET),
+  the first touch of entry × (1 + `midday_floor_trigger_pct`/100) (+3% — much lower
+  than the plain early floor's +8%) raises the required stop to entry × (1 +
+  `midday_floor_pct`/100) (breakeven). Stops only move up; a no-op once the +20%
+  ratchet has armed, same restriction as the early floor above; outside the window it
+  has no effect and the plain early floor alone applies. Motivation: BABA (2026-08-03)
+  peaked only +5% at 11:40 ET — below the early floor's +8% trigger, so no protection
+  engaged — then faded through the midday session to a full -25% stop-out. A backtest
+  of 07/16-08/03 (23 trades) found only 3 trades whose high-water mark occurred in
+  this window and were still open past 1:30 PM (the only ones that actually test
+  whether a midday peak keeps extending); all 3 faded, averaging -28% — zero
+  counterexamples, though n=3 is a thin sample. No re-entry restriction is tied to
+  this rule; a close it triggers gets the standard re-entry check like any other exit.
 - **Hard take-profit — instant sale at +50% (raised 2026-07-28, was +30% for a few
   hours, originally +100%):** mark ≥ entry × (1 + `hard_take_profit_pct`/100) → cancel
   the resting stop and sell-to-close at mid immediately, no discretion — the profit is
