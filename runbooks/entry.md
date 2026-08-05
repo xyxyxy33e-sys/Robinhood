@@ -3,6 +3,21 @@
 Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
 All times US/Eastern. Account = `account_number` from config.
 
+## Loop resilience (added 2026-08-05 per user, after a `get_equity_historicals` call
+during a no-trade re-check failed on a transient "model temporarily unavailable"
+auto-mode classifier error and the re-check loop died silently — no `send_later` had
+been armed yet for the next cycle, so nothing woke it back up until the user
+manually said "continue")
+If any tool call in a re-check firing fails on a transient/infrastructure error
+(classifier unavailable, timeout, rate limit — not a logic or data error): retry
+once or twice within the same firing. Whether or not the retry succeeds, still reach
+the re-arm step at the end of this firing — journal "data fetch failed this cycle,
+retrying next" (or similar) in place of the normal no-trade note if the retries also
+failed, and call `send_later` for the next cycle regardless (guards permitting — see
+§0.2). A re-check must never end a firing without either filling a position or
+arming the next one; a single bad tool call should cost at most one cycle, never
+the rest of the day's search.
+
 ## 0. Guards — every one must pass or the day is a no-trade
 1. Trading day check (same as premarket). Market closed → journal, push, stop.
 2. Time check: if before 9:35 ET, schedule a self check-in (`send_later`) for 9:35 ET and

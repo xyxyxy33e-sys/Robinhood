@@ -4,6 +4,19 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
 (delay_minutes=3, tightened from 5 on 2026-07-28 per user). Read `config.yaml` and
 today's journal first. All times US/Eastern.
 
+## Loop resilience (added 2026-08-05 per user, after a `get_equity_historicals` call
+failed mid-cycle on a transient "model temporarily unavailable" auto-mode classifier
+error and the loop died silently — no `send_later` had been armed yet for the next
+cycle, so nothing woke it back up until the user manually said "continue")
+If any tool call in a firing fails on a transient/infrastructure error (classifier
+unavailable, timeout, rate limit — not a logic or data error): retry once or twice
+within the same firing. Whether or not the retry succeeds, still reach the re-arm
+step at the end of this firing — journal "data fetch failed this cycle, retrying
+next" (or similar) in place of the normal update if the retries also failed, and
+call `send_later` for the next cycle regardless. The loop must never end a firing
+without either closing a position or arming the next one; a single bad tool call
+should cost at most one cycle's data, never the whole loop.
+
 ## Each firing
 1. `git pull` the branch (config may have changed), read config + today's journal.
 2. `get_option_positions` (nonzero=true) for `account_number`; match against the
