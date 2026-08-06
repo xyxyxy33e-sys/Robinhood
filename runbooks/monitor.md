@@ -1,7 +1,8 @@
-# Runbook: Monitor loop (every 3 minutes while a position is open)
+# Runbook: Monitor loop (every 1 minute while a position is open)
 
 Started by the entry runbook after a fill; self-perpetuating via `send_later`
-(delay_minutes=3, tightened from 5 on 2026-07-28 per user). Read `config.yaml` and
+(delay_minutes=1, tightened from 3 on 2026-08-06 per user, which itself was tightened
+from 5 on 2026-07-28 per user). Read `config.yaml` and
 today's journal first. All times US/Eastern.
 
 ## Loop resilience (added 2026-08-05 per user, after a `get_equity_historicals` call
@@ -214,7 +215,7 @@ should cost at most one cycle's data, never the whole loop.
    settled cash can.
 
 ## Re-arm or stop
-- **Re-arm** (`send_later`, 3 min) if any strategy position is open and it's before
+- **Re-arm** (`send_later`, 1 min) if any strategy position is open and it's before
   3:25 PM ET.
 - **Stop the loop** when: flat with no re-entry possible (past 1:30 PM ET or daily entry
   limit reached), or it's 3:25 PM ET or later (the 3:30 exit Routine owns the close from

@@ -41,7 +41,8 @@ or the close will be rejected / double-sell.
 4. `place_option_order` (sell, position_effect=close, GFD, fresh ref_id).
 
 ## 3. Work the order until flat
-Poll `get_option_orders` every ~3 minutes (use `send_later`/Monitor, never sleep-loops):
+Poll `get_option_orders` every ~1 minute (tightened from 3 on 2026-08-06 per user; use
+`send_later`/Monitor, never sleep-loops):
 - 3:48 ET still unfilled → cancel, re-place at mid − 40% of half-spread.
 - `forced_close_cross_et` (3:53) still unfilled → cancel, re-place limit AT THE BID.
 - Repeat at-bid repricing every 2 min until filled or 3:59.

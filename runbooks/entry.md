@@ -1,7 +1,9 @@
-# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 3 min until 1:30 PM on no-trade)
+# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 1 min until 1:30 PM on no-trade)
 
 Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
 All times US/Eastern. Account = `account_number` from config.
+Re-check cadence tightened from 3 min to 1 min on 2026-08-06 per user (applies to both
+the no-trade re-check loop and the initial monitor-loop kickoff after a fill).
 
 ## Loop resilience (added 2026-08-05 per user, after a `get_equity_historicals` call
 during a no-trade re-check failed on a transient "model temporarily unavailable"
@@ -170,11 +172,11 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
      Quantity = the full filled position quantity. Fresh ref_id; covered by the same
      standing authorization as the entry. Record the order id (and type — stop_limit or
      stop_market) in the journal — every later close must CANCEL this order first.
-  2. Start the **monitor loop**: `send_later` in 3 minutes to execute
+  2. Start the **monitor loop**: `send_later` in 1 minute to execute
      `runbooks/monitor.md` (the software side of stop/TP, discretion, re-entries, and —
      while a position's resting order is still the pre-9:45 stop_limit — the upgrade to
      stop_market once 9:45 arrives).
-- **No trade** → arm a **re-check**: `send_later` in 3 minutes to re-run this runbook
+- **No trade** → arm a **re-check**: `send_later` in 1 minute to re-run this runbook
   from §0 (guards apply fresh each time; journal only changes, not full re-writes).
   Re-checks stop at 1:30 PM ET or when an entry fills, whichever comes first. A late
   qualifier must pass the same gates — no loosening because the morning was quiet — PLUS
