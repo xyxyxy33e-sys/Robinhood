@@ -364,6 +364,39 @@ midday_floor_pct: 0              # floor level once midday_floor_trigger_pct is 
                                  # restriction is tied to this rule — a close it triggers is
                                  # followed by the standard §4 re-entry check exactly like any
                                  # other exit (still subject to the existing 1:30 PM cutoff).
+late_day_floor_window_start_et: "13:30"  # added 2026-08-06 per user, after U's second
+                                 # trade: sat around +10-11% at 15:00-15:06 ET (well before
+                                 # the +20% ratchet armed at 15:20), then the eventual stop
+                                 # only banked +2.28% after slippage. Same window-based
+                                 # mechanism as midday_floor, but for the afternoon and —
+                                 # per user — actually LOCKING IN a real profit rather than
+                                 # just protecting breakeven. Starts right where
+                                 # midday_floor_window_end_et (13:30) leaves off, so there's
+                                 # no protection gap through the afternoon.
+late_day_floor_window_end_et: "15:00"    # "by 3 o'clock" per user — matches the point where
+                                 # forced_close_start_et (15:40) is close enough that a
+                                 # position should already be locking in gains rather than
+                                 # still hoping for the full +20% ratchet to arm.
+late_day_floor_trigger_pct: 5    # first touch of entry × (1 + this%) during the window.
+                                 # Higher than midday_floor_trigger_pct (3, breakeven-only)
+                                 # since this floor actually banks profit rather than just
+                                 # preventing a loss — set above typical noise but well
+                                 # below the +8% early_floor_trigger_pct and +20% ratchet
+                                 # arm, so it catches positions (like U's second trade) that
+                                 # spend real time in the +5-15% range without ever reaching
+                                 # either of those. Pre-arm only — a no-op once take_profit_pct
+                                 # (20%) has armed the full ratchet, since that floor (at
+                                 # least +10% per take_profit_floor_pct) is already higher.
+late_day_floor_pct: 5            # floor level once late_day_floor_trigger_pct is touched
+                                 # during the window — locks in the SAME +5% (trigger and
+                                 # floor equal, unlike early_floor/midday_floor's
+                                 # trigger-above-floor gap), since the point here is banking
+                                 # a real minimum gain this late in the day, not leaving
+                                 # room for further upside before protection engages. Stops
+                                 # only move up; whenever this, early_floor, and/or
+                                 # midday_floor are all eligible, take the highest of the
+                                 # three (mechanically, not a special case). No re-entry
+                                 # restriction tied to this rule.
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 

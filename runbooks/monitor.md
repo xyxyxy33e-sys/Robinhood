@@ -169,6 +169,25 @@ should cost at most one cycle's data, never the whole loop.
      thin. Journal ("midday floor: stop $X → $Y"). No re-entry restriction is tied to
      this rule — a close it triggers gets the standard §5 re-entry check like any other
      exit, still subject to the 1:30 PM cutoff.
+   - **Late-day floor (added 2026-08-06, pre-arm only, checked only while current ET time
+     is within [`late_day_floor_window_start_et`, `late_day_floor_window_end_et`] —
+     1:30-3:00 PM ET, picking up right where the midday window ends): mark ≥ entry × (1 +
+     late_day_floor_trigger_pct/100)** (+5%, first touch during the window) → required
+     stop = entry × (1 + late_day_floor_pct/100) (+5% — an actual profit lock, not just
+     breakeven like the midday floor). If this exceeds the current resting stop, CANCEL
+     and place the new higher stop (depth-gated per above; order type follows the same
+     `ratchet_stop_type`/cutoff logic as the ratchet-arm bullet if that's also eligible,
+     otherwise stop_market; fresh ref_id, verify confirmed). Stops only ever move UP. When
+     multiple pre-arm floors are eligible at once (early floor, midday floor, this one),
+     take the highest required stop of the group — purely mechanical, no ordering
+     judgment needed since they're all just candidate floors feeding the same "stops only
+     move up" rule. Motivated by U's second trade (2026-08-06): sat around +10-11% for
+     several cycles around 3:00 PM ET, well below the +20% ratchet, then the eventual exit
+     banked only +2.28% after slippage — a position that spends real time solidly positive
+     this late in the day, without ever arming the full ratchet, should already be locking
+     in some of that gain rather than staying exposed to a full round-trip risk with only
+     ~40 minutes left before `forced_close_start_et`. Journal ("late-day floor: stop $X →
+     $Y").
    - **in profit, momentum broken** (5-min bars: lower highs, VWAP lost, volume faded) →
      discretionary sell-to-close per STRATEGY.md §6 — CANCEL the resting order first.
      Journal the reasoning. (Applies armed or not — the ratchet is a floor, not a reason
