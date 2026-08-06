@@ -88,7 +88,13 @@ the rest of the day's search.
    a bearish qualifier) → ATM or first strike beyond spot in the trade's direction (above
    spot for calls, below spot for puts).
 3. `get_option_quotes` → gates: open_interest ≥ `min_open_interest`; spread ≤
-   `max_spread_pct_of_mid`% of mid. **Quantity** = floor(`max_premium_per_trade` /
+   `max_spread_pct_of_mid`% of mid; **bid_size ≥ `min_quote_size_for_entry` AND
+   ask_size ≥ `min_quote_size_for_entry`** (added 2026-08-06 after U $40C 8/14 —
+   OI and spread both cleared but ask_size was only 2-4 against a 16-lot buy, and the
+   resting stop later swept ~26% through its trigger on a thin book; OI/spread are
+   static/percentage measures and don't see top-of-book depth, so check it directly).
+   Any one of the three failing is a gate failure — same next-strike-then-next-candidate
+   cascade as OI/spread below. **Quantity** = floor(`max_premium_per_trade` /
    (mid × 100)), minimum 1 — multiple contracts of the same call or put are allowed.
    `max_premium_per_trade` is the dollar figure computed once in today's premarket run
    (`daily_start_balance × max_premium_per_trade_pct_of_daily_start / 100`, from today's
@@ -103,7 +109,9 @@ the rest of the day's search.
    Gates fail ATM → next strike further out-of-the-money once → otherwise next candidate.
 4. **OI is static intraday (learned 2026-07-24):** open interest updates once daily,
    after settlement — a strike that fails the OI gate stays failed ALL DAY no matter how
-   strong the tape gets; only the spread can improve intraday. On re-checks, do NOT
+   strong the tape gets; only the spread and quote size can improve intraday (2026-08-06:
+   both can also move against you between checks — re-verify size fresh each re-check,
+   don't assume a prior pass still holds). On re-checks, do NOT
    re-pull quotes for a contract that already failed on OI today. A name whose ATM and
    step-out strikes have both failed on OI is dead for the day UNLESS spot has moved far
    enough that the ATM shifts to a strike not yet checked. The premarket journal records

@@ -82,6 +82,24 @@ min_open_interest: 500           # NOTE (added 2026-07-29): open interest visibl
                                  # clear, which hasn't happened yet.
 max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
 
+min_quote_size_for_entry: 10     # added 2026-08-06 per user, after U $40C 8/14: OI (1,393)
+                                 # and spread (7.7%) both cleared at entry, but the live
+                                 # ask_size was only 2-4 contracts against a 16-lot buy —
+                                 # OI is a stale once-daily figure and says nothing about
+                                 # real quoted depth. Displayed depth on that contract then
+                                 # swung wildly (2-4 at entry -> 463/243 six minutes later
+                                 # -> 2 right after the stop fired), and the resting
+                                 # stop_market swept straight through to a fill ~26% below
+                                 # its $1.70 trigger. Neither `min_open_interest` nor
+                                 # `max_spread_pct_of_mid` would have caught this — both are
+                                 # static/percentage measures blind to top-of-book size.
+                                 # Set a bit above `min_quote_size_for_stop_update` (5,
+                                 # which only gates RAISING an already-resting stop
+                                 # mid-trade, never removing protection) since this gate
+                                 # instead decides whether to take on the full position in
+                                 # the first place — same rationale as the OI/spread gates,
+                                 # applied to the dimension they miss.
+
 # --- Intraday risk -----------------------------------------------------------
 # Robinhood holds only ONE sell order per contract (no OCO for options), so only one of
 # the two protective orders can rest broker-side; the monitor loop enforces the other.
