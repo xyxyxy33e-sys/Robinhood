@@ -125,7 +125,17 @@ the rest of the day's search.
 2. If `entry_auto_execute` is **false**: present the trade (symbol, catalyst, contract,
    quote, alerts, cost) via AskUserQuestion and wait. No approval → no trade; journal it.
    If **true**: config records the user's standing authorization — proceed.
-3. `place_option_order` with a fresh UUID ref_id (reuse the same ref_id only on transport
+3. **Re-verify the spread immediately before placing (added 2026-08-06):** on a contract
+   that only just cleared the gates this cycle, the `review_option_order` quote can already
+   be stale by the time it returns — U $40C 8/14 cleared `max_spread_pct_of_mid` at 8.7% at
+   the gate check, then the review call came back seconds later at 12.86%, back over the
+   line. Pull one more fresh `get_option_quotes` right before `place_option_order` and
+   recompute the spread; if it's back above `max_spread_pct_of_mid`, **abort — do not
+   place** — journal it as an aborted attempt (contract, both spread reads, timing) and
+   fall through to the normal no-trade/re-check path for this cycle. Do not chase it by
+   repricing to the wider spread; that defeats the gate's purpose. This is a pre-placement
+   check only, not a new gate — OI/spread/size were already confirmed once in §2.
+4. `place_option_order` with a fresh UUID ref_id (reuse the same ref_id only on transport
    retries). If unfilled after 5 min (`get_option_orders`), cancel and re-place once at
    mid + 40% of half-spread. Still unfilled after 5 more min → cancel, no-trade day.
 
