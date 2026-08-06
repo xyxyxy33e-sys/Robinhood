@@ -23,7 +23,7 @@ or the close will be rejected / double-sell.
 1. `get_option_quotes` → mark vs entry premium (entry price from today's journal / the
    filled order).
 2. Whatever the P&L, the position closes today; P&L and momentum only affect timing:
-   - mark ≤ stop loss (`stop_loss_pct`) → close NOW, limit at mid; if unfilled in 3 min
+   - mark ≤ stop loss (`stop_loss_pct`) → close NOW, limit at mid; if unfilled in 1 min
      reprice to bid. No discretion on losers.
    - mark ≥ entry × (1 + hard_take_profit_pct/100) → sell NOW at mid, no discretion
      (the +30% hard-TP cap applies here exactly as in the monitor loop).
@@ -45,7 +45,7 @@ Poll `get_option_orders` every ~1 minute (tightened from 3 on 2026-08-06 per use
 `send_later`/Monitor, never sleep-loops):
 - 3:48 ET still unfilled → cancel, re-place at mid − 40% of half-spread.
 - `forced_close_cross_et` (3:53) still unfilled → cancel, re-place limit AT THE BID.
-- Repeat at-bid repricing every 2 min until filled or 3:59.
+- Repeat at-bid repricing every 1 min until filled or 3:59.
 - If anything is still open after 4:00 ET: notify the user IMMEDIATELY (push notification
   if available) with contract, quantity, and mark — never silently hold.
 

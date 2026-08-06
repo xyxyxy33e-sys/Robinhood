@@ -144,8 +144,9 @@ the rest of the day's search.
    repricing to the wider spread; that defeats the gate's purpose. This is a pre-placement
    check only, not a new gate — OI/spread/size were already confirmed once in §2.
 4. `place_option_order` with a fresh UUID ref_id (reuse the same ref_id only on transport
-   retries). If unfilled after 5 min (`get_option_orders`), cancel and re-place once at
-   mid + 40% of half-spread. Still unfilled after 5 more min → cancel, no-trade day.
+   retries). If unfilled after 1 min (`get_option_orders`), cancel and re-place once at
+   mid + 40% of half-spread. Still unfilled after 1 more min → cancel, no-trade day.
+   (Reprice windows tightened from 5 min to 1 min on 2026-08-06 per user.)
 
 ## 4. Record
 Journal the entry: contract, fill price (from the filled order), thesis, planned exits

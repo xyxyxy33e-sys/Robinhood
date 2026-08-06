@@ -73,7 +73,7 @@ should cost at most one cycle's data, never the whole loop.
    - **mark ≥ entry × (1 + hard_take_profit_pct/100)** (raised to +50% on 2026-07-28,
      briefly +30% earlier that day, originally +100%) → CANCEL the resting stop first
      (verify cancelled), then sell-to-close at mid immediately — NO discretion, winners
-     get capped as mechanically as losers get stopped. If unfilled in 3 min, reprice
+     get capped as mechanically as losers get stopped. If unfilled in 1 min, reprice
      toward the bid. Journal the win ("hard TP: sold at $X, +Y%"). **Note:** at +50% both
      `take_profit_pct` (20%, arms the ratchet) and `scale_out_pct` (40%) sit live inside
      this window and are checked before the position could ever reach the hard cap.
@@ -81,7 +81,7 @@ should cost at most one cycle's data, never the whole loop.
      (check the journal for a "SCALED OUT" entry on this position) → partial profit lock
      (added 2026-07-23, re-activated 2026-07-28): CANCEL the resting stop (verify
      cancelled), sell floor(qty/3)
-     contracts (min 1) limit at mid — reprice toward the bid after 3 min if unfilled —
+     contracts (min 1) limit at mid — reprice toward the bid after 1 min if unfilled —
      then re-place the resting stop for the REMAINING quantity at max(previous stop,
      entry × (1 + scale_out_floor_pct/100)) rounded to tick (depth-gated per above) —
      the −15% floor keyed to ORIGINAL entry (or the ratcheted price if the ratchet
