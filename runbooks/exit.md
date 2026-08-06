@@ -30,6 +30,11 @@ or the close will be rejected / double-sell.
    - winner or flat → discretionary (STRATEGY.md §6): pull 5-minute bars on the underlying;
      if it's still trending (higher highs, above VWAP, volume holding) you may hold until
      `forced_close_start_et` to capture the last leg — otherwise sell-to-close now at mid.
+     **Thin-liquidity exception (added 2026-08-06):** if this position was journaled
+     "LIQUIDITY: THIN" at entry, skip the last-leg hold entirely — sell-to-close now at
+     mid regardless of how the underlying is trending. A name with proven exit-slippage
+     risk shouldn't be given extra time in the position chasing a marginal further gain;
+     get flat as soon as this phase runs rather than waiting for `forced_close_start_et`.
      Either way, journal the reasoning; the position is flat by 3:53 regardless.
 3. `review_option_order` first; then, per `exit_auto_execute` (true = place without
    asking; false = AskUserQuestion, warning that no answer means an overnight hold).

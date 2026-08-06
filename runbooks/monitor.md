@@ -99,10 +99,18 @@ should cost at most one cycle's data, never the whole loop.
      cancel the resting stop and re-place it for the full new quantity at the SAME
      stop level (unchanged — floors stay keyed to original entry). Journal
      "RE-ENTERED tranche: bought N @ $X (sold @ $Y), stop re-placed for full qty".
+   - **Thin-liquidity thresholds (added 2026-08-06):** if this position was journaled
+     "LIQUIDITY: THIN" at entry (per entry.md §2), use `thin_liquidity_take_profit_pct`
+     (12) in place of `take_profit_pct` (20) for the arm trigger below, and
+     `thin_liquidity_stop_ratchet_trail_pct` (20) in place of `stop_ratchet_trail_pct`
+     (30) in the required-stop formula once armed — bank the profit lock sooner and trail
+     tighter on a name with proven exit-slippage risk. Liquid positions are unaffected.
    - **mark ≥ entry × (1 + take_profit_pct/100)** (lowered to +20% on 2026-07-28, was
-     50% — "start considering sale") → the ratchet ARMS (no forced sale). While armed:
+     50% — "start considering sale"; or `thin_liquidity_take_profit_pct`/12 for
+     THIN-flagged positions per above) → the ratchet ARMS (no forced sale). While armed:
      required stop = max(entry × (1 + take_profit_floor_pct/100), high-water mark × (1 −
-     stop_ratchet_trail_pct/100)), rounded to tick — floor raised from breakeven to +10%
+     stop_ratchet_trail_pct/100, or `thin_liquidity_stop_ratchet_trail_pct`/20 if THIN)),
+     rounded to tick — floor raised from breakeven to +10%
      on 2026-07-28 — track the high-water mark from the journal's mark history plus this
      check's quote. If the required stop exceeds the current resting stop, CANCEL the
      resting stop and place the new higher stop (depth-gated per above; fresh

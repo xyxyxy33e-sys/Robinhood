@@ -107,6 +107,12 @@ the rest of the day's search.
    `OPTION_NOT_ENOUGH_BP_FOR_PREMIUM` with buying power tied up in T+1-settling proceeds
    from earlier same-day closes). Journal it either way.
    Gates fail ATM → next strike further out-of-the-money once → otherwise next candidate.
+   **Thin-liquidity flag (added 2026-08-06):** once a contract clears all gates and is
+   selected, if its OI is below `thin_liquidity_oi_threshold`, journal it explicitly —
+   "LIQUIDITY: THIN (OI X < threshold Y)" — alongside the fill record in §4. This doesn't
+   block the trade (it already cleared every gate); it flags the position for the
+   tightened exit cascade in monitor.md/exit.md (lower ratchet-arm trigger, tighter trail,
+   no last-leg hold at exit) for the rest of its life, since OI is static intraday.
 4. **OI is static intraday (learned 2026-07-24):** open interest updates once daily,
    after settlement — a strike that fails the OI gate stays failed ALL DAY no matter how
    strong the tape gets; only the spread and quote size can improve intraday (2026-08-06:

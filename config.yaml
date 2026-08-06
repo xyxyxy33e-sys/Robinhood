@@ -100,6 +100,36 @@ min_quote_size_for_entry: 10     # added 2026-08-06 per user, after U $40C 8/14:
                                  # the first place — same rationale as the OI/spread gates,
                                  # applied to the dimension they miss.
 
+thin_liquidity_oi_threshold: 2500  # added 2026-08-06 per user: a contract can clear every
+                                 # entry gate (OI ≥ 500, spread ≤ 10%, size ≥ 10) and still
+                                 # be meaningfully thinner than a genuinely liquid name — U's
+                                 # $40C 8/14 had OI 1,393 (comfortably above the 500 minimum)
+                                 # but its spread flickered 6-30% all day and both of today's
+                                 # exits (a stop-out and a ratchet-stop) suffered real
+                                 # slippage against the same contract. At contract selection
+                                 # (entry.md §2), if the chosen contract's OI is below this
+                                 # threshold, journal it as "LIQUIDITY: THIN" for that
+                                 # position — OI is static intraday, so this classification
+                                 # doesn't change for the life of the trade. Roughly 5x
+                                 # `min_open_interest`, a round number distinguishing
+                                 # "barely qualifies" from genuinely deep (megacap names
+                                 # typically run OI in the 5,000-50,000+ range at ATM).
+thin_liquidity_take_profit_pct: 12  # for THIN-flagged positions only: replaces
+                                 # `take_profit_pct` (20) as the ratchet-arm trigger — bank
+                                 # the profit-lock ratchet sooner on a name with proven
+                                 # slippage risk, rather than waiting for the same +20% bar
+                                 # as a liquid name and giving the book more time to move
+                                 # against the exit. Liquid positions (OI ≥ threshold above)
+                                 # are unaffected — they keep using `take_profit_pct`.
+thin_liquidity_stop_ratchet_trail_pct: 20  # for THIN-flagged positions only: replaces
+                                 # `stop_ratchet_trail_pct` (30) once their (lower) ratchet
+                                 # has armed — a tighter trail gives back less of the move
+                                 # before locking in, compensating for the wider fill
+                                 # slippage already expected on this contract's exit.
+                                 # take_profit_floor_pct (+10%) still applies as the floor
+                                 # component either way; this only tightens the HWM-trail
+                                 # side of the max(...) calc.
+
 # --- Intraday risk -----------------------------------------------------------
 # Robinhood holds only ONE sell order per contract (no OCO for options), so only one of
 # the two protective orders can rest broker-side; the monitor loop enforces the other.
