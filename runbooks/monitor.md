@@ -34,10 +34,20 @@ should cost at most one cycle's data, never the whole loop.
    cascade checks below, and skip entirely for positions whose resting order is already
    a stop_market (either placed that way originally, at/after 9:45, or already upgraded
    on a prior cycle).
+3b. **Ratchet stop_limit → stop_market upgrade near close (added 2026-08-06):** if this
+   position's resting order is currently a ratchet-placed stop_limit (see the ratchet-arm
+   bullet in §4 below) and current ET time is now ≥ `ratchet_stop_limit_cutoff_et`, cancel
+   it (`get_option_orders` confirms `cancelled`) and place a stop_market at the SAME
+   stop_price, fresh ref_id, verify `state: confirmed`. Update the journal with the new
+   order id/type. One-time transition per position, same mechanic as the 9:45 upgrade in
+   §3 — past this cutoff, certainty of getting flat before `forced_close_start_et` matters
+   more than bounding slippage. Skip entirely for positions whose resting order is a
+   stop_market already, or whose ratchet hasn't armed yet.
 4. For each open strategy position, `get_option_quotes`. Software-side of whichever
    protection is NOT resting (per `resting_order_type`):
-   **Quote-depth gate (added 2026-07-31, applies to every stop_market cancel+replace
-   below — ratchet-arm, stall-trail, early floor):** immediately before cancelling the
+   **Quote-depth gate (added 2026-07-31, applies to every resting-stop cancel+replace
+   below — ratchet-arm, stall-trail, early floor — whether the new order is stop_market
+   or, per the 2026-08-06 ratchet_stop_type option, stop_limit):** immediately before cancelling the
    resting stop and placing a new one, re-`get_option_quotes` fresh (don't reuse the
    read from earlier this cycle — it may be stale by the time cancel+place executes)
    and require `bid_size ≥ min_quote_size_for_stop_update` AND
@@ -95,10 +105,19 @@ should cost at most one cycle's data, never the whole loop.
      stop_ratchet_trail_pct/100)), rounded to tick — floor raised from breakeven to +10%
      on 2026-07-28 — track the high-water mark from the journal's mark history plus this
      check's quote. If the required stop exceeds the current resting stop, CANCEL the
-     resting stop and place the new higher stop_market (depth-gated per above; fresh
+     resting stop and place the new higher stop (depth-gated per above; fresh
      ref_id, verify `state: confirmed`, record the new order id). Stops only ever move
-     UP. Journal each ratchet
-     ("ratchet: stop $X → $Y, HWM $Z"). With a 20-50% window before the hard-TP cap above,
+     UP. **Order type (added 2026-08-06):** if `ratchet_stop_type` is `stop_limit` AND
+     current ET time is before `ratchet_stop_limit_cutoff_et`, place the new stop as a
+     stop_limit (stop_price as computed above; limit_price = stop_price × (1 −
+     `ratchet_stop_limit_buffer_pct`/100), rounded to tick) instead of stop_market —
+     bounds slippage on a contract already carrying a real profit cushion. Otherwise
+     (config set to `stop_market`, or at/after the cutoff) place stop_market as before.
+     Once a stop_limit is placed this way, every subsequent ratchet/stall-trail raise on
+     this position also re-computes its limit_price the same way and stays stop_limit
+     until either filled or upgraded to stop_market by §3b near the close. Journal each
+     ratchet with its order type ("ratchet: stop $X → $Y (stop_limit, limit $L), HWM $Z"
+     or "... (stop_market) ..."). With a 20-50% window before the hard-TP cap above,
      arming typically snaps the stop to entry × 1.10 first (a HWM only modestly above
      entry, trailed 30%, computes below the +10% floor) — but as the position runs further
      toward +50%, the HWM-trail component can overtake the floor and raise the stop above

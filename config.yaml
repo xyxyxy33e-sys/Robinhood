@@ -269,6 +269,36 @@ stop_ratchet_stall_trail_pct: 10 # added 2026-07-28 per user (secondary layer, o
                                  # discretionary momentum-broken check below, which can
                                  # still force a full exit on a fully confirmed reversal
                                  # even if the tightened stop hasn't been touched yet.
+ratchet_stop_type: "stop_limit"  # added 2026-08-06 per user, after U's second trade: the
+                                 # resting stop_market fired at 15:33:52 ET on a $2.41
+                                 # trigger but filled at $2.24 (~7% slippage) — mild
+                                 # compared to the SAME contract's ~26% slippage on trade 1
+                                 # that morning, but still gave back real banked profit.
+                                 # Once the take-profit ratchet ARMS (mark first touches
+                                 # take_profit_pct), and only if there's still runway before
+                                 # ratchet_stop_limit_cutoff_et (below), switch the resting
+                                 # order from stop_market to stop_limit for the rest of its
+                                 # life — bounding slippage now that a real profit cushion
+                                 # exists to protect, rather than accepting unbounded
+                                 # stop_market slippage on a contract with today's proven
+                                 # thin-book history. Set to "stop_market" to disable and
+                                 # keep the pre-2026-08-06 behavior (stop_market throughout).
+ratchet_stop_limit_buffer_pct: 5 # limit_price = stop_price × (1 − this/100) whenever a
+                                 # ratchet-armed stop is (re)placed as stop_limit — tighter
+                                 # than the 15% buffer used for the pre-9:45 blackout
+                                 # stop_limit (that one exists purely to get SOME resting
+                                 # order on before 9:45; this one exists to actually bound
+                                 # slippage close to the trigger, so it should stay tight).
+ratchet_stop_limit_cutoff_et: "15:30" # 10 min before forced_close_start_et (15:40) — the
+                                 # "meaningful runway" boundary. The ratchet only switches TO
+                                 # stop_limit before this time. If a stop_limit is already
+                                 # resting and current time reaches this cutoff, monitor.md
+                                 # upgrades it back to stop_market at the same stop_price
+                                 # (mirrors the existing pre-9:45 upgrade mechanic) — past
+                                 # this point, certainty of getting flat before the forced
+                                 # close matters more than bounding a few more % of slippage;
+                                 # a stuck unfilled limit order this late risks scrambling at
+                                 # 3:59 ET or an unwanted hold into the close.
 early_floor_trigger_pct: 8       # added 2026-07-30 per user, after AMD (peaked +11.5%,
                                  # never armed the +20% ratchet, ground down on theta for
                                  # ~an hour, round-tripped to a full stop-out) and MSFT's
