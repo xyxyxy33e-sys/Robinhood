@@ -130,6 +130,25 @@ thin_liquidity_stop_ratchet_trail_pct: 20  # for THIN-flagged positions only: re
                                  # component either way; this only tightens the HWM-trail
                                  # side of the max(...) calc.
 
+# --- Single-gate liquidity exception: PAPER-ONLY SHADOW TEST -----------------
+# Added 2026-08-07 per user, after a week-long counterfactual (journal 2026-08-07)
+# showed contracts failing exactly ONE liquidity gate by a bounded margin — with
+# the other two passing — were the only gate-blocked setups that would have won.
+# SHADOW ONLY through Fri 2026-08-14: no real order may ever use this exception
+# while gate_exception_shadow_only is true. Mechanics in entry.md TEMPORARY
+# section; review with user after the 8/14 close before any live use.
+gate_exception_shadow_only: true # HARD SWITCH — true means paper tracking only
+gate_exception_min_oi: 200       # if OI is the (single) failing gate it must still be
+                                 # ≥ this (40% of min_open_interest 500)
+gate_exception_max_spread_pct: 20  # if spread is the (single) failing gate it must
+                                 # still be ≤ this % of mid (2x max_spread_pct_of_mid)
+gate_exception_size_factor: 0.5  # exception trades size at half the normal
+                                 # max_premium_per_trade (applies to the shadow's
+                                 # hypothetical sizing now, and to real sizing if/when
+                                 # this ever goes live). Quote-size gate
+                                 # (min_quote_size_for_entry) must ALWAYS pass — it is
+                                 # never the exception-eligible gate.
+
 # --- Intraday risk -----------------------------------------------------------
 # Robinhood holds only ONE sell order per contract (no OCO for options), so only one of
 # the two protective orders can rest broker-side; the monitor loop enforces the other.

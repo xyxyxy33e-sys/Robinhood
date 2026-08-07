@@ -85,7 +85,17 @@ the rest of the day's search.
    trade; journal it.
 
 ## 2. Select the contract (per chosen underlying)
-1. `get_option_chains` (underlying_symbol) → pick expiration in [dte_min, dte_max].
+1. `get_option_chains` (underlying_symbol) → pick the NEAREST expiration in
+   [dte_min, dte_max] (the established convention, now written down).
+   **Expiry step-out on structural cap (LIVE, added 2026-08-07 per user):** if that
+   nearest expiry's chain is structurally capped short of spot — no ATM or OTM strike
+   exists in the trade's direction (calls: no strike ≥ spot; puts: no strike ≤ spot),
+   as happened with TEAM on 2026-08-07 (spot $146-153 all session, highest 8/14 strike
+   $145) — step to the NEXT expiration inside [dte_min, dte_max] and run the normal §2
+   gates there instead. Structural-cap cases ONLY: never step out because a strike
+   exists but fails OI/spread/size — those failures follow the normal
+   next-strike-then-next-candidate cascade at the chosen expiry. Journal the step-out
+   explicitly ("EXPIRY STEP-OUT: 8/14 capped at $X < spot $Y → using 8/21").
 2. `get_option_instruments` (chain, expiration, type=call for a bullish qualifier / put for
    a bearish qualifier) → ATM or first strike beyond spot in the trade's direction (above
    spot for calls, below spot for puts).
@@ -214,3 +224,34 @@ one). No real orders are ever placed for this track.
    shadow 9:45 trades: entry price, exit price/reason, P&L) across the week plus
    2026-08-03's own retroactive/live data points, and review with the user before
    deciding whether 9:35 stays the permanent entry time.
+
+## TEMPORARY: single-gate-exception shadow track (2026-08-10 through 2026-08-14 —
+review with user after Friday 8/14 close, then remove or promote to live)
+Per user decision 2026-08-07 (analysis in journal/2026-08-07.md "DRAFT proposal"
+section). PAPER ONLY — `gate_exception_shadow_only: true` in config.yaml is a hard
+switch; no real order may use the exception while it is true.
+1. During any §2 contract-selection pass (initial or re-check), when a tape-qualified
+   candidate's contract fails the standard three-gate check, test the exception:
+   - exactly ONE of the three gates (OI / spread / quote-size) failed, AND
+   - the failing gate is NOT quote-size (bid_size ≥ `min_quote_size_for_entry` AND
+     ask_size ≥ `min_quote_size_for_entry` must both hold), AND
+   - the miss is bounded: OI ≥ `gate_exception_min_oi` if OI failed, or spread ≤
+     `gate_exception_max_spread_pct`% of mid if spread failed.
+   If it qualifies AND no gate-exception shadow is already open today: journal
+   "GATE-EXCEPTION SHADOW ENTRY (paper only): contract, failing gate + value,
+   hypothetical entry (mid), quantity = floor(max_premium_per_trade ×
+   `gate_exception_size_factor` / (mid × 100)), THIN flag". One shadow per day,
+   first-qualified-first-tracked; the real search continues unaffected.
+2. On every subsequent loop firing (entry re-check or monitor cycle), pull the shadow
+   contract's quote and apply the THIN exit cascade on paper (stop −25%, THIN ratchet
+   arm at `thin_liquidity_take_profit_pct` 12% / trail
+   `thin_liquidity_stop_ratchet_trail_pct` 20%, early/midday/late-day floors, hard TP
+   +50%). Journal "GATE-EXCEPTION SHADOW: mark $X (±Y%) — [action]" each cycle. On a
+   paper exit, journal the hypothetical fill and P&L and stop tracking for the day.
+3. If the shadow is still open when the entry re-check loop ends (1:30 PM cutoff or a
+   real fill switching to monitor.md), it stays open on paper; the EXIT phase (~3:30,
+   exit.md reads today's journal and will see the open shadow line) closes it at the
+   then-current mid and journals the result.
+4. After Friday 8/14's close: compile the week's shadow results (entry, exit, P&L,
+   which gate was excepted) vs. the week-of-8/4 backtest, and review with the user
+   before deciding whether to flip `gate_exception_shadow_only` to false.
