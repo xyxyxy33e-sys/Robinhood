@@ -34,8 +34,11 @@ the rest of the day's search.
    closer-to-the-money strike before the existing ratchet/stall-trail logic exited it
    for +15.9%, vs. the real 9:45 entry's -26.09% stop-out — though that single day never
    actually tested the stop_limit fill risk, since price never approached a stop level
-   during 9:35-9:45. A parallel paper-only 9:45 shadow track (see the TEMPORARY section
-   below) runs through Friday 2026-08-07 to build more evidence before this is final.)
+   during 9:35-9:45. **9:35 made PERMANENT on 2026-08-07 per user** after the week-long
+   9:45 shadow comparison concluded: one strong data point for 9:35 (8/3), four washes
+   (8/4-8/7 — chain liquidity, not entry timing, was the binding constraint all week;
+   full table in journal/2026-08-07.md). Open item, never yet tested live: a stop_limit
+   fill during the 9:30-9:45 blackout on a fast reversal — watch organically.)
 3. `get_option_positions` (nonzero=true): count total open positions (calls + puts
    combined). If total ≥ `max_open_positions`, stop (no room). Otherwise continue.
 4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
@@ -194,36 +197,6 @@ Journal the entry: contract, fill price (from the filled order), thesis, planned
   the late-re-check volume bar (STRATEGY.md §3): several consecutive closes in the trade
   direction on rising/elevated volume, sustained 15+ minutes. A quiet low-volume reclaim
   of the open does not qualify.
-
-## TEMPORARY: 9:45 shadow-entry tracking (2026-08-04 through 2026-08-07 — review with
-user after Friday 8/7 close, then remove this section)
-Per user request (2026-08-03): 9:35 is now the real entry time (with the stop_limit
-mechanism above), but run a PAPER-ONLY parallel comparison of what waiting for the old
-9:45, three-bar-confirmed entry would have done instead — the mirror image of the
-tracking done on 2026-08-03 itself (which compared a 9:35 entry against the real 9:45
-one). No real orders are ever placed for this track.
-1. At 9:45 ET each day, using the day's premarket-ranked candidates, run the "Later
-   re-checks" 9:45 three-5-minute-bar tape check from §1.3 above — the fuller-confirmation
-   version — independent of whatever the real 9:35 entry already did. If it would
-   qualify: pick the hypothetical contract/strike/quantity per §2's rules using that
-   moment's spot price (this may differ from the real 9:35 contract if spot has moved,
-   or the 9:45 read may reject a candidate the thinner 9:35 read accepted — that
-   divergence is exactly what this comparison is for) and journal "9:45 SHADOW ENTRY
-   (paper only): contract, hypothetical entry price (mid), quantity, planned exits." If
-   no qualifier at 9:45 (including because the real 9:35 trade already reversed by
-   then), journal that too.
-2. During each 3-min monitor cycle for the rest of the day, ALSO pull
-   `get_option_quotes` (or historicals, if catching up after a gap) for the shadow
-   contract and apply the exact same cascade from monitor.md §3 (stop_loss, hard-TP,
-   scale-out, ratchet-arm + stall-trail, early floor, midday floor) on paper. Journal
-   "SHADOW (9:45): mark $X (±Y%) — [action]" alongside the real position's entries each
-   cycle. When the shadow position would exit under any rule, journal the hypothetical
-   fill price and realized P&L, and stop shadow-tracking for the day (one shadow track
-   per day, no shadow re-entry search — keep this lightweight).
-3. On 2026-08-07 (Friday) close, compile a comparison table (real 9:35 trades vs.
-   shadow 9:45 trades: entry price, exit price/reason, P&L) across the week plus
-   2026-08-03's own retroactive/live data points, and review with the user before
-   deciding whether 9:35 stays the permanent entry time.
 
 ## TEMPORARY: single-gate-exception shadow track (2026-08-10 through 2026-08-14 —
 review with user after Friday 8/14 close, then remove or promote to live)
