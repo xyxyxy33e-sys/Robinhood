@@ -156,7 +156,7 @@ thin_liquidity_oi_threshold: 2500  # added 2026-08-06 per user: a contract can c
                                  # `min_open_interest`, a round number distinguishing
                                  # "barely qualifies" from genuinely deep (megacap names
                                  # typically run OI in the 5,000-50,000+ range at ATM).
-thin_liquidity_take_profit_pct: 12  # for THIN-flagged positions only: replaces
+thin_liquidity_take_profit_pct: 7  # for THIN-flagged positions only: replaces
                                  # `take_profit_pct` (20) as the ratchet-arm trigger — bank
                                  # the profit-lock ratchet sooner on a name with proven
                                  # slippage risk, rather than waiting for the same +20% bar
@@ -190,6 +190,52 @@ gate_exception_size_factor: 0.5  # exception trades size at half the normal
                                  # this ever goes live). Quote-size gate
                                  # (min_quote_size_for_entry) must ALWAYS pass — it is
                                  # never the exception-eligible gate.
+
+# === EXIT-THRESHOLD RECALIBRATION, 2026-08-12 (per user: "scale down the exit
+# === thresholds too") — read this before interpreting any single value below.
+# Expiry selection moved to dte_target=14 the same day (see "Contract selection"),
+# which roughly HALVES contract leverage: today's five actual fills averaged 14.6x
+# (option % move per 1% underlying move); a ~14 DTE contract runs ~8.6x. Every
+# PROFIT-side threshold was multiplied by 0.59 so it still represents the SAME
+# underlying move it always did — the thresholds were never really about option
+# percentages, they were proxies for "how far has the stock gone":
+#
+#   parameter                        old -> new   underlying move required
+#   take_profit_pct (ratchet arm)     20 -> 12     1.37% -> 1.39%   unchanged
+#   hard_take_profit_pct              50 -> 30     3.42% -> 3.48%   unchanged
+#   scale_out_pct                     40 -> 24     2.74% -> 2.79%   unchanged
+#   take_profit_floor_pct             10 ->  6     0.68% -> 0.70%   unchanged
+#   thin_liquidity_take_profit_pct    12 ->  7     0.82% -> 0.81%   unchanged
+#   early_floor_trigger_pct            8 ->  5     0.55% -> 0.58%   unchanged
+#   early_floor_pct                   -3 -> -2     0.21% -> 0.23%   unchanged
+#   midday_floor_trigger_pct           3 ->  2     0.21% -> 0.23%   unchanged
+#   late_day_floor_trigger/floor_pct   5 ->  3     0.34% -> 0.35%   unchanged
+#   scale_out_floor_pct              -15 -> -9     1.03% -> 1.04%   unchanged
+#
+# DELIBERATELY NOT SCALED:
+#  * stop_loss_pct stays -25. Halving it would put the stop back at ~1.45% of
+#    underlying movement and undo the entire point of the DTE change. Holding it at
+#    -25% while leverage falls is precisely what widens the tolerance from 1.71% to
+#    2.90% — that widening IS the change. Do not "finish the job" by scaling it.
+#  * The trail percentages (stop_ratchet_trail_pct 30, thin 20, stall 10) stay put.
+#    They are proportional give-back from a high-water mark, so they are already
+#    leverage-neutral: 30% of the peak is 30% of the peak at any leverage.
+#  * midday_floor_pct stays 0 — breakeven is breakeven.
+#
+# NOTE ON hard_take_profit_pct 50 -> 30: this is NOT a reversal of the 2026-07-28
+# decision that raised it 30 -> 50 because +30% was cutting winners short. That
+# lesson was learned at ~15x leverage where +30% meant a 2.0% underlying move. At
+# 8.6x, +30% means a 3.48% move — the same bar as the old +50%. Equivalent, not a
+# regression.
+#
+# Verified on the same 20 name-day sample (14 DTE profile, 10:30 entry, theta charged):
+#   old thresholds at new leverage:  5 stops, 3 TPs, 2 scale-outs, +7.52%, 70% win
+#   NEW thresholds at new leverage:  3 stops, 5 TPs, 4 scale-outs, +8.11%, 80% win
+# The gain is modest in average P&L; the real effect is that the cascade FUNCTIONS
+# again — hard-TP and scale-out actually fire instead of every exit defaulting to the
+# ratchet floor. Median falls +10.0% -> +6.0% purely because the floor itself moved.
+# CAVEAT: same 20 name-days as the DTE and entry-timing tests, so these three findings
+# are NOT independent confirmations of each other.
 
 # --- Intraday risk -----------------------------------------------------------
 # Robinhood holds only ONE sell order per contract (no OCO for options), so only one of
@@ -233,7 +279,7 @@ min_quote_size_for_stop_update: 5
 resting_order_type: "stop_loss"  # "stop_loss" (default: resting stop_market at the stop
                                  # level; monitor handles profit-taking) or "take_profit"
                                  # (resting sell limit at the target; monitor handles stops)
-scale_out_pct: 40                # partial profit lock (added 2026-07-23 per user, after
+scale_out_pct: 24                # partial profit lock (added 2026-07-23 per user, after
                                  # GOOGL peaked +44.1% — under the +50% ratchet arm — and
                                  # round-tripped to −3.9%): on positions holding 2+
                                  # contracts, when the mark FIRST touches entry ×
@@ -246,7 +292,7 @@ scale_out_pct: 40                # partial profit lock (added 2026-07-23 per use
                                  # Re-activated 2026-07-28 (had been dormant while
                                  # hard_take_profit_pct sat below 40; now the cascade is
                                  # ratchet-arm 20% → scale-out 40% (qty≥2) → hard-TP 50%).
-scale_out_floor_pct: -15         # after a scale-out fills, the remainder's stop is raised
+scale_out_floor_pct: -9         # after a scale-out fills, the remainder's stop is raised
                                  # to at least entry × (1 + this%/100) (rounded to tick,
                                  # keyed to ORIGINAL entry; stops only move up). Guarantees
                                  # the whole trade stays net-positive once the scale-out
@@ -267,7 +313,7 @@ scale_out_floor_pct: -15         # after a scale-out fills, the remainder's stop
                                  # most its original size. After the re-buy, the resting
                                  # stop is cancelled and re-placed for the full new
                                  # quantity at the same (unchanged) stop level.
-take_profit_pct: 20              # ratchet trigger (lowered from 50 to 20 on 2026-07-28
+take_profit_pct: 12              # ratchet trigger (lowered from 50 to 20 on 2026-07-28
                                  # per user — "start considering sale" at +20%): when the
                                  # mark first touches entry × (1 + this%), the stop
                                  # ratchet arms (see below) — required stop rises toward
@@ -284,7 +330,7 @@ stop_loss_pct: -25               # hard floor: entry premium × (1 + this%). Tig
                                  # fill price. Tightening the trigger to -25% gives more
                                  # cushion against that gap before the position reaches an
                                  # unacceptable actual loss.
-hard_take_profit_pct: 50         # instant sale: mark ≥ entry × (1 + this%) → cancel the
+hard_take_profit_pct: 30         # instant sale: mark ≥ entry × (1 + this%) → cancel the
                                  # resting stop and sell-to-close at mid NOW, no
                                  # discretion. Raised from 30 to 50 on 2026-07-28 per user
                                  # — a backtest of the prior week's trades showed the
@@ -305,7 +351,7 @@ hard_take_profit_pct: 50         # instant sale: mark ≥ entry × (1 + this%) �
                                  # reached. The +20% ratchet-arm above now gives a live
                                  # 20%-50% window to trail before the hard cap fires, and
                                  # `scale_out_pct` (40%) sits live inside that window too.
-take_profit_floor_pct: 10        # added 2026-07-28 per user: once the ratchet is armed
+take_profit_floor_pct: 6        # added 2026-07-28 per user: once the ratchet is armed
                                  # (mark ≥ entry × (1 + take_profit_pct/100), i.e. +20%),
                                  # the floor is entry × (1 + this%/100) — +10% — instead
                                  # of plain breakeven. Combined with stop_ratchet_trail_pct
@@ -390,7 +436,7 @@ ratchet_stop_limit_cutoff_et: "15:30" # 10 min before forced_close_start_et (15:
                                  # close matters more than bounding a few more % of slippage;
                                  # a stuck unfilled limit order this late risks scrambling at
                                  # 3:59 ET or an unwanted hold into the close.
-early_floor_trigger_pct: 8       # added 2026-07-30 per user, after AMD (peaked +11.5%,
+early_floor_trigger_pct: 5       # added 2026-07-30 per user, after AMD (peaked +11.5%,
                                  # never armed the +20% ratchet, ground down on theta for
                                  # ~an hour, round-tripped to a full stop-out) and MSFT's
                                  # failed leader re-entry (peaked +8.44%, same story) both
@@ -406,7 +452,7 @@ early_floor_trigger_pct: 8       # added 2026-07-30 per user, after AMD (peaked 
                                  # anyway. Checked in the monitor loop after hard-TP/
                                  # scale-out/ratchet-arm but before plain "otherwise hold" —
                                  # only applies pre-arm; a no-op once armed.
-early_floor_pct: -3              # floor level once early_floor_trigger_pct is touched —
+early_floor_pct: -2              # floor level once early_floor_trigger_pct is touched —
                                  # set slightly below breakeven (not exactly 0) to leave
                                  # slippage room so the stop_market mechanism itself
                                  # doesn't whipsaw the position out right at the breakeven
@@ -436,7 +482,7 @@ midday_floor_window_end_et: "13:30"  # window end — matches the existing 1:30 
                                  # for symmetry (the same hour treated as "weak" for new
                                  # entries is now also treated as "weak" for letting an
                                  # existing position's gain ride unprotected).
-midday_floor_trigger_pct: 3      # much lower than early_floor_trigger_pct (8) — set low
+midday_floor_trigger_pct: 2      # much lower than early_floor_trigger_pct (8) — set low
                                  # enough to have caught today's BABA (+5% peak). Pre-arm
                                  # only (no-op once take_profit_pct/20% has armed the full
                                  # ratchet, same restriction as early_floor_trigger_pct).
@@ -468,7 +514,7 @@ late_day_floor_window_end_et: "15:00"    # "by 3 o'clock" per user — matches t
                                  # forced_close_start_et (15:40) is close enough that a
                                  # position should already be locking in gains rather than
                                  # still hoping for the full +20% ratchet to arm.
-late_day_floor_trigger_pct: 5    # first touch of entry × (1 + this%) during the window.
+late_day_floor_trigger_pct: 3    # first touch of entry × (1 + this%) during the window.
                                  # Higher than midday_floor_trigger_pct (3, breakeven-only)
                                  # since this floor actually banks profit rather than just
                                  # preventing a loss — set above typical noise but well
@@ -478,7 +524,7 @@ late_day_floor_trigger_pct: 5    # first touch of entry × (1 + this%) during th
                                  # either of those. Pre-arm only — a no-op once take_profit_pct
                                  # (20%) has armed the full ratchet, since that floor (at
                                  # least +10% per take_profit_floor_pct) is already higher.
-late_day_floor_pct: 5            # floor level once late_day_floor_trigger_pct is touched
+late_day_floor_pct: 3            # floor level once late_day_floor_trigger_pct is touched
                                  # during the window — locks in the SAME +5% (trigger and
                                  # floor equal, unlike early_floor/midday_floor's
                                  # trigger-above-floor gap), since the point here is banking

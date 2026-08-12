@@ -189,6 +189,20 @@ heavier theta): the volume bar is the compensation, not optional.
   firing the stop_market instantly at $3.50 even though the underlying stock itself
   was still near its session highs. A plain numeric threshold, not a discretionary
   override — the mechanical no-discretion property of the stop system is unchanged.
+> **⚠ THRESHOLD VALUES BELOW ARE PRE-2026-08-12 AND ARE NOW HISTORICAL NARRATIVE.**
+> On 2026-08-12 expiry selection moved to `dte_target: 14`, roughly halving contract
+> leverage (~14.6x → ~8.6x), and every profit-side threshold was scaled by 0.59 so it
+> represents the **same underlying move** as before. Current values live in
+> `config.yaml`, which is authoritative — the runbooks read them by name, so behaviour
+> is already correct; only the prose numbers below are stale.
+> **arm 20→12 · hard TP 50→30 · scale-out 40→24 · TP floor 10→6 · THIN arm 12→7 ·
+> early floor 8→5 / −3→−2 · midday trigger 3→2 · late-day 5→3 · scale-out floor −15→−9.**
+> **`stop_loss_pct` stays −25 deliberately** — not scaling it is what widens the stop's
+> tolerance from 1.71% to 2.90% of underlying movement, which is the entire point.
+> Trail percentages (30/20/10) also unchanged: give-back from a peak is leverage-neutral.
+> Rationale, arithmetic and verification: `config.yaml` "EXIT-THRESHOLD RECALIBRATION"
+> and `journal/2026-08-12.md`.
+
 - **Partial scale-out at +40% (added 2026-07-23; re-activated 2026-07-28 now that the
   hard cap sits above it again):** on a position holding 2+ contracts, the first touch
   of entry × (1 + `scale_out_pct`/100) sells floor(quantity/3) contracts (min 1) at mid;
