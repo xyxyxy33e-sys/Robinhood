@@ -156,14 +156,14 @@ thin_liquidity_oi_threshold: 2500  # added 2026-08-06 per user: a contract can c
                                  # `min_open_interest`, a round number distinguishing
                                  # "barely qualifies" from genuinely deep (megacap names
                                  # typically run OI in the 5,000-50,000+ range at ATM).
-thin_liquidity_take_profit_pct: 12  # for THIN-flagged positions only: replaces
+thin_liquidity_take_profit_pct: 8  # for THIN-flagged positions only: replaces
                                  # `take_profit_pct` (20) as the ratchet-arm trigger — bank
                                  # the profit-lock ratchet sooner on a name with proven
                                  # slippage risk, rather than waiting for the same +20% bar
                                  # as a liquid name and giving the book more time to move
                                  # against the exit. Liquid positions (OI ≥ threshold above)
                                  # are unaffected — they keep using `take_profit_pct`.
-thin_liquidity_stop_ratchet_trail_pct: 20  # for THIN-flagged positions only: replaces
+thin_liquidity_stop_ratchet_trail_pct: 15  # for THIN-flagged positions only: replaces
                                  # `stop_ratchet_trail_pct` (30) once their (lower) ratchet
                                  # has armed — a tighter trail gives back less of the move
                                  # before locking in, compensating for the wider fill
@@ -244,6 +244,38 @@ gate_exception_size_factor: 0.5  # exception trades size at half the normal
 # CAVEAT: same 20 name-days as the DTE and entry-timing tests, so these three findings
 # are NOT independent confirmations of each other.
 
+# === EXIT-THRESHOLD SCAN, 2026-08-12 evening (per user) — THE CHANGES BELOW ARE LIVE.
+# Each exit parameter was scanned individually at the 14-DTE profile (8.6x leverage,
+# 4.04%/day theta, 2.8% measured vega cost), entry 9:35, 47 name-days, with a
+# July(31)/August(16) split-sample stability check on every parameter. Full tables in
+# journal/2026-08-12.md. Only two parameters showed a stable, monotonic effect:
+#   take_profit_pct        20 -> 12   (scan optimum 10; both subsamples agreed)
+#   stop_ratchet_trail_pct 30 -> 20   (scan optimum 15; both subsamples agreed)
+#   thin_liquidity_take_profit_pct        12 -> 8    (kept below the normal arm)
+#   thin_liquidity_stop_ratchet_trail_pct 20 -> 15   (kept tighter than the normal trail)
+# Combined effect on the sample: +4.71% -> +6.05%, improving ALL THREE of the full
+# sample, July and August. Stops 18 -> 17, median +7.7% -> +10.5%.
+#
+# DELIBERATELY STOPPED SHORT OF THE SCAN OPTIMUM (arm 10 / trail 15, which measured
+# +6.98%). The response curve stayed monotonic to the edge of the tested range, which
+# usually means the simulation is missing a cost rather than that an optimum was found —
+# and here the missing cost is identified: the backtest checks the trail on 30-MINUTE
+# bars (9 checks/session) while monitor.md checks it EVERY MINUTE, so tight trails are
+# systematically flattered. The arm is a one-time trigger and far less resolution-
+# sensitive, which is why it was moved closer to its optimum than the trail was.
+#
+# NOT CHANGED, and why:
+#   stop_loss_pct  -25  : the LEAST stable parameter in the scan (ALL says -30, July -20,
+#                         August -25). That spread is what an overfit parameter looks like.
+#   take_profit_floor_pct 10 : completely FLAT in the scan — 0/3/5/8/10 all returned an
+#                         identical +4.71%. No evidence either way, so left alone.
+#   hard_take_profit_pct 50, scale_out_pct 40 : near-flat and subsample-unstable.
+#
+# ORDERING CONSTRAINT (found via a scan bug, now an explicit rule): the effective floor
+# once armed is min(take_profit_floor_pct, the arm level that applied). With THIN arming
+# at +8% and the floor at +10%, an unclamped floor would sit ABOVE the mark at the moment
+# of arming and force an instant sell — see monitor.md 4.
+
 # --- Intraday risk -----------------------------------------------------------
 # Robinhood holds only ONE sell order per contract (no OCO for options), so only one of
 # the two protective orders can rest broker-side; the monitor loop enforces the other.
@@ -320,7 +352,7 @@ scale_out_floor_pct: -15         # after a scale-out fills, the remainder's stop
                                  # most its original size. After the re-buy, the resting
                                  # stop is cancelled and re-placed for the full new
                                  # quantity at the same (unchanged) stop level.
-take_profit_pct: 20              # ratchet trigger (lowered from 50 to 20 on 2026-07-28
+take_profit_pct: 12              # ratchet trigger (lowered from 50 to 20 on 2026-07-28
                                  # per user — "start considering sale" at +20%): when the
                                  # mark first touches entry × (1 + this%), the stop
                                  # ratchet arms (see below) — required stop rises toward
@@ -373,7 +405,7 @@ take_profit_floor_pct: 10        # added 2026-07-28 per user: once the ratchet i
                                  # over as the position extends further, until either the
                                  # +50% hard-TP full exit or a stop-out at the trailed
                                  # level (floor +10% minimum).
-stop_ratchet_trail_pct: 30       # once armed (mark touched the take_profit level), the
+stop_ratchet_trail_pct: 20       # once armed (mark touched the take_profit level), the
                                  # resting stop is raised to max(take_profit_floor_pct
                                  # level, high-water mark × (1 − this%/100)), rounded to
                                  # tick, and only ever moves UP — a big winner can no

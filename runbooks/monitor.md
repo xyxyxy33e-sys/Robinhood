@@ -125,6 +125,13 @@ should cost at most one cycle's data, never the whole loop.
      `thin_liquidity_stop_ratchet_trail_pct` (20) in place of `stop_ratchet_trail_pct`
      (30) in the required-stop formula once armed — bank the profit lock sooner and trail
      tighter on a name with proven exit-slippage risk. Liquid positions are unaffected.
+   - **FLOOR CLAMP (added 2026-08-12):** wherever `take_profit_floor_pct` is used below,
+     the effective floor is **min(`take_profit_floor_pct`, the arm level that applied)** —
+     10 for a normal position (arm 12), 8 for a THIN one (arm 8). Without this clamp a
+     THIN position arming at +8% against a +10% floor would have its required stop set
+     ABOVE the live mark at the instant of arming, forcing an immediate sell-at-mid and
+     turning the ratchet into a hard take-profit. Surfaced by a backtest bug on
+     2026-08-12; the arm/trail changes that day made it reachable in live config.
    - **mark ≥ entry × (1 + take_profit_pct/100)** (lowered to +20% on 2026-07-28, was
      50% — "start considering sale"; or `thin_liquidity_take_profit_pct`/12 for
      THIN-flagged positions per above) → the ratchet ARMS (no forced sale). While armed:
