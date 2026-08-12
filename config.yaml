@@ -449,6 +449,78 @@ late_day_floor_pct: 5            # floor level once late_day_floor_trigger_pct i
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 
+# --- Opening gap-fade guard --------------------------------------------------
+# Added 2026-08-12 per user ("crwv and nbis are in a similar situation, after massive
+# spike, people start to selloff, take profit after market open — is there a way we can
+# monitor that to avoid what happened today"). Both of today's stop-outs were entries
+# placed INTO the opening distribution of a large premarket gap: CRWV bought 9:40 at
+# $110.99 (0.74% under its $111.82 session high) -> -27.19%; NBIS bought 9:48 at ~$230
+# (0.84% under its $231.95 high) -> -25.63%. The one winner, SMCI, was bought 9:56 at
+# $35.82 — 3.63% BELOW its $37.17 high, i.e. after the first pullback had completed.
+# Two independent measures separated the winners from the losers cleanly across 7
+# candidate-days spanning 2026-08-11 and 2026-08-12 (analysis + tables in
+# journal/2026-08-12.md):
+#
+#   opening-bar close position = (close − low) / (high − low) of the FIRST 5-min
+#   regular-session bar (09:30-09:35) — i.e. where in its own range the bar closed.
+#     failures: CRWV 0.21, NBIS 0.27, RIOT 0.14 (8/11), LEGN 0.24 (8/11)
+#     winners : SMCI 0.83, SE 0.63 (8/11, the strongest/most durable name of that day)
+#     HIMS 8/11 (a PUT candidate) closed 0.72 = gap-DOWN being bought back — correctly
+#     rejected by the inverted test, and its gap-down was indeed fully bought in 15 min.
+#   7 of 7 classified correctly, and the two clusters are far apart (max failure 0.27
+#   vs. min success 0.63) so any threshold in 0.35-0.55 separates them — not a
+#   knife-edge fit. Mechanism (not just curve-fitting): the opening bar is the first
+#   time real regular-session size meets the premarket gap; a close near the bar's LOW
+#   means that size is distributing into the spike, and the overhead supply needs time
+#   to clear before the name can trend.
+#
+# Both gates below are BLOCKING-ONLY — they can only veto an entry, never create one,
+# so the worst case is a missed trade, never a worse one. Evidence is n=7 over two
+# days: directionally strong and mechanically motivated, but NOT proven. Review with
+# more data before tightening; set opening_fade_guard_enabled: false to disable both.
+opening_fade_guard_enabled: true
+opening_fade_guard_min_gap_pct: 5   # only apply these two gates to names that actually
+                                 # gapped this much (|open vs prior close|), since the
+                                 # premarket-spike-distribution dynamic is what they
+                                 # describe. All of today's and 8/11's candidates gapped
+                                 # 6.6-20.1%, so this exempts only ordinary non-gap
+                                 # movers, which have no gap supply to distribute.
+opening_bar_min_close_position: 0.50  # GATE A. On a gapped name, require the first
+                                 # 5-min RTH bar to close in the upper half of its own
+                                 # range for a CALL (≥ this), or the lower half for a
+                                 # PUT (≤ 1 − this). A rejected opening bar means the
+                                 # gap is being sold; skip the name rather than buying
+                                 # into the distribution. Chosen at the midpoint of the
+                                 # empty 0.35-0.55 band between the two observed
+                                 # clusters. Not computable before ~9:35 ET (the bar
+                                 # must complete) — the initial 9:35 pass therefore
+                                 # leans on Gate B plus the existing 5×1-min tape read.
+                                 # A name failing this gate is not dead for the day: it
+                                 # becomes eligible again on a volume-confirmed 5-min
+                                 # close back above the opening bar's HIGH (proof the
+                                 # overhead supply cleared), after which the normal
+                                 # gates — including Gate B — still apply. NBIS did
+                                 # exactly that today, reclaiming its $228.44 opening-bar
+                                 # high by 9:50 and running to $234+ by 10:05.
+opening_window_chase_guard_pct: 1.5   # GATE B. Inside the opening window below, do not
+                                 # enter when the underlying is within this % of its
+                                 # session high — that is buying the top of the push,
+                                 # which is exactly what both of today's stop-outs did
+                                 # (0.74% and 0.84% under the high). Wait for the
+                                 # pullback and a higher low instead, as the SMCI winner
+                                 # did at 3.63% under its high. 1.5% sits inside the gap
+                                 # between the observed losers (≤0.84%) and the entries
+                                 # that worked (SMCI 3.63%, SE 8/11 ~2.05% at its first
+                                 # near-miss). Applies to puts symmetrically against the
+                                 # session LOW.
+opening_window_end_et: "10:30"   # Gate B applies only until this time. After it, a push
+                                 # to new highs is an ordinary momentum breakout and
+                                 # blocking it would gut the strategy; the existing
+                                 # late-re-check volume bar (entry.md §4 / STRATEGY.md
+                                 # §3) governs from there. Gate A has no time limit —
+                                 # it is cleared by the reclaim condition above, not by
+                                 # the clock.
+
 # --- Signal thresholds -------------------------------------------------------
 min_day_change_pct: 2            # underlying must move at least this % (up for calls,
                                  # down for puts) at entry check

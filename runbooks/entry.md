@@ -75,8 +75,42 @@ the rest of the day's search.
      min_day_change_pct/100), price > VWAP, and no full gap-fade using all available
      5-minute bars (three or more by 9:45). Same call/put logic, just against the fuller
      multi-bar read.
-4. `get_earnings_results` on finalists — reject if earnings before option expiry.
-5. Rank the qualifiers (catalyst > relative volume > tape), calls and puts together, and
+4. **Opening gap-fade guard (added 2026-08-12 per user — see config.yaml
+   "Opening gap-fade guard" for the full derivation and the 7-candidate evidence
+   table).** Skip entirely if `opening_fade_guard_enabled` is false. Both gates are
+   blocking-only: they can veto a candidate, never promote one, and they run AFTER the
+   §1.3 tape check on candidates that already passed it.
+   First compute the gap: `open_price` of the 9:30 5-min bar vs. prior close. If
+   |gap| < `opening_fade_guard_min_gap_pct`, neither gate applies — this name has no
+   premarket gap supply to distribute. Otherwise:
+   - **Gate A — opening-bar acceptance.** From the FIRST 5-min regular-session bar
+     (09:30-09:35), compute `close_position = (close − low) / (high − low)`.
+     - Calls: require `close_position ≥ opening_bar_min_close_position`.
+     - Puts: require `close_position ≤ 1 − opening_bar_min_close_position`.
+     A failure means the gap is being sold into, not bought — **skip this candidate**
+     and move to the next. It is not dead for the day: the name becomes eligible again
+     once a later 5-min bar CLOSES above the opening bar's high (below its low for
+     puts) on volume at least matching the prior bar — the overhead supply clearing.
+     Journal the reclaim when it happens ("GAP-FADE GATE A cleared: SYM reclaimed
+     $X opening-bar high on rising volume"). After a reclaim the candidate returns to
+     the normal flow and must still pass Gate B and every §2-§3 gate.
+     Not computable on the initial 9:35 pass (the bar hasn't closed yet) — on that pass
+     apply Gate B only, and evaluate Gate A from the first re-check onward.
+   - **Gate B — opening-window chase guard.** While the current ET time is before
+     `opening_window_end_et`, compute the session high (session low for puts) across
+     all bars so far and reject the candidate if the live price is within
+     `opening_window_chase_guard_pct`% of it — that is buying the top of the push
+     rather than a pullback's higher low. Journal it ("GAP-FADE GATE B: SYM $X is
+     0.74% under its $Y session high, inside the 1.5% chase guard — waiting for a
+     pullback"), and re-check it on the normal 1-minute cadence; a name blocked this
+     cycle frequently qualifies a few minutes later once it has pulled back and based,
+     which is precisely the SMCI entry that worked on 2026-08-12. After
+     `opening_window_end_et` this gate is inactive and the §4 late-re-check volume bar
+     governs instead.
+   Journal every veto with the measured numbers, not just the verdict — these two gates
+   are new and their live hit rate needs to be reviewable against outcomes.
+5. `get_earnings_results` on finalists — reject if earnings before option expiry.
+6. Rank the qualifiers (catalyst > relative volume > tape), calls and puts together, and
    take **up to (max_open_positions − currently open positions total)** qualifiers, best
    first across BOTH directions combined (no fixed split between calls and puts) — each
    independently passing every gate in §2–§3. Re-entering a symbol
