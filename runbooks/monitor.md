@@ -5,7 +5,10 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
 from 5 on 2026-07-28 per user). Read `config.yaml` and
 today's journal first. All times US/Eastern.
 
-> **⚠ THRESHOLD NUMBERS IN THIS FILE'S PROSE ARE PRE-2026-08-12 AND ARE NOW HISTORICAL NARRATIVE.**
+> **NOTE — the 0.59x threshold scaling described below was REVERTED on 2026-08-12** after
+> an expanded 47-name-day backtest showed it cost 1.43pp of expectancy. The numbers in this
+> file's prose are CURRENT again (arm 20, hard TP 50, scale-out 40, floor 10). `config.yaml`
+> stays authoritative. ~~Superseded banner:~~
 > On 2026-08-12 expiry selection moved to `dte_target: 14`, roughly halving contract
 > leverage (~14.6x → ~8.6x), and every profit-side threshold was scaled by 0.59 so it
 > represents the **same underlying move** as before. Current values live in
@@ -40,10 +43,9 @@ should cost at most one cycle's data, never the whole loop.
    (win if take_profit, stop-out if stop_loss) — journal it and treat as flat. If the
    position is gone but the resting order didn't fill, the user closed it manually —
    cancel the resting order, journal the user's fill from get_option_orders, treat as flat.
-3. **Stop_limit → stop_market upgrade (added 2026-08-03). ⚠ DEAD CODE as of 2026-08-12 —
-   entry now starts at 10:30, so no fill can land inside the 9:30-9:45 blackout and no
-   position will ever carry an "upgrade at 9:45" flag. Retained purely as a safeguard in
-   case entry timing is moved back before 9:45; skip this step in normal operation:**
+3. **Stop_limit → stop_market upgrade (added 2026-08-03; LIVE — entry is 9:35, so fills
+   can land inside the 9:30-9:45 blackout. Briefly dead code on 2026-08-12 while entry
+   started at 10:30; that change was reverted the same evening):**
    if today's journal flagged this position's resting order as a pre-9:45 stop_limit
    ("upgrade at 9:45") and current ET time is now ≥ 9:45, cancel it (`get_option_orders`
    confirms `cancelled`) and place a stop_market at the SAME stop_price, fresh ref_id,
