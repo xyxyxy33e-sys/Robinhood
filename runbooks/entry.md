@@ -1,4 +1,4 @@
-# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 1 min until 1:30 PM on no-trade)
+# Runbook: Entry (10:30 AM ET, Mon–Fri; re-checks every 1 min until 1:30 PM on no-trade)
 
 Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
 All times US/Eastern. Account = `account_number` from config.
@@ -22,23 +22,31 @@ the rest of the day's search.
 
 ## 0. Guards — every one must pass or the day is a no-trade
 1. Trading day check (same as premarket). Market closed → journal, push, stop.
-2. Time check: if before 9:35 ET, schedule a self check-in (`send_later`) for 9:35 ET and
-   stop; if after 1:30 PM ET, skip the day (momentum entries decay) — journal why.
-   (Entry moved 9:35 → 9:45 on 2026-07-31, then back to 9:35 on 2026-08-03 per user, now
-   paired with the stop_limit-then-upgrade mechanism in §4 below instead of just waiting
-   out the blackout. Rationale for going back: the 2026-08-03 diagnostic confirmed
-   stop_limit orders — unlike stop_market — ARE accepted during the 9:30-9:45 blackout,
-   so a fill before 9:45 can still get real resting protection immediately, just not the
-   fully-guaranteed stop_market kind until 9:45. Retroactive check on 2026-08-03's BABA
-   trade found a 9:35 entry would have caught a materially bigger move on a
-   closer-to-the-money strike before the existing ratchet/stall-trail logic exited it
-   for +15.9%, vs. the real 9:45 entry's -26.09% stop-out — though that single day never
-   actually tested the stop_limit fill risk, since price never approached a stop level
-   during 9:35-9:45. **9:35 made PERMANENT on 2026-08-07 per user** after the week-long
-   9:45 shadow comparison concluded: one strong data point for 9:35 (8/3), four washes
-   (8/4-8/7 — chain liquidity, not entry timing, was the binding constraint all week;
-   full table in journal/2026-08-07.md). Open item, never yet tested live: a stop_limit
-   fill during the 9:30-9:45 blackout on a fast reversal — watch organically.)
+2. Time check: **if before 10:30 ET, schedule a self check-in (`send_later`) for 10:30 ET
+   and stop**; if after 1:30 PM ET, skip the day (momentum entries decay) — journal why.
+   **ENTRY START MOVED 9:35 → 10:30 on 2026-08-12 per user**, on a 20-name-day backtest
+   across 8 sessions (2026-07-16 → 08-12; full tables in journal/2026-08-12.md). The
+   finding: opening 30-minute ranges on gapped momentum names run **5-9%**, while a −25%
+   stop on an ATM 2-DTE call tolerates only **~1.6%** of adverse underlying movement —
+   the stop is 3-6× tighter than opening volatility, so a correctly-directioned position
+   is stopped out by noise unrelated to its thesis. Measured stop-out rate by entry time:
+   **09:30 → 60%, 10:00 → 50%, 10:30 → 45%, 11:00 → 30%**; simulated option P&L (real
+   cascade: −25% stop, +50% TP, +10% floor after +20%) favoured 10:30-11:00 at every
+   leverage assumption tested (10×/12×/15×), and at 12×/15× the **median** outcome of a
+   9:35 entry was a full −25% stop-out. 10:30 chosen over 11:00 to keep entry-window
+   length; note 10:00 is NOT a valid compromise — it was the worst non-09:30 cell at 15×.
+   Caveats on the record: n=20, the sample inherits the existing screens' bias, the
+   backtest assumes a name still qualifies at the later hour, and theta (~2-4%/hour on
+   2-DTE premium) argues mildly against waiting. Revisit if stop-outs do not fall.
+   *History:* 9:35 → 9:45 on 2026-07-31, back to 9:35 on 2026-08-03, made "permanent" on
+   2026-08-07 after a week-long shadow comparison that was inconclusive (four of five
+   days were washes because chain liquidity, not timing, bound). That comparison never
+   measured stop-out rates against opening volatility, which is what this change is based
+   on.
+   **Consequence — the 9:30-9:45 stop_market blackout is now unreachable.** A 10:30+ fill
+   always gets a real stop_market immediately, so the pre-9:45 stop_limit path in §4 and
+   the 9:45 upgrade in monitor.md are dead code in normal operation. Both are retained
+   only as safeguards in case entry timing is ever moved back.
 3. `get_option_positions` (nonzero=true): count total open positions (calls + puts
    combined). If total ≥ `max_open_positions`, stop (no room). Otherwise continue.
 4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
@@ -53,28 +61,24 @@ the rest of the day's search.
    live matches now meaningful.
 2. Merge both scan results with pre-market candidates (top 10, each tagged call/put); drop
    anything that hit its "disqualify if".
-3. For each surviving candidate (check the best-ranked first), tape check scaled to how
-   much session exists, direction-aware:
-   - **Initial 9:35 pass (only the single 9:30-9:35 minute bars exist yet):**
-     `get_equity_historicals` interval=minute from 9:30 to now (five 1-minute bars).
-     Compute VWAP from those bars (typical price × volume, summed and divided by total
-     volume) and the opening-window low/high from their low/high.
-     - **Calls:** require price > the 9:30 open, price ≥ prior close × (1 +
-       min_day_change_pct/100), price > this VWAP, and no full gap-fade (still above the
-       low of these five minutes).
-     - **Puts:** require price < the 9:30 open, price ≤ prior close × (1 −
-       min_day_change_pct/100), price < this VWAP, and no full gap-fill (still below the
-       high of these five minutes).
-     This is a thinner read than the 9:45 version below (5 minutes of tape vs. 15) —
-     genuine whipsaws in the last 10 minutes of the blackout won't have played out yet.
-     That's the accepted tradeoff for capturing the move earlier; it's why the resting
-     stop in §4 needs to go on immediately rather than waiting for a stop_market slot.
-   - **Later re-checks (any check at/after 9:45 ET — no qualifier at 9:35, or a position
-     closed and this is hunting for a new one):** `get_equity_historicals`
-     interval=5minute from 9:30 — require price > open, price ≥ prior close × (1 +
-     min_day_change_pct/100), price > VWAP, and no full gap-fade using all available
-     5-minute bars (three or more by 9:45). Same call/put logic, just against the fuller
-     multi-bar read.
+3. For each surviving candidate (check the best-ranked first), tape check, direction-aware.
+   Since the entry window now starts at 10:30 (see §0.2), **every pass has a full hour of
+   tape** — ~12 five-minute bars — so the single tape test below always applies:
+   `get_equity_historicals` interval=5minute from 9:30. Require price > open, price ≥
+   prior close × (1 + min_day_change_pct/100), price > VWAP, and no full gap-fade, using
+   all available 5-minute bars. Puts invert every leg: price < open, price ≤ prior close ×
+   (1 − min_day_change_pct/100), price < VWAP, no full gap-fill.
+   Because this is by definition a "later" pass, the §4 late-re-check volume bar
+   (STRATEGY.md §3.2) **always applies too**: a volume-confirmed breakout — several
+   consecutive closes in the trade direction on rising/elevated volume, sustained 15+
+   minutes. Measure "elevated" against the name's own trailing baseline rather than by
+   eye; on 2026-08-12 this single test correctly passed NBIS (2.9× baseline) and SMCI's
+   third push (3.4×) while rejecting SMCI's first two pushes (0.9× — an advance on
+   *declining* volume), and it was decisive four times in one session.
+   *Removed 2026-08-12:* the old thin "initial 9:35 pass" that read only the five
+   9:30-9:35 one-minute bars. It existed solely because entry started at 9:35; with a
+   10:30 start there is never a five-minute-of-tape situation, and that pass was the one
+   most exposed to the opening-volatility problem the timing change addresses.
 4. **Opening gap-fade guard (added 2026-08-12 per user — see config.yaml
    "Opening gap-fade guard" for the full derivation and the 7-candidate evidence
    table).** Skip entirely if `opening_fade_guard_enabled` is false. Both gates are
@@ -94,9 +98,19 @@ the rest of the day's search.
      Journal the reclaim when it happens ("GAP-FADE GATE A cleared: SYM reclaimed
      $X opening-bar high on rising volume"). After a reclaim the candidate returns to
      the normal flow and must still pass Gate B and every §2-§3 gate.
-     Not computable on the initial 9:35 pass (the bar hasn't closed yet) — on that pass
-     apply Gate B only, and evaluate Gate A from the first re-check onward.
-   - **Gate B — opening-window chase guard.** While the current ET time is before
+     Always computable now that entry starts at 10:30 — the 09:30-09:35 bar closed
+     ~an hour before the first pass. (Before 2026-08-12 this had to be deferred on the
+     initial 9:35 pass because the bar had not closed yet.)
+   - **Gate B — opening-window chase guard. ⚠ INACTIVE BY CONSTRUCTION as of 2026-08-12:**
+     `opening_window_end_et` is 10:30 and the entry window now *starts* at 10:30, so this
+     gate can never fire. It is left in place, not deleted, because the entry-timing
+     change subsumes what it was protecting against — it existed to stop us buying the top
+     of the opening push, and we no longer trade the opening push at all. **Flagged to the
+     user rather than silently repurposed:** if the entry start is ever moved back before
+     10:30, this gate becomes live again automatically; if instead you want chase
+     protection inside the new 10:30-13:30 window, `opening_window_end_et` must be raised
+     deliberately (e.g. to 11:00). Logic retained below for both cases.
+     While the current ET time is before
      `opening_window_end_et`, compute the session high (session low for puts) across
      all bars so far and reject the candidate if the live price is within
      `opening_window_chase_guard_pct`% of it — that is buying the top of the push

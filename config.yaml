@@ -527,6 +527,15 @@ opening_window_end_et: "10:30"   # Gate B applies only until this time. After it
                                  # §3) governs from there. Gate A has no time limit —
                                  # it is cleared by the reclaim condition above, not by
                                  # the clock.
+                                 # ⚠ 2026-08-12: the entry window START moved 9:35 -> 10:30
+                                 # (see entry.md §0.2), so Gate B is now INACTIVE BY
+                                 # CONSTRUCTION — the window it guards ends exactly when
+                                 # trading begins. Left in place deliberately: the timing
+                                 # change subsumes it (we no longer trade the opening push
+                                 # at all), and it self-reactivates if entry is ever moved
+                                 # earlier. To restore chase protection inside the new
+                                 # 10:30-13:30 window instead, raise this to e.g. "11:00" —
+                                 # a deliberate decision, not done automatically.
 
 # --- Signal thresholds -------------------------------------------------------
 min_day_change_pct: 2            # underlying must move at least this % (up for calls,

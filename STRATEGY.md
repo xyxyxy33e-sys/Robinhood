@@ -17,12 +17,12 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
 | ~9:00 AM | Pre-entry sentiment-shift check (added 2026-07-27) — re-reads the same candidates against the 8 AM read to catch reversals/fades before entry | `runbooks/premarket_confirm.md` |
-| 9:35 AM | Entry — confirm momentum after the open, buy call or put (moved 9:35→9:45 on 2026-07-31 since 9:45 is when Robinhood first accepts resting stop_market orders; moved back to 9:35 on 2026-08-03 after confirming stop_limit orders ARE accepted during the 9:30-9:45 blackout — enter with a resting stop_limit, then upgrade to stop_market once 9:45 arrives) | `runbooks/entry.md` |
+| **10:30 AM** | Entry — confirm momentum, buy call or put. **Moved 9:35 → 10:30 on 2026-08-12** per user, on a 20-name-day / 8-session backtest: opening 30-min ranges run 5-9% while a −25% stop on an ATM 2-DTE call tolerates only ~1.6% adverse movement, so early entries are stopped out by opening noise rather than by a failed thesis. Stop-out rate by entry time: 09:30 60%, 10:00 50%, 10:30 45%, 11:00 30%; simulated P&L favoured 10:30-11:00 at every leverage tested. (Earlier history: 9:35→9:45 on 07-31, back to 9:35 on 08-03, "permanent" 08-07 — that comparison never measured stop-outs against opening volatility.) | `runbooks/entry.md` |
 | every 3 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
 | every 3 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries, and (temporary) the 9:45 stop_limit→stop_market upgrade | `runbooks/monitor.md` |
 | ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
 
-The 8:00/9:35/3:30 phases are cron Routines; the 3-minute monitor (tightened from 5 min
+The 8:00/10:30/3:30 phases are cron Routines; the 3-minute monitor (tightened from 5 min
 on 2026-07-28 per user) is a self-re-arming `send_later` loop started by a fill and stood
 down at 3:25 ET when the exit run takes over.
 
@@ -56,18 +56,17 @@ candidate with a live chain.
 
 1. Appears in the relevant scanner **or** was a top pre-market candidate now moved ≥2% in
    its direction.
-2. Tape confirmation, direction-aware (entries begin at 9:35 as of 2026-08-03 — moved
-   9:35→9:45 on 2026-07-31, then back to 9:35 once stop_limit was confirmed accepted
-   during the blackout — so the initial pass only has the single 9:30-9:35 minute bars
-   to confirm against, a thinner read than the three 5-minute bars available at 9:45):
-   - **Calls**: above open and holding above VWAP (computed from whatever bars exist —
-     minute bars at 9:35, 5-minute bars on later re-checks), no full gap-fade (still
-     above the opening window's low).
+2. Tape confirmation, direction-aware. **Entries begin at 10:30 as of 2026-08-12**, so
+   every pass has a full hour (~12 five-minute bars) of tape — the old thin "9:35 pass"
+   that read only five 1-minute bars is retired, and with it the weakest read in the
+   system:
+   - **Calls**: above open and holding above VWAP (5-minute bars from 9:30), no full
+     gap-fade (still above the opening window's low).
    - **Puts**: below open and holding below VWAP on the same bars, no full
      gap-fill-back-to-open (still below the opening window's high).
-   - **Later re-checks (any entry at/after 9:45, or a fresh candidate hunt after a
-     position closes):** the fuller three-5-minute-bar version applies, plus price
-     beyond the open is necessary but NOT sufficient — require a volume-confirmed
+   - **Every entry now counts as a "later re-check"** (10:30 start, plus any fresh
+     candidate hunt after a position closes): the fuller multi-bar version applies, plus
+     price beyond the open is necessary but NOT sufficient — require a volume-confirmed
      breakout: several consecutive closes in the trade direction on rising/elevated
      volume, sustained for 15+ minutes. A quiet, low-volume grind back through the open
      does not qualify (codified 2026-07-21 from the NVS-declined / TSM-declined-then-
@@ -132,7 +131,7 @@ heavier theta): the volume bar is the compensation, not optional.
 - At most `max_open_positions` concurrent positions total, any mix of calls and puts
   (changed 2026-07-28 from separate max_open_calls=5/max_open_puts=5 buckets [10 total]
   to one combined 6-total cap), plus `max_new_positions_per_day` entries per day (initial
-  entry at 9:35 as of 2026-08-03; re-checks on no-trade and monitor-loop re-entries both
+  entry at 10:30 as of 2026-08-12; re-checks on no-trade and monitor-loop re-entries both
   end at 1:30 PM ET).
 - Skip entries while options buying power < `min_buying_power_to_trade` — log why.
 - Cash account: option sale proceeds settle **T+1**. The exit run's proceeds fund the
@@ -147,7 +146,10 @@ heavier theta): the volume bar is the compensation, not optional.
   interrupted (failure mode observed 2026-07-16). Alternative `take_profit`: a sell limit
   at entry × (1 + `take_profit_pct`/100). The monitor loop enforces whichever side is not
   resting, in software. Any other close must cancel the resting order first.
-- **9:30–9:45 stop_market blackout, worked around with stop_limit (since 2026-08-03):**
+- **9:30–9:45 stop_market blackout — NOW UNREACHABLE (entry moved to 10:30 on
+  2026-08-12). The stop_limit workaround below is retained only as a safeguard should
+  entry timing ever move back inside the blackout; in normal operation every fill now
+  gets a real stop_market immediately.** Original note:
   Robinhood rejects stop_market orders in the first 15 minutes after the open
   (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`, observed 2026-07-21) — this is why
   entry moved to 9:45 on 2026-07-31. A 2026-08-03 diagnostic confirmed stop_limit orders
@@ -317,7 +319,7 @@ lesson. Committed and pushed after every run — the journal is the system's mem
 - Level 2 = no spreads; there is no defined-risk vertical available to cap IV exposure on
   either side.
 - Scanner % change filter reads ~0 outside regular hours; pre-market candidate work relies
-  on news + prior-day closes, and the 9:35 entry run re-validates with live data.
+  on news + prior-day closes, and the 10:30 entry run re-validates with live data.
 - Puts are newer (added 2026-07-21) and have no live track record yet in this system —
   watch the first several put trades closely for anything the calls-only design didn't
   anticipate (e.g. downside gap risk behaves differently from upside chasing).

@@ -2,8 +2,11 @@
 
 Read `config.yaml` and today's journal (the 8:00 AM Pre-market section, already written
 by `runbooks/premarket.md`) first. All times US/Eastern. Added 2026-07-27: markets can
-move meaningfully in the hour between the premarket read and the 9:35 entry check —
-this phase exists to catch that shift *before* entry, not discover it live at 9:35.
+move meaningfully between the premarket read and the entry check (now 10:30 ET, moved
+from 9:35 on 2026-08-12 — so this phase now runs ~90 minutes ahead of entry rather than
+~35, and its read is correspondingly staler; the entry runbook's live tape check is the
+authority) —
+this phase exists to catch that shift *before* entry, not discover it live at 10:30.
 
 ## 0. Guards
 - Confirm today is a US equity trading day. If closed, or if today's journal has no
@@ -28,7 +31,7 @@ this phase exists to catch that shift *before* entry, not discover it live at 9:
    - **Reversed** — has already crossed back through its prior close in the opposite
      direction — a strong early warning the entry-check tape confirmation is likely to
      fail (this is exactly what happened to every oil-crash put candidate on 2026-07-27,
-     visible in premarket data almost an hour before entry (9:35)).
+     visible in premarket data well before entry (10:30)).
    - **Unchanged** — no material move either way.
 4. Note whether any 8 AM candidate now fails its own "disqualify if" condition already
    (e.g. a put candidate that reclaimed its prior close) — flag it as likely dead before
@@ -37,15 +40,15 @@ this phase exists to catch that shift *before* entry, not discover it live at 9:
 ## 2. Re-rank
 Produce an updated candidate order (same top-10 list, re-sorted) reflecting the hour's
 moves: strengthening candidates move up, fading/reversed candidates move down or get a
-"likely fails at 9:35" flag. Do not add brand-new names lightly — the entry runbook's
-live scanner + tape check at 9:35 is still the primary discovery mechanism; this phase
+"likely fails at the entry check" flag. Do not add brand-new names lightly — the entry runbook's
+live scanner + tape check at 10:30 is still the primary discovery mechanism; this phase
 is a sentiment/confirmation check on the existing list, not a second full research pass.
 
 ## 3. Journal & handoff
 - Append a **"Pre-market update (9:00 ET)"** section to today's journal: one line per
   candidate on its classification (strengthening/fading/reversed/unchanged) vs. the 8 AM
   read, the re-ranked order, and a one-sentence overall read (e.g. "oil-crash puts are
-  already fading back toward their opens — expect a difficult 9:35 tape check").
+  already fading back toward their opens — expect a difficult tape check at 10:30").
 - Commit ("journal: YYYY-MM-DD premarket update 9:00") and push to the working branch.
 - Do not place, review, or cancel any order in this phase — research only, same as
   the 8 AM premarket run.
