@@ -6,9 +6,14 @@ from 5 on 2026-07-28 per user). Read `config.yaml` and
 today's journal first. All times US/Eastern.
 
 > **NOTE — the 0.59x threshold scaling described below was REVERTED on 2026-08-12** after
-> an expanded 47-name-day backtest showed it cost 1.43pp of expectancy. The numbers in this
-> file's prose are CURRENT again (arm 20, hard TP 50, scale-out 40, floor 10). `config.yaml`
-> stays authoritative. ~~Superseded banner:~~
+> an expanded 47-name-day backtest showed it cost 1.43pp of expectancy.
+> **A SEPARATE change that same evening moved arm and trail again** via a per-parameter
+> scan (not a blanket scale): `take_profit_pct` 20→**12**, `stop_ratchet_trail_pct`
+> 30→**20** (THIN 12→**8** / 20→**15**). hard TP 50, scale-out 40, floor 10, and stop −25
+> are unaffected by that later change and remain as this revert restored them.
+> `config.yaml` stays authoritative for every one of these — the §3 cascade above already
+> reads it by name and reflects today's actual live values; treat any number written below
+> this banner as historical reasoning, not a current setting. ~~Superseded banner:~~
 > On 2026-08-12 expiry selection moved to `dte_target: 14`, roughly halving contract
 > leverage (~14.6x → ~8.6x), and every profit-side threshold was scaled by 0.59 so it
 > represents the **same underlying move** as before. Current values live in

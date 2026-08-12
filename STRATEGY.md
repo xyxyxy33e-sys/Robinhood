@@ -185,12 +185,18 @@ heavier theta): the volume bar is the compensation, not optional.
   firing the stop_market instantly at $3.50 even though the underlying stock itself
   was still near its session highs. A plain numeric threshold, not a discretionary
   override — the mechanical no-discretion property of the stop system is unchanged.
-> **NOTE — threshold scaling was tried and REVERTED on 2026-08-12.** The numbers in this
-> section are CURRENT and authoritative again. A 0.59x scaling (arm 20→12, hard TP 50→30,
-> etc.) was implemented to match the lower leverage of ~14 DTE contracts, then reverted the
-> same evening: an expanded 47-name-day backtest showed it cost 1.43pp of expectancy
-> (+5.78% old vs +4.35% scaled at 14 DTE / 09:30). Scaling the triggers also lifts the
-> ratchet floor, which truncates runners. `config.yaml` remains authoritative.
+> **NOTE — threshold scaling was tried and REVERTED on 2026-08-12.** A 0.59x scaling
+> (arm 20→12, hard TP 50→30, etc.) was implemented to match the lower leverage of ~14 DTE
+> contracts, then reverted the same afternoon: an expanded 47-name-day backtest showed it
+> cost 1.43pp of expectancy (+5.78% old vs +4.35% scaled at 14 DTE / 09:30). Scaling the
+> triggers also lifts the ratchet floor, which truncates runners.
+> **A SEPARATE change that same evening moved arm and trail again** — this time via a
+> per-parameter scan, not a blanket 0.59x scale: `take_profit_pct` 20→**12**,
+> `stop_ratchet_trail_pct` 30→**20** (THIN 12→**8** / 20→**15**). Everything else this
+> revert restored (hard TP 50, scale-out 40, floor 10, stop −25) is unaffected by that
+> later change. `config.yaml` is the single source of truth for all of it — the section
+> below documents the *reasoning*, but read the current section 6 above (or config.yaml
+> directly) for today's live numbers rather than trusting any number in this note.
 > ~~Superseded banner:~~
 > On 2026-08-12 expiry selection moved to `dte_target: 14`, roughly halving contract
 > leverage (~14.6x → ~8.6x), and every profit-side threshold was scaled by 0.59 so it
