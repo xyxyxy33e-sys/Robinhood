@@ -136,14 +136,32 @@ the rest of the day's search.
    trade; journal it.
 
 ## 2. Select the contract (per chosen underlying)
-1. `get_option_chains` (underlying_symbol) → pick the NEAREST expiration in
-   [dte_min, dte_max] (the established convention, now written down).
-   **Expiry step-out on structural cap (LIVE, added 2026-08-07 per user):** if that
-   nearest expiry's chain is structurally capped short of spot — no ATM or OTM strike
+1. `get_option_chains` (underlying_symbol) → **select the expiry in [dte_min, dte_max]
+   whose DTE is CLOSEST TO `dte_target` (14)** — ties break toward the LONGER expiry.
+   **CHANGED 2026-08-12 per user: was "pick the NEAREST expiration in the window."**
+   With `dte_min` then at 2, "nearest" always resolved to the shortest contract on the
+   board, which is simultaneously the worst on both axes that matter — highest leverage
+   (so the −25% stop trips on the smallest underlying move) and highest theta. That was
+   never a deliberate choice; it fell out of the word "nearest". Measured on the live
+   SMCI $38C chain (same strike, five expiries): 2 DTE = 17.1× leverage / −26.9% theta
+   per day / stop trips at a **1.46%** adverse move, vs. 16 DTE = 7.9× / −3.3% / **3.16%**.
+   Backtest over 20 name-days showed 2 DTE was the only negative bucket (avg −1.25%,
+   **median −25%** — the modal outcome was a full stop-out) while 9-16 DTE returned
+   +6% to +7% with a 65-75% win rate. `dte_min` raised 2 → 7 at the same time. Full
+   tables in config.yaml and journal/2026-08-12.md.
+   **Procedure:** list the chain's expirations, keep those with DTE in [dte_min, dte_max],
+   sort by |DTE − dte_target|, and take the first that clears §2.3's liquidity gates. If
+   it fails those gates, advance to the NEXT-closest expiry in the window (this is a real
+   step-out path, unlike the structural-cap case below) before abandoning the underlying —
+   weekly chains thin out badly 3+ weeks out and then recover at the monthly, so the
+   nearest-to-target expiry is not reliably the most liquid. Journal which expiry was
+   chosen and its distance from target.
+   **Expiry step-out on structural cap (LIVE, added 2026-08-07 per user):** if the
+   selected expiry's chain is structurally capped short of spot — no ATM or OTM strike
    exists in the trade's direction (calls: no strike ≥ spot; puts: no strike ≤ spot),
    as happened with TEAM on 2026-08-07 (spot $146-153 all session, highest 8/14 strike
-   $145) — step to the NEXT expiration inside [dte_min, dte_max] and run the normal §2
-   gates there instead. Structural-cap cases ONLY: never step out because a strike
+   $145) — step to the next-closest-to-target expiration inside [dte_min, dte_max] and run
+   the normal §2 gates there instead. Structural-cap cases ONLY: never step out because a strike
    exists but fails OI/spread/size — those failures follow the normal
    next-strike-then-next-candidate cascade at the chosen expiry. Journal the step-out
    explicitly ("EXPIRY STEP-OUT: 8/14 capped at $X < spot $Y → using 8/21").

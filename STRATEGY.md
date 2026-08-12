@@ -97,13 +97,21 @@ heavier theta): the volume bar is the compensation, not optional.
 ## 4. Contract selection
 
 - **Type:** call for a bullish qualifier, put for a bearish qualifier; always buy-to-open
-  (long only — no short options). **Expiry:** nearest expiration 2–21 DTE — never 0 or 1
-  DTE (raised from 1 on 2026-07-21: a 1-DTE MU contract with theta −9.9 hit the −30%
-  floor in 20 minutes on a modest underlying pullback; the contract structure, not the
-  thesis, drove the speed of the loss). Monthly-only chains (no expiry in window): nearest
-  monthly up to `dte_max_no_weekly` (45) is allowed. Short-dated contracts are cheapest
-  but carry violent gamma/theta; the forced same-day close caps expiry risk, not premium
-  risk.
+  (long only — no short options). **Expiry: the expiration in [`dte_min`, `dte_max`] =
+  7–21 DTE whose DTE is CLOSEST TO `dte_target` (14)**, ties breaking toward the longer
+  one; if it fails the liquidity gates, advance to the next-closest expiry in the window
+  before abandoning the underlying. **Changed 2026-08-12 (was: nearest expiration, 2–21
+  DTE).** "Nearest" always resolved to the shortest contract on the board — the worst
+  available on both axes at once: highest leverage, so the −25% stop trips on the
+  smallest underlying move, AND highest theta. Measured on one live chain (SMCI $38C,
+  same strike, five expiries): 2 DTE = 17.1× leverage, −26.9%/day theta, stop trips at a
+  **1.46%** adverse move; 16 DTE = 7.9×, −3.3%/day, **3.16%**. A 2-DTE contract bleeds
+  roughly the entire stop distance per day to decay alone. Backtested over 20 name-days:
+  2 DTE was the **only negative bucket** (avg −1.25%, median −25% — the modal outcome was
+  a full stop-out); 9–16 DTE returned +6% to +7% at a 65–75% win rate; 23+ DTE stayed
+  positive but recorded **zero** hard-TP hits, leverage too weak to reach the profit
+  rungs. A real interior optimum, hence a target rather than an extreme. Monthly-only
+  chains (no expiry in window): nearest monthly up to `dte_max_no_weekly` (45) is allowed.
 - **Strike:** at-the-money, or the first strike beyond spot in the direction of the trade
   (above spot for calls, below spot for puts).
 - **Liquidity gates:** open interest ≥ 500; bid-ask spread ≤ 10% of mid. If ATM fails the

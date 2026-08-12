@@ -54,10 +54,45 @@ max_open_positions: 6            # combined cap across calls AND puts together (
 max_new_positions_per_day: 30
 
 # --- Contract selection ------------------------------------------------------
-dte_min: 2                       # 0 and 1 DTE excluded (raised from 1 on 2026-07-21: a
-                                 # 1-DTE MU contract hit the -30% floor in 20 minutes on a
-                                 # modest pullback — extreme theta/gamma, not the thesis,
-                                 # drove the speed of the loss)
+dte_min: 7                       # RAISED 2 -> 7 on 2026-08-12 per user. Previously 2 (and
+                                 # 1 before 2026-07-21). The old rule "pick the NEAREST
+                                 # expiration in [dte_min, dte_max]" meant we ALWAYS landed
+                                 # on the shortest contract available, which is the worst
+                                 # on both axes at once: highest leverage (so the tightest
+                                 # effective stop) AND highest theta. That was a side
+                                 # effect of "nearest", never a deliberate choice.
+                                 # Measured on the live SMCI $38C chain 2026-08-12 (same
+                                 # strike, same underlying, five expiries):
+                                 #   2 DTE: 17.1x leverage, -26.9%/day theta, -25% stop
+                                 #          trips on a 1.46% adverse underlying move
+                                 #   9 DTE: 10.4x,  -5.9%/day, 2.40%
+                                 #  16 DTE:  7.9x,  -3.3%/day, 3.16%
+                                 #  37 DTE:  5.7x,  -1.4%/day, 4.39%
+                                 # A 2-DTE contract bleeds ~27% of premium PER DAY — nearly
+                                 # the whole -25% stop distance — so the underlying has to
+                                 # move ~1.6% in your favour just to break even on the clock.
+                                 # Backtested over 20 name-days / 8 sessions (10:30 entry,
+                                 # forced close 15:40, full cascade, theta charged pro-rata):
+                                 #   DTE  stops  avg P&L  median  win%
+                                 #     2     11   -1.25%  -25.0%   45%
+                                 #     9      6   +6.07%  +10.0%   65%
+                                 #    16      4   +7.35%  +10.0%   75%   <- peak
+                                 #    23      3   +4.67%  +10.0%   65%
+                                 #    37      1   +5.11%  +10.0%   65%
+                                 # 2 DTE is the only NEGATIVE bucket and its MEDIAN outcome
+                                 # is a full -25% stop-out. There is a real interior optimum:
+                                 # too short = stopped out by noise + decay, too long =
+                                 # leverage too weak to reach the profit rungs (ZERO hard-TP
+                                 # hits at 23 and 37 DTE). 7 chosen as the floor because the
+                                 # 9-16 band is where both stop-survival and upside coexist.
+dte_target: 14                   # Added 2026-08-12. Selection is now "the expiry in
+                                 # [dte_min, dte_max] CLOSEST TO THIS TARGET that passes the
+                                 # liquidity gates" — not the nearest expiry. 14 sits centrally
+                                 # in the strong 9-16 band rather than on the measured 16-DTE
+                                 # peak, deliberately: n=20 is too small to justify fitting the
+                                 # exact maximum, and the 9-16 range is statistically flat.
+                                 # Ties (equidistant expiries) break toward the LONGER one —
+                                 # lower theta and a wider stop tolerance.
 dte_max: 21                      # preferred window...
 dte_max_no_weekly: 45            # ...but when an underlying has NO expiry in [dte_min,
                                  # dte_max] (monthly-only chains like TRV), the nearest
