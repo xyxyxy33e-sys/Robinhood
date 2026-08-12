@@ -233,17 +233,18 @@ heavier theta): the volume bar is the compensation, not optional.
   position may not exceed its original size, and the resting stop is re-placed for
   the full quantity at the unchanged level after the fill. (Agent's strict-bar
   recommendation was declined; risks accepted: chop re-buys and double spread cost.)
-- **Stop ratchet on winners — arms at +20% (lowered from 50% on 2026-07-28, "start
-  considering sale"):** touching entry × (1 + `take_profit_pct`/100) does not force a
+- **Stop ratchet on winners — arms at +12% (50% → 20% on 2026-07-28 "start considering
+  sale", 20% → 12% on 2026-08-12 per the threshold scan):** touching entry × (1 +
+  `take_profit_pct`/100) does not force a
   sale — it ARMS the ratchet. From then on the resting stop must sit at
   max(entry × (1 + `take_profit_floor_pct`/100), high-water mark × (1 −
   `stop_ratchet_trail_pct`/100)), rounded to tick; whenever the required level exceeds
   the current resting stop, the monitor loop cancels-and-replaces it (verify the new stop
   is confirmed). The stop only ever moves UP. The floor was raised from plain breakeven
-  to +10% on 2026-07-28 (per user) — once a position is up 20%, the worst outcome is now
+  to +10% on 2026-07-28 (per user) — once a position is up 12%, the worst outcome is now
   a +10% win, not a scratch. With the hard cap now at +50% (raised same day, see below),
-  the live window is 20%-50%: early in that range the +10% floor dominates the required
-  stop (a 30% trail off a HWM only modestly above entry computes below +10%), but as the
+  the live window is 12%-50%: early in that range the +10% floor dominates the required
+  stop (a 20% trail off a HWM only modestly above entry computes below +10%), but as the
   position runs further toward +50% the high-water-mark trail can overtake the floor and
   lock in more. The winner keeps running under the discretionary rules below in the
   meantime (motivated by NBIS peaking +113% intraday with the stop still at −30%).
@@ -252,7 +253,7 @@ heavier theta): the volume bar is the compensation, not optional.
   steady/rising) or STALLING (anything short of that — a lighter bar than the full
   momentum-broken check below, which needs lower highs AND VWAP lost AND volume faded
   together). On a STALLING read, compute HWM × (1 − `stop_ratchet_stall_trail_pct`/100)
-  (10%, vs. the 30% trail above) and take the higher of it vs. the normal required
+  (10%, vs. the 20% trail above) and take the higher of it vs. the normal required
   stop — reacting to a pause immediately instead of waiting for the wider trail or the
   floor to eventually be crossed. If that level is already at/above the current mark,
   sell to close at mid now rather than trying to rest an unplaceable stop above the
@@ -263,22 +264,24 @@ heavier theta): the volume bar is the compensation, not optional.
   ratchet alone in that reconstruction. Does not replace the discretionary check below,
   which can still force a full exit on a fully confirmed reversal regardless of where
   the tightened stop sits.
-- **Early floor, pre-arm (added 2026-07-30):** covers the gap below the +20% ratchet
+- **Early floor, pre-arm (added 2026-07-30):** covers the gap below the +12% ratchet
   entirely. Once the mark first touches entry × (1 + `early_floor_trigger_pct`/100)
   (+8%), the required stop rises to entry × (1 + `early_floor_pct`/100) (−3%, just
   below breakeven to leave slippage room) — far short of the full ratchet's +10%
   floor, but enough to stop a genuine early pop from fully round-tripping into a loss.
-  Stops only move up; superseded the moment the +20% ratchet arms (its floor is
+  Stops only move up; superseded the moment the +12% ratchet arms (its floor is
   already higher). Motivation: on 2026-07-30, AMD peaked +11.5% and MSFT's second
   entry peaked +8.44% — both real, thesis-confirming moves — then ground down on
-  theta for close to an hour without ever reaching +20%, giving back the entire move
-  plus more before the stop_loss floor finally caught them (-$1,020 and -$1,280).
-  Nothing between 0% and +20% existed to protect either.
+  theta for close to an hour without ever reaching the then-+20% arm, giving back the
+  entire move plus more before the stop_loss floor finally caught them (-$1,020 and
+  -$1,280). Nothing between 0% and the arm level existed to protect either. (Note: at
+  today's +12% arm, AMD's +11.5% peak would still have just missed arming — the early
+  floor remains the operative protection for pops in that band.)
 - **Midday floor, pre-arm (added 2026-08-03):** while the current ET time is within
   `midday_floor_window_start_et`-`midday_floor_window_end_et` (11:30 AM-1:30 PM ET),
   the first touch of entry × (1 + `midday_floor_trigger_pct`/100) (+3% — much lower
   than the plain early floor's +8%) raises the required stop to entry × (1 +
-  `midday_floor_pct`/100) (breakeven). Stops only move up; a no-op once the +20%
+  `midday_floor_pct`/100) (breakeven). Stops only move up; a no-op once the +12%
   ratchet has armed, same restriction as the early floor above; outside the window it
   has no effect and the plain early floor alone applies. Motivation: BABA (2026-08-03)
   peaked only +5% at 11:40 ET — below the early floor's +8% trigger, so no protection
@@ -304,7 +307,7 @@ heavier theta): the volume bar is the compensation, not optional.
   extending well past +30% before any real reversal. **+50% is the compromise**: still a
   meaningful improvement over the old +100% cap (which let NBIS run to +113% completely
   unprotected on 7/21), while giving genuine multi-session-type runners more room than
-  +30% before being forced out. `scale_out_pct` (40%) now sits live inside the 20%-50%
+  +30% before being forced out. `scale_out_pct` (40%) now sits live inside the 12%-50%
   window (no longer dormant) and is checked between hard-TP and the ratchet.
 - **Discretionary profit-taking:** the agent may sell a winner at any gain level — before
   or after the ratchet arms — when momentum breaks (lower highs, VWAP lost, volume faded)

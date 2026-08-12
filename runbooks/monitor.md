@@ -94,7 +94,7 @@ should cost at most one cycle's data, never the whole loop.
      (verify cancelled), then sell-to-close at mid immediately — NO discretion, winners
      get capped as mechanically as losers get stopped. If unfilled in 1 min, reprice
      toward the bid. Journal the win ("hard TP: sold at $X, +Y%"). **Note:** at +50% both
-     `take_profit_pct` (20%, arms the ratchet) and `scale_out_pct` (40%) sit live inside
+     `take_profit_pct` (12%, arms the ratchet) and `scale_out_pct` (40%) sit live inside
      this window and are checked before the position could ever reach the hard cap.
    - **mark ≥ entry × (1 + scale_out_pct/100), quantity ≥ 2, not yet scaled out today**
      (check the journal for a "SCALED OUT" entry on this position) → partial profit lock
@@ -121,9 +121,9 @@ should cost at most one cycle's data, never the whole loop.
      "RE-ENTERED tranche: bought N @ $X (sold @ $Y), stop re-placed for full qty".
    - **Thin-liquidity thresholds (added 2026-08-06):** if this position was journaled
      "LIQUIDITY: THIN" at entry (per entry.md §2), use `thin_liquidity_take_profit_pct`
-     (12) in place of `take_profit_pct` (20) for the arm trigger below, and
-     `thin_liquidity_stop_ratchet_trail_pct` (20) in place of `stop_ratchet_trail_pct`
-     (30) in the required-stop formula once armed — bank the profit lock sooner and trail
+     (8) in place of `take_profit_pct` (12) for the arm trigger below, and
+     `thin_liquidity_stop_ratchet_trail_pct` (15) in place of `stop_ratchet_trail_pct`
+     (20) in the required-stop formula once armed — bank the profit lock sooner and trail
      tighter on a name with proven exit-slippage risk. Liquid positions are unaffected.
    - **FLOOR CLAMP (added 2026-08-12):** wherever `take_profit_floor_pct` is used below,
      the effective floor is **min(`take_profit_floor_pct`, the arm level that applied)** —
@@ -132,11 +132,13 @@ should cost at most one cycle's data, never the whole loop.
      ABOVE the live mark at the instant of arming, forcing an immediate sell-at-mid and
      turning the ratchet into a hard take-profit. Surfaced by a backtest bug on
      2026-08-12; the arm/trail changes that day made it reachable in live config.
-   - **mark ≥ entry × (1 + take_profit_pct/100)** (lowered to +20% on 2026-07-28, was
-     50% — "start considering sale"; or `thin_liquidity_take_profit_pct`/12 for
+   - **mark ≥ entry × (1 + take_profit_pct/100)** (+12% — 50% → 20% on 2026-07-28
+     "start considering sale", 20% → 12% on 2026-08-12 per the threshold scan; or
+     `thin_liquidity_take_profit_pct`/8 for
      THIN-flagged positions per above) → the ratchet ARMS (no forced sale). While armed:
-     required stop = max(entry × (1 + take_profit_floor_pct/100), high-water mark × (1 −
-     stop_ratchet_trail_pct/100, or `thin_liquidity_stop_ratchet_trail_pct`/20 if THIN)),
+     required stop = max(entry × (1 + take_profit_floor_pct/100 — subject to the FLOOR
+     CLAMP above), high-water mark × (1 −
+     stop_ratchet_trail_pct/100, or `thin_liquidity_stop_ratchet_trail_pct`/15 if THIN)),
      rounded to tick — floor raised from breakeven to +10%
      on 2026-07-28 — track the high-water mark from the journal's mark history plus this
      check's quote. If the required stop exceeds the current resting stop, CANCEL the
@@ -152,9 +154,9 @@ should cost at most one cycle's data, never the whole loop.
      this position also re-computes its limit_price the same way and stays stop_limit
      until either filled or upgraded to stop_market by §3b near the close. Journal each
      ratchet with its order type ("ratchet: stop $X → $Y (stop_limit, limit $L), HWM $Z"
-     or "... (stop_market) ..."). With a 20-50% window before the hard-TP cap above,
+     or "... (stop_market) ..."). With a 12-50% window before the hard-TP cap above,
      arming typically snaps the stop to entry × 1.10 first (a HWM only modestly above
-     entry, trailed 30%, computes below the +10% floor) — but as the position runs further
+     entry, trailed 20%, computes below the +10% floor) — but as the position runs further
      toward +50%, the HWM-trail component can overtake the floor and raise the stop above
      +10%. Both are expected, not a bug.
      **Stall-trail (added 2026-07-28, secondary layer, checked every cycle while armed):**
@@ -162,7 +164,7 @@ should cost at most one cycle's data, never the whole loop.
      on the trade-direction side of VWAP, volume steady/rising) or STALLING (anything
      short of that — a lighter bar than the full momentum-broken check below, which needs
      ALL three conditions against it together). On a STALLING read, also compute HWM × (1
-     − stop_ratchet_stall_trail_pct/100) (10%, vs. the normal 30% trail) and take the
+     − stop_ratchet_stall_trail_pct/100) (10%, vs. the normal 20% trail) and take the
      higher of it vs. the normal required stop from above (this replacement is also
      depth-gated per above). This reacts to a pause the
      moment it happens rather than waiting for the wider trail or the +10% floor to
@@ -183,7 +185,7 @@ should cost at most one cycle's data, never the whole loop.
      which peaked +8-11.5% — real, thesis-confirming pops — then ground down on theta for
      nearly an hour without ever reaching the +20% arm level, round-tripping all the way
      to the stop_loss floor with zero protection in between. Journal ("early floor: stop
-     $X → $Y"). Once take_profit_pct (+20%) arms, its floor (+10%) is already higher than
+     $X → $Y"). Once take_profit_pct (+12%) arms, its floor (+10%) is already higher than
      this one, so no conflict — just check the ratchet first each cycle.
    - **Midday floor (added 2026-08-03, pre-arm only, checked only while the current ET
      time is within [`midday_floor_window_start_et`, `midday_floor_window_end_et`] —

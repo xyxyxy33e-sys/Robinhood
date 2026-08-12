@@ -285,8 +285,10 @@ switch; no real order may use the exception while it is true.
    first-qualified-first-tracked; the real search continues unaffected.
 2. On every subsequent loop firing (entry re-check or monitor cycle), pull the shadow
    contract's quote and apply the THIN exit cascade on paper (stop −25%, THIN ratchet
-   arm at `thin_liquidity_take_profit_pct` 12% / trail
-   `thin_liquidity_stop_ratchet_trail_pct` 20%, early/midday/late-day floors, hard TP
+   arm at `thin_liquidity_take_profit_pct` 8% / trail
+   `thin_liquidity_stop_ratchet_trail_pct` 15% — subject to the monitor.md §3 FLOOR
+   CLAMP, so the effective floor on a THIN shadow is +8%, not `take_profit_floor_pct`'s
+   +10% — early/midday/late-day floors, hard TP
    +50%). Journal "GATE-EXCEPTION SHADOW: mark $X (±Y%) — [action]" each cycle. On a
    paper exit, journal the hypothetical fill and P&L and stop tracking for the day.
 3. If the shadow is still open when the entry re-check loop ends (1:30 PM cutoff or a
