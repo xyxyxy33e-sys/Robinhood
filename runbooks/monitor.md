@@ -5,6 +5,20 @@ Started by the entry runbook after a fill; self-perpetuating via `send_later`
 from 5 on 2026-07-28 per user). Read `config.yaml` and
 today's journal first. All times US/Eastern.
 
+> **⚠ THRESHOLD NUMBERS IN THIS FILE'S PROSE ARE PRE-2026-08-12 AND ARE NOW HISTORICAL NARRATIVE.**
+> On 2026-08-12 expiry selection moved to `dte_target: 14`, roughly halving contract
+> leverage (~14.6x → ~8.6x), and every profit-side threshold was scaled by 0.59 so it
+> represents the **same underlying move** as before. Current values live in
+> `config.yaml`, which is authoritative — the runbooks read them by name, so behaviour
+> is already correct; only the prose numbers below are stale.
+> **arm 20→12 · hard TP 50→30 · scale-out 40→24 · TP floor 10→6 · THIN arm 12→7 ·
+> early floor 8→5 / −3→−2 · midday trigger 3→2 · late-day 5→3 · scale-out floor −15→−9.**
+> **`stop_loss_pct` stays −25 deliberately** — not scaling it is what widens the stop's
+> tolerance from 1.71% to 2.90% of underlying movement, which is the entire point.
+> Trail percentages (30/20/10) also unchanged: give-back from a peak is leverage-neutral.
+> Rationale, arithmetic and verification: `config.yaml` "EXIT-THRESHOLD RECALIBRATION"
+> and `journal/2026-08-12.md`.
+
 ## Loop resilience (added 2026-08-05 per user, after a `get_equity_historicals` call
 failed mid-cycle on a transient "model temporarily unavailable" auto-mode classifier
 error and the loop died silently — no `send_later` had been armed yet for the next
@@ -73,20 +87,6 @@ should cost at most one cycle's data, never the whole loop.
    - **mark ≤ entry × (1 + stop_loss_pct/100)** (when the stop is software-side) → CANCEL
      the resting order first, then close NOW per exit runbook §2 (limit at mid, reprice to
      bid after 3 min, no discretion). Journal the stop-out.
-> **⚠ THRESHOLD VALUES BELOW ARE PRE-2026-08-12 AND ARE NOW HISTORICAL NARRATIVE.**
-> On 2026-08-12 expiry selection moved to `dte_target: 14`, roughly halving contract
-> leverage (~14.6x → ~8.6x), and every profit-side threshold was scaled by 0.59 so it
-> represents the **same underlying move** as before. Current values live in
-> `config.yaml`, which is authoritative — the runbooks read them by name, so behaviour
-> is already correct; only the prose numbers below are stale.
-> **arm 20→12 · hard TP 50→30 · scale-out 40→24 · TP floor 10→6 · THIN arm 12→7 ·
-> early floor 8→5 / −3→−2 · midday trigger 3→2 · late-day 5→3 · scale-out floor −15→−9.**
-> **`stop_loss_pct` stays −25 deliberately** — not scaling it is what widens the stop's
-> tolerance from 1.71% to 2.90% of underlying movement, which is the entire point.
-> Trail percentages (30/20/10) also unchanged: give-back from a peak is leverage-neutral.
-> Rationale, arithmetic and verification: `config.yaml` "EXIT-THRESHOLD RECALIBRATION"
-> and `journal/2026-08-12.md`.
-
    - **mark ≥ entry × (1 + hard_take_profit_pct/100)** (raised to +50% on 2026-07-28,
      briefly +30% earlier that day, originally +100%) → CANCEL the resting stop first
      (verify cancelled), then sell-to-close at mid immediately — NO discretion, winners
