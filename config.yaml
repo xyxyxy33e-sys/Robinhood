@@ -32,8 +32,15 @@ max_premium_per_trade_pct_of_daily_start: 25
                                  # 2026-07-22 EOD report, captured retroactively since
                                  # today's premarket run predates this rule) -> effective
                                  # max_premium_per_trade = $2,571.72 for the rest of today.
-# Contracts per trade: quantity = floor(max_premium_per_trade / (premium × 100)),
-# minimum 1 — multiple contracts of the same call (or put) are allowed.
+# Contracts per trade (CHANGED 2026-08-12 per user — "use whatever is in the buying
+# power"): quantity = floor(min(max_premium_per_trade, live options buying power) /
+# (premium × 100)), minimum 1 — multiple contracts of the same call (or put) are
+# allowed. Buying power is pulled fresh from get_portfolio at selection time and the
+# SMALLER of the two budgets binds, so a qualifying setup is taken at whatever size
+# settled cash allows rather than skipped. Previously sizing ignored buying power
+# entirely and an insufficient-cash rejection was a hard stop with downsizing
+# forbidden; that cost a fully-qualified SMCI trade on 2026-08-12 (31 contracts
+# required vs. 13 affordable — see journal). Mechanics in entry.md §2.
 max_open_positions: 6            # combined cap across calls AND puts together (changed
                                  # 2026-07-28 per user from separate max_open_calls=5 /
                                  # max_open_puts=5 [10 total] back to a single combined

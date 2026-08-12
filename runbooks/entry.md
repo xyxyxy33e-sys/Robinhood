@@ -147,14 +147,28 @@ the rest of the day's search.
    (mid × 100)), minimum 1 — multiple contracts of the same call or put are allowed.
    `max_premium_per_trade` is the dollar figure computed once in today's premarket run
    (`daily_start_balance × max_premium_per_trade_pct_of_daily_start / 100`, from today's
-   journal) — read it from there, don't recompute mid-day. Not capped or scaled by live
-   buying power; if settled cash is actually insufficient the order will be rejected at
-   placement — treat that as a hard stop for the underlying, don't chase a smaller size.
-   **Notify the user directly** when this happens for a candidate that otherwise fully
-   qualified (tape + liquidity gates both passed) — don't just log it in the journal and
-   move on silently (added 2026-07-30, after a genuine MSFT setup was rejected on
-   `OPTION_NOT_ENOUGH_BP_FOR_PREMIUM` with buying power tied up in T+1-settling proceeds
-   from earlier same-day closes). Journal it either way.
+   journal) — read it from there, don't recompute mid-day.
+   **Buying-power scaling (CHANGED 2026-08-12 per user — "Remove the forbidding scaling
+   down rule, use whatever is in the buying power"):** the premium budget is
+   **min(`max_premium_per_trade`, live options buying power)**. Pull buying power fresh
+   from `get_portfolio` at selection time and size to whichever is smaller:
+   quantity = floor(min(max_premium_per_trade, buying_power) / (mid × 100)), minimum 1.
+   A qualifying setup is now taken at whatever size settled cash allows rather than
+   skipped. If even 1 contract is unaffordable, that IS a no-trade for the underlying —
+   journal it and notify the user.
+   *Prior rule, replaced:* quantity was sized off `max_premium_per_trade` alone and
+   explicitly "not capped or scaled by live buying power," with an insufficient-cash
+   rejection treated as a hard stop and chasing a smaller size forbidden (added
+   2026-07-30 after an MSFT setup was rejected on `OPTION_NOT_ENOUGH_BP_FOR_PREMIUM`).
+   That rule cost a fully-qualified trade on 2026-08-12: SMCI $37.50C 8/14 passed every
+   tape gate (3.4× volume expansion, leader re-entry, new session high) and every
+   liquidity gate (OI 1,154, spread 5.71%, depth 167/183), but sizing demanded 31
+   contracts ($3,255) against $1,429.66 of buying power — 13 contracts were affordable
+   and the trade was skipped entirely. Per user, taking the smaller position is
+   preferred to taking none.
+   **Still notify the user directly** whenever buying power (not the premium cap) is what
+   binds the size, so the funding constraint stays visible instead of silently shrinking
+   positions — and journal the two figures side by side (budget vs. buying power).
    Gates fail ATM → next strike further out-of-the-money once → otherwise next candidate.
    **Thin-liquidity flag (added 2026-08-06):** once a contract clears all gates and is
    selected, if its OI is below `thin_liquidity_oi_threshold`, journal it explicitly —
