@@ -54,13 +54,22 @@ without either filling a position or arming the next one.
 
    | test | requirement |
    |---|---|
-   | **volume** | leg volume ÷ the name's own **pre-leg trailing baseline** ≥ `late_entry_min_volume_ratio`, measured over `late_entry_min_bars` consecutive 5-min closes in the trade direction |
-   | **structure** (`late_entry_require_structure`) | the leg has made **and held** a higher low (lower high for puts) or a new local extreme — and has **not** broken the low the sequence was built on |
+   | **volume** | this bar's volume ÷ the trailing baseline below ≥ `late_entry_min_volume_ratio`, with `late_entry_min_bars` consecutive 5-min closes in the trade direction |
+   | **structure** (`late_entry_require_structure`) | **all three**: (a) this bar closed in the trade direction *relative to its own open* (close > open for calls); (b) a new local extreme over the last `late_entry_min_bars` bars, **or** a higher low (lower high for puts); (c) the low the sequence was built on is **unbroken** |
 
-   - **Compute the baseline, do not eyeball it.** Use the quiet period immediately
-     *preceding* the leg. Never benchmark against the opening range: it is always inflated
-     and makes every later leg look weak by comparison (BIRK 8/13 read 0.58× against the
-     open and 3.35× against its own baseline — same leg, opposite verdict).
+   - **Baseline is mechanical — do not choose it by eye, and do not key it to the leg
+     start.** `median(volume of the previous late_entry_baseline_bars bars, skipping the
+     session's first late_entry_baseline_skip_open_bars)`. The earlier "quiet period
+     preceding the leg" wording was ambiguous and broke on BIRK 8/13: a consecutive-closes
+     leg start walked the baseline back into the busy post-open window and returned
+     **0.48×** where the eyeballed dormant window gave **3.35×** — same leg, same bars, 7×
+     apart, and the inflated-open error this rule exists to prevent. The opening bars are
+     excluded by construction now.
+   - **(a) is load-bearing.** A bar that prints a new high but closes below its own open is
+     a rejection, not a breakout. It is the single condition that separated the two rules
+     in backtest: BIRK 8/13 at 14:25 had volume 4.3× and a new session high, and closed
+     $0.07 below its open — the old clock rule bought it, structure declined it, and it
+     lost 2.9% over the next hour.
    - **Breaking the structure low is an immediate disqualification**, no waiting for the
      next cycle. This is what killed RDDT at 10:26 on 8/14 and BIRK at 10:42 on 8/13.
    - Declining volume in a *consolidation* is healthy (a flag); declining volume in an

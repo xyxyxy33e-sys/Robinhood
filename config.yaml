@@ -146,11 +146,20 @@ min_day_change_pct: 2            # underlying must move at least this % in the t
 late_entry_min_bars: 3           # consecutive 5-min closes in the trade direction.
                                  # 3 bars IS the 15 minutes the old rule asked for —
                                  # stated once now, not twice.
-late_entry_min_volume_ratio: 1.5 # leg volume vs the name's OWN pre-leg trailing baseline.
-                                 # Codifies existing discretion, does not change it:
-                                 # passed NBIS 2.9x / BIRK 3.35x, rejected RDDT 1.23x
-                                 # ("weak"), SMCI 0.9x, RDDT 0.42x. Never benchmark
-                                 # against the opening range — it is always inflated.
+late_entry_min_volume_ratio: 1.5 # this bar's volume vs the trailing baseline below.
+                                 # Separates the record cleanly: NBIS's real breakout
+                                 # measured 2.5-2.9x, BIRK's push 4.3x, against RDDT
+                                 # 0.5-0.8x and SMCI 0.9x.
+# BASELINE — must NOT depend on where the leg is judged to start (backtest 2026-08-14).
+# The first spec said "the quiet period immediately preceding the leg", which is
+# ambiguous: on BIRK 8/13 a consecutive-closes leg start walked back into the busy
+# post-open window and produced 0.48x, versus 3.35x from the dormant window the journal
+# picked by eye — same leg, same bars, 7x apart, and the runbook's own warning about
+# inflated opening volume violated by its own definition. Now fully determined:
+#   ratio = this bar's volume / median(volume of the previous late_entry_baseline_bars,
+#           skipping the first late_entry_baseline_skip_open_bars of the session)
+late_entry_baseline_bars: 6      # 30 min of trailing context
+late_entry_baseline_skip_open_bars: 3  # the opening 15 min is always inflated — excluded
 late_entry_require_structure: true  # leg must have made AND HELD a higher low or a new
                                  # local extreme; breaking the structure low it was built
                                  # on is an immediate disqualification. This is the veto

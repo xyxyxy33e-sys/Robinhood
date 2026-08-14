@@ -64,7 +64,22 @@ measures *accumulated stock*, not current flow, and the two worst execution outc
 the sample both cleared it comfortably: NBIS $250C had OI 5,872 and displayed **one
 contract a side**; U $40C had OI 1,393 and swept 26% through its stop. Spread and depth
 measure the thing we actually care about; OI is a proxy that the record repeatedly
-contradicts. It stays at 500 for now because (a) the argument above still holds — thin OI
+contradicts.
+
+Now measured rather than inferred (RDDT 2026-09-18 chain, 11 strikes around spot, live
+8/14): **the correlation between OI and displayed depth is r = −0.22** — slightly
+*negative*. The $170 strike carried the highest OI on the board (3,307) and nearly the
+thinnest book (bid 15 / ask 9), reproducing the NBIS pattern exactly. OI does not predict
+whether you can get filled.
+
+**Round-strike clustering — confirmed on live data (2026-08-14).** Same chain: strikes at
+multiples of 10 average **2,164** OI against **1,087** for the intermediate $5 strikes, a
+**1.99×** gap with no monotonic relationship to distance from spot. This is the premise
+behind the band search, and it now has cross-sectional support beyond the 9 journal
+step-out cases. Related structural point: the 9/18 monthly lists $5 increments where the
+8/28 weekly carried half-strikes like $182.50 — finer spacing spreads the same interest
+across more strikes, which is why weekly step-outs onto half-strikes were so destructive
+(RDDT $182.50, OI 6). It stays at 500 for now because (a) the argument above still holds — thin OI
 and wide spreads co-move, so lowering it in isolation unlocks nothing, and (b) the
 band search above should clear most OI failures by finding the round strike without
 touching the threshold. Revisit only with evidence from `data/chain_log.csv`.
@@ -219,11 +234,48 @@ computable disqualification — precisely what killed RDDT at 10:26 (8/14) and B
 than changing it: it is consistent with every live judgment on record (passed NBIS 2.9×
 and BIRK 3.35×; rejected RDDT 1.23× as "weak", SMCI 0.9×, RDDT 0.42×).
 
-**The clock is not disproven, only unproven.** There is a plausible mechanism — in a
-gapped name the first 10–15 minutes is where the marginal buyer absorbs gap supply, so
-surviving it should carry information. `late_entry_advisory_leg_minutes` keeps the
-figure recorded so the hypothesis stays testable. Restore it as a veto only on evidence
-from `data/leg_log.csv`, not on intuition.
+**Backtested 2026-08-14 — the clock is now disproven, and structure wins.** Harness:
+`tools/backtest_legs.py`, bars in `data/bars/`. 160 decision points, 4 names over 4
+sessions (NBIS 8/12 the one genuine uptrend at +27.4%; BIRK 8/13, RDDT 8/14, NU 8/14 all
+no-trade days). Both rules share an identical volume test, so they differ *only* on clock
+versus structure.
+
+| rule | fires | avg fwd-60min | wins |
+|---|---|---|---|
+| OLD (15-min clock) | 6 | −0.76% | 2/6 |
+| NEW (volume + structure) | 4 | −0.21% | 2/4 |
+
+They disagree on exactly **2 of 160** points, both BIRK 8/13, and structure declined both:
+−0.79% and −2.91% over the next hour. On NBIS — the only real trend in the sample — the
+two rules are **identical**: same 4 firings, first at 15:55 UTC, precisely the breakout leg
+the journal identified, at a measured 2.5–2.9× against the journal's eyeballed 2.9×.
+
+So structure strictly dominates here: same behaviour on the winner, two fewer losers.
+**This corrects the earlier claim in this file that BIRK "would have been taken under the
+revised rule."** It would not be. The reason is condition (a) — BIRK's 14:25 bar printed a
+new session high on 4.3× volume but closed $0.07 *below its own open*. A rejection candle.
+The clock could not see that; structure fails it at the bar rather than one bar later.
+
+Sample caveats, stated plainly: 4 names, and every session except NBIS was a no-trade day,
+so the absolute returns are unrepresentative — all six OLD signals and three of four NEW
+signals lost. Underlying forward return is the outcome measure; option P&L would be a
+levered, theta-decayed version of it, so directionally the same but larger in magnitude.
+
+**The backtest also found a defect in the rule as first written.** "Measure against the
+quiet period immediately preceding the leg" is not a definition — it depends on where the
+leg is judged to start. On BIRK the codified consecutive-closes leg start walked the
+baseline into the busy post-open window and returned **0.48×**, where the journal's
+eyeballed dormant window gave **3.35×**: same leg, same bars, 7× apart, committing the
+inflated-opening-window error this very rule warns against. Replaced with a mechanical
+trailing median (`late_entry_baseline_bars`, `late_entry_baseline_skip_open_bars`) that
+never touches the leg start and excludes the opening bars by construction. Note what this
+means: for four weeks the rule was not reproducible, and no one could have noticed without
+running it.
+
+**The clock stays recorded, not restored.** The gap-supply mechanism remains plausible
+and `late_entry_advisory_leg_minutes` keeps the figure in the log, but it now has a
+negative result against it as well as no positive one. Restoring it as a veto needs
+evidence from `data/leg_log.csv` that beats structure head-to-head.
 
 **Why the log exists (2026-08-14).** The old evidence was survivorship-friendly by
 construction, and worse than first stated: not only do we never observe the legs the
