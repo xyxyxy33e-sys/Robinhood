@@ -298,14 +298,49 @@ Threshold sweep (`python3 tools/backtest_legs.py --sweep`):
 **1.5 sits in the weakest part of the curve** — the MFE/MAE ratio bottoms around 1.4–1.5
 (0.52–0.67) and improves both below (1.74 at 1.20) and above (2.72 at 2.00).
 
-**Deliberately not retuned.** n=9 names, and the 1.4–1.5 trough is well within noise for
-that sample; picking 1.20 off this curve is exactly the overfitting this file already
-refused once, when 14 DTE was chosen over the measured 16-DTE peak because "n=20 is too
-small to justify fitting the exact maximum." The same discipline applies at n=9. What is
-recorded instead: the value is **unsupported**, it sits in a weak region, and its
-false negatives are systematic rather than random — steady trends, by construction. Change
-it when `data/leg_log.csv` has live evidence, and consider that the right fix may not be
-one number but a volume test that does not assume burst-shaped volume.
+**That sweep is misleading, and the correction points the other way
+(`--pnl`, 2026-08-14).** MFE/MAE is not P&L, for two reasons. It counts every qualifying
+bar as a signal when **only the first per name-day becomes a trade**; and a signal with
+excellent MFE still loses if it trips the −25% stop on the way there. Modelling the actual
+exit cascade on an option position (7.9× leverage per the DTE table, 14-DTE theta, 3%
+round-trip friction), one trade per name-day:
+
+| threshold | trades | avg P&L | total | wins |
+|---|---|---|---|---|
+| 1.20 | 8 | −7.5% | **−60%** | 3/8 |
+| 1.50 (live) | 5 | −7.8% | **−39%** | 1/5 |
+| 1.75 | 3 | −3.5% | −11% | 1/3 |
+| 2.00 | 2 | +0.4% | +1% | 1/2 |
+
+**1.20 is worse than 1.50, not better** — near-identical average, but it adds losing
+trades, so the total is half again as bad. The ordering is stable across leverage
+assumptions from 5× to 10×. Catching 4/4 winners bought less than it cost: the extra
+winners it admits are small, and it admits losers alongside them.
+
+The gradient now points *up*, not down — but 2.00 rests on **two trades**, and the whole
+table is dominated by three no-trade days (BIRK, RDDT, NU) where any entry stops out and
+where, in reality, the liquidity gates blocked the trade before the leg rule mattered. The
+model also disagrees with reality on GOOGL: it shows a loss where the real trade made
++$405, because the real entry was not at the signal bar and was exited discretionarily. So
+it is not validated either.
+
+Two defensible metrics disagreeing on n=9 is the actual result: **this sample cannot settle
+the threshold in either direction.**
+
+**Not retuned, and the case for lowering it did not survive contact with a P&L model.**
+1.5 remains **unsupported** — derived from a biased population, sitting in a weak region of
+the MFE/MAE curve, with systematic rather than random false negatives. None of that makes
+1.20 right: on modelled P&L it is worse. Picking any value off these curves at n=9 is the
+overfitting this file already refused once, when 14 DTE was chosen over the measured
+16-DTE peak because "n=20 is too small to justify fitting the exact maximum."
+
+The more useful conclusion is structural, and no threshold fixes it: **the test assumes
+burst-shaped volume.** Gap-up earnings names deliver volume in spikes; steady trends never
+print one, so they are excluded by construction no matter where the line sits — lower it
+far enough to admit them and it admits everything else too (at 1.20, 4 of 5 losers fire).
+The candidate fix is a differently-shaped test — sustained elevation over a window, or
+volume relative to the name's own intraday distribution rather than a fixed multiple — not
+a different number. Needs live `data/leg_log.csv` evidence before anything changes.
 
 Sample caveats: 9 names over 7 sessions; the losers include three no-trade days where no
 signal could have been profitable. Excursion is measured on the underlying — option P&L

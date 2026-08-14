@@ -69,6 +69,42 @@ if __name__=='__main__':
             d['fwd60']= raw if up else -raw   # direction-adjusted: gain for the trade
             d['lab']=lab; d['up']=up
             rows.append((f[:-4],x['t'],d))
+    # --- modelled P&L: the sweep below it measures MFE/MAE, which is NOT P&L.
+    # Only the FIRST qualifying signal per name-day becomes a trade, and a signal
+    # with good MFE still loses if it trips the -25% stop first. This applies the
+    # real exit cascade to an option position. Assumptions: LEV x delta leverage,
+    # theta at 14 DTE, fixed round-trip spread friction. Ignores IV moves.
+    if '--pnl' in sys.argv:
+        LEV=float(os.environ.get('LEV','7.9')); THETA=-3.3; FRIC=-3.0
+        def sim(b,i,up):
+            e=b[i]['c']; hwm=0.0; armed=False; n=0
+            for y in b[i+1:]:
+                n+=1; adj=THETA*(n*5/390.0)+FRIC
+                pnl=(((y['c']-e)/e*100) if up else ((e-y['c'])/e*100))*LEV
+                hi =(((y['h']-e)/e*100) if up else ((e-y['l'])/e*100))*LEV
+                lo =(((y['l']-e)/e*100) if up else ((e-y['h'])/e*100))*LEV
+                hwm=max(hwm,hi)
+                if lo<=-25: return -25+adj
+                if hi>=50:  return 50+adj
+                if hwm>=12: armed=True
+                if armed and pnl<=max(10,hwm-20): return max(10,hwm-20)+adj
+                if not armed and hwm>=8 and pnl<=-3: return -3+adj
+            return (((b[-1]['c']-e)/e*100) if up else ((e-b[-1]['c'])/e*100))*LEV+adj
+        print(f"modelled P&L, one trade per name-day, {LEV}x leverage")
+        print(f"{'thresh':>7}{'trades':>8}{'avg':>9}{'total':>9}{'wins':>7}")
+        for th in (1.0,1.2,1.25,1.3,1.5,1.75,2.0):
+            globals()['VOL_RATIO']=th; tr=[]
+            for f,pc,up,lab in cases:
+                fp=os.path.join(D,f)
+                if not os.path.exists(fp): continue
+                b=load(fp)
+                for i,x in enumerate(b):
+                    if x['t']<'1345' or x['t']>'1700': continue
+                    if analyze(b,i,pc,up)['NEW'] and i<len(b)-1: tr.append(sim(b,i,up)); break
+            if tr: print(f"{th:>7.2f}{len(tr):>8}{sum(tr)/len(tr):>+8.1f}%{sum(tr):>+8.0f}%"
+                         f"{sum(1 for t in tr if t>0):>4}/{len(tr)}")
+        raise SystemExit
+
     # --- volume-threshold sensitivity -------------------------------------
     if '--sweep' in sys.argv:
         print(f"{'thresh':>7}{'fires':>7}{'avgMFE':>9}{'avgMAE':>9}{'winners':>9}{'losers':>8}")
