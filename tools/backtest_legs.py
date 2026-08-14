@@ -47,18 +47,50 @@ def analyze(bars,i,prior_close,up=True):
 if __name__=='__main__':
     import os,sys
     D=os.path.join(os.path.dirname(__file__),'..','data','bars')
-    cases=[('2026-08-12_NBIS.csv',193.23),('2026-08-13_BIRK.csv',36.74),
-           ('2026-08-14_RDDT.csv',158.12),('2026-08-14_NU.csv',13.93)]
+    # (file, prior_close, is_call, outcome_label)
+    cases=[('2026-07-23_TSLA.csv',374.01,False,'WIN +$920 put'),
+           ('2026-07-23_GOOGL.csv',342.09,False,'WIN +$405 put'),
+           ('2026-07-31_AAPL.csv',333.43,False,'LOSS -$1568 put'),
+           ('2026-08-04_PLTR.csv',125.65,True ,'WIN +$725'),
+           ('2026-08-06_U.csv',35.47,True ,'LOSS -$1536'),
+           ('2026-08-12_NBIS.csv',193.23,True ,'uptrend +27.4%'),
+           ('2026-08-13_BIRK.csv',36.74,True ,'no-trade'),
+           ('2026-08-14_RDDT.csv',158.12,True ,'no-trade'),
+           ('2026-08-14_NU.csv',13.93,True ,'no-trade')]
     rows=[]
-    for f,pc in cases:
+    for f,pc,up,lab in cases:
         p=os.path.join(D,f)
         if not os.path.exists(p): continue
         b=load(p)
         for i,x in enumerate(b):
             if x['t']<'1345' or x['t']>'1700': continue
-            d=analyze(b,i,pc)
-            d['fwd60']=(b[min(i+12,len(b)-1)]['c']/x['c']-1)*100
+            d=analyze(b,i,pc,up)
+            raw=(b[min(i+12,len(b)-1)]['c']/x['c']-1)*100
+            d['fwd60']= raw if up else -raw   # direction-adjusted: gain for the trade
+            d['lab']=lab; d['up']=up
             rows.append((f[:-4],x['t'],d))
+    # --- volume-threshold sensitivity -------------------------------------
+    if '--sweep' in sys.argv:
+        print(f"{'thresh':>7}{'fires':>7}{'avgMFE':>9}{'avgMAE':>9}{'winners':>9}{'losers':>8}")
+        wins={'2026-07-23_TSLA','2026-07-23_GOOGL','2026-08-04_PLTR','2026-08-12_NBIS'}
+        for th in (1.0,1.1,1.2,1.25,1.3,1.4,1.5,1.75,2.0):
+            globals()['VOL_RATIO']=th; fired=[]; w=set(); l=set()
+            for f,pc,up,lab in cases:
+                fp=os.path.join(D,f)
+                if not os.path.exists(fp): continue
+                b=load(fp)
+                for i,x in enumerate(b):
+                    if x['t']<'1345' or x['t']>'1700': continue
+                    if not analyze(b,i,pc,up)['NEW']: continue
+                    e=x['c']; fut=b[i+1:]
+                    if not fut: continue
+                    fired.append((max((y['h']-e)/e*100 if up else (e-y['l'])/e*100 for y in fut),
+                                  min((y['l']-e)/e*100 if up else (e-y['h'])/e*100 for y in fut)))
+                    (w if f[:-4] in wins else l).add(f)
+            if fired:
+                print(f"{th:>7.2f}{len(fired):>7}{sum(r[0] for r in fired)/len(fired):>+8.2f}%"
+                      f"{sum(r[1] for r in fired)/len(fired):>+8.2f}%{len(w):>8}/4{len(l):>7}/5")
+        raise SystemExit
     for tag in ('OLD','NEW'):
         s=[r for r in rows if r[2][tag]]
         if s: print(f"{tag:4} fires={len(s):3} avg_fwd60={sum(r[2]['fwd60'] for r in s)/len(s):+.2f}% "

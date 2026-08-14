@@ -256,10 +256,60 @@ revised rule."** It would not be. The reason is condition (a) — BIRK's 14:25 b
 new session high on 4.3× volume but closed $0.07 *below its own open*. A rejection candle.
 The clock could not see that; structure fails it at the bar rather than one bar later.
 
-Sample caveats, stated plainly: 4 names, and every session except NBIS was a no-trade day,
-so the absolute returns are unrepresentative — all six OLD signals and three of four NEW
-signals lost. Underlying forward return is the outcome measure; option P&L would be a
-levered, theta-decayed version of it, so directionally the same but larger in magnitude.
+**Extended to 9 names, 360 decision points (2026-08-14).** The first sample had no puts
+and one winner, so it was rebuilt around the actual trade record: TSLA (+$920 put),
+GOOGL (+$405 put), PLTR (+$725), NBIS (uptrend) against AAPL (−$1,568 put), U (−$1,536),
+BIRK, RDDT, NU. Outcome switched to **max favourable / adverse excursion to session end**,
+because a fixed 60-minute horizon misprices this strategy in both directions — the ratchet
+lets winners run and the −25% stop caps losers. TSLA is the proof: it made +$920 in
+reality and reads **−1.85%** at 60 minutes.
+
+| rule | fires | avg MFE | avg MAE | signals with MAE ≤ −1.5% |
+|---|---|---|---|---|
+| OLD (clock) | 8 | +0.96% | −2.17% | 4/8 |
+| NEW (structure) | 7 | +0.93% | −1.38% | 2/7 |
+
+Same upside, materially less downside — NEW halves the rate of deeply adverse signals.
+The three disagreements all favour it: it declines BIRK twice (−0.79%, −2.91%) and adds
+one U signal at +0.35%. Note it is **not** merely the more conservative rule; it fires
+where the clock does not.
+
+**The real finding is a false-negative problem neither rule solves.** Both miss two of the
+four genuine winners — GOOGL and PLTR — and the cause is isolated: **the volume gate,
+alone.** On PLTR the tape passed on all 40 decision bars and structure never blocked once;
+volume blocked every bar, peaking at **1.36×** against the 1.5 threshold. GOOGL peaked at
+**1.34×**. Both were steady grinds, and a steady grind never prints a 1.5× bar.
+
+That is a population-calibration error, not bad luck. `late_entry_min_volume_ratio: 1.5`
+was set from the discretionary record, which is almost entirely **gapped earnings-reaction
+names** (NBIS, BIRK, SMCI, RDDT) where volume arrives in bursts. Applied to an ordinary
+trending name it is close to unreachable.
+
+Threshold sweep (`python3 tools/backtest_legs.py --sweep`):
+
+| threshold | fires | avg MFE | avg MAE | winners hit | losers hit |
+|---|---|---|---|---|---|
+| 1.20 | 22 | +1.60% | −0.92% | **4/4** | 4/5 |
+| 1.25 | 14 | +1.65% | −1.10% | 3/4 | 4/5 |
+| 1.50 (live) | 7 | +0.93% | −1.38% | 2/4 | 3/5 |
+| 1.75 | 5 | +1.14% | −0.83% | 2/4 | 1/5 |
+| 2.00 | 4 | +1.36% | −0.50% | 1/4 | 1/5 |
+
+**1.5 sits in the weakest part of the curve** — the MFE/MAE ratio bottoms around 1.4–1.5
+(0.52–0.67) and improves both below (1.74 at 1.20) and above (2.72 at 2.00).
+
+**Deliberately not retuned.** n=9 names, and the 1.4–1.5 trough is well within noise for
+that sample; picking 1.20 off this curve is exactly the overfitting this file already
+refused once, when 14 DTE was chosen over the measured 16-DTE peak because "n=20 is too
+small to justify fitting the exact maximum." The same discipline applies at n=9. What is
+recorded instead: the value is **unsupported**, it sits in a weak region, and its
+false negatives are systematic rather than random — steady trends, by construction. Change
+it when `data/leg_log.csv` has live evidence, and consider that the right fix may not be
+one number but a volume test that does not assume burst-shaped volume.
+
+Sample caveats: 9 names over 7 sessions; the losers include three no-trade days where no
+signal could have been profitable. Excursion is measured on the underlying — option P&L
+would be a levered, theta-decayed version, same sign, larger magnitude.
 
 **The backtest also found a defect in the rule as first written.** "Measure against the
 quiet period immediately preceding the leg" is not a definition — it depends on where the
