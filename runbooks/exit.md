@@ -12,10 +12,6 @@ work the close until flat or 4:00 ET.
    owns the position from here; ignore/cancel any monitor re-arm that slips through.
 3. `get_option_positions` (nonzero=true) + `get_option_orders` (today, open states):
    no open position and no working orders → journal "flat, nothing to do", push, stop.
-   **TEMPORARY (through 2026-08-14):** before stopping, check today's journal for an
-   open "GATE-EXCEPTION SHADOW" position (paper-only test, see entry.md TEMPORARY
-   section) — if one is still open, close it on paper at the current mid, journal the
-   hypothetical fill and P&L, then proceed with the flat/stop path as normal.
 
 ## 1. Cancel stale orders
 Any working strategy order still open → `cancel_option_order` (part of the user's standing

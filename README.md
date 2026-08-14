@@ -38,6 +38,8 @@ Where to look:
 - `data/leg_log.csv` — every momentum leg the entry phase has evaluated, accepted and
   declined, with the measurements behind each call. This is the sample the entry
   thresholds get validated against; declines alone would be survivorship-biased.
+- `data/chain_log.csv` — every option strike priced, pass or fail, with OI, spread and
+  displayed depth. Same purpose for the liquidity gates.
 - `journal/YYYY-MM-DD.md` — every run appends and pushes, so the journal is the durable
   memory across sessions.
 

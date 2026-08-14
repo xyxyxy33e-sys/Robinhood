@@ -36,18 +36,46 @@ dte_target: 14                   # pick the expiry in [dte_min, dte_max] CLOSEST
 dte_max: 21
 dte_max_no_weekly: 45            # when no expiry exists in [dte_min, dte_max] (monthly-only
                                  # chains), the nearest monthly up to this DTE is allowed
-min_open_interest: 500           # static intraday — a strike that fails stays failed all day
-max_spread_pct_of_mid: 10        # spread CAN improve intraday; re-check each cycle
-min_quote_size_for_entry: 10     # bid_size AND ask_size, both. Never exception-eligible.
+min_open_interest: 500           # static intraday — a strike that fails stays failed all day.
+                                 # Weakest of the three gates (NBIS $250C: OI 5,872 with 1
+                                 # contract displayed a side; U $40C: OI 1,393 and swept 26%
+                                 # through its stop). It measures accumulated stock, not
+                                 # current flow. Held at 500 pending chain_log.csv data.
+max_spread_pct_of_mid: 10        # spread CAN improve intraday; re-check each cycle.
+                                 # Best-behaved gate — % of mid correctly normalizes
+                                 # crossing cost as a fraction of the position. Do not
+                                 # "wait for it to tighten": SE oscillated 12-59% across six
+                                 # cycles with no trend. Leave at 10.
+# Depth gate: displayed size must cover the ORDER, not a fixed constant. Revised
+# 2026-08-14 — the old flat `min_quote_size_for_entry: 10` demanded 3.3x coverage on a
+# 3-lot and 1x on a 10-lot, i.e. it was most restrictive exactly when the order was
+# smallest. It blocked NBIS 8/12 (needed 3 contracts, ask_size 8) six minutes before the
+# same strike showed 32/93. Required on BOTH bid_size and ask_size:
+#   required = max(min_quote_size_floor, ceil(quantity x quote_size_coverage_multiple))
+min_quote_size_floor: 5          # absolute floor, matches min_quote_size_for_stop_update
+quote_size_coverage_multiple: 2  # ... and 2x the contracts actually being bought. This
+                                 # TIGHTENS large orders (a 16-lot now needs 32 a side —
+                                 # the U $40C size) and loosens only small ones.
 thin_liquidity_oi_threshold: 2500  # below this, flag the position "LIQUIDITY: THIN" for life
                                  # and use the tightened THIN exit values below
 
-# --- Single-gate liquidity exception: PAPER-ONLY SHADOW TEST ------------------
-# Review due after the 2026-08-14 close; see entry.md TEMPORARY section.
-gate_exception_shadow_only: true # HARD SWITCH — true means paper tracking only
-gate_exception_min_oi: 200       # floor if OI is the single failing gate
-gate_exception_max_spread_pct: 20  # ceiling if spread is the single failing gate
-gate_exception_size_factor: 0.5  # exception trades size at half the normal cap
+# Single-gate liquidity exception: RETIRED 2026-08-14 after its paper window
+# (8/10-8/14) produced exactly one shadow trade — SE $130C, stopped out -25.9%
+# (-$360) — and could never apply to quote-size, the gate that actually blocks.
+# See docs/RATIONALE.md before proposing anything like it again.
+
+# --- Strike search ------------------------------------------------------------
+# Liquidity clusters at ROUND strikes, not by distance from spot. The old cascade
+# ("next strike further OTM once") searched an axis that does not describe the
+# liquidity surface and only in the direction where premium falls and % spread
+# mechanically worsens: it made OI worse in 7 of 9 measured cases (-99%, -88%,
+# -71%, -70%, -65%). Both improvements were steps onto round strikes.
+strike_search_steps_itm: 1       # how many strikes BELOW spot to consider (calls;
+                                 # above spot for puts). 0 restores OTM-only search.
+strike_search_steps_otm: 2       # how many strikes BEYOND spot to consider
+                                 # Among strikes in the band that pass ALL gates, take
+                                 # the one CLOSEST TO ATM — the band widens the search,
+                                 # it does not change the strike preference.
 
 # --- Exits: the cascade -------------------------------------------------------
 # Checked in this order each monitor cycle:

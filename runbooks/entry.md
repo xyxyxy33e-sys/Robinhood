@@ -118,28 +118,67 @@ without either filling a position or arming the next one.
      the trade's direction at all (calls: no strike ≥ spot), step to the next-closest
      expiry. **Never** step out because a strike exists but fails a gate — that follows
      the normal next-strike-then-next-candidate cascade.
-2. `get_option_instruments` → ATM, or the first strike beyond spot in the trade's
-   direction. **Re-derive this each cycle** — spot moves, and the ATM anchor moves with it.
-3. `get_option_quotes` → all three gates must pass:
+2. **Build the strike band (revised 2026-08-14).** `get_option_instruments` → the ATM
+   anchor (first strike at/beyond spot in the trade's direction), then take
+   `strike_search_steps_itm` strikes on the near side and `strike_search_steps_otm` on the
+   far side. **Re-derive the anchor every cycle** — spot moves, and the anchor moves with it.
+
+   The old rule stepped "one strike further OTM" on a failure. That searched the wrong
+   axis: liquidity clusters at **round strikes**, not by distance from spot, and the OTM
+   direction is also where premium falls and % spread mechanically worsens. It made OI
+   worse in 7 of 9 measured cases ($182.50 → OI 6). Evaluate the whole band instead.
+
+3. `get_option_quotes` on **every strike in the band** (one batched call). All three gates
+   must pass, per strike:
 
    | gate | threshold |
    |---|---|
    | open interest | ≥ `min_open_interest` |
    | spread | ≤ `max_spread_pct_of_mid`% of mid |
-   | depth | `bid_size` AND `ask_size` ≥ `min_quote_size_for_entry` |
+   | depth | `bid_size` AND `ask_size` ≥ **required size** (§2.4 — depends on quantity) |
 
-   Any one failing → next strike further OTM **once** → otherwise next candidate.
-   **OI is static intraday**: a strike that fails on OI stays failed all day; do not
-   re-pull it. Spread and size DO move both ways — re-verify them fresh every cycle.
-   - **Sizing:** quantity = floor(min(`max_premium_per_trade`, live buying power) /
-     (mid × 100)), minimum 1. `max_premium_per_trade` is the dollar figure computed once
-     in today's premarket section — read it, don't recompute. Pull buying power fresh at
-     selection time. If even 1 contract is unaffordable that is a no-trade for this
-     underlying — journal and notify. **Notify the user whenever buying power, not the
-     premium cap, is what binds the size**, and journal both figures side by side.
+   - **Selection: among strikes passing ALL gates, take the one CLOSEST TO ATM.** The band
+     widens the *search*, it does not change the strike *preference* — never take a far
+     strike merely because its OI is larger.
+   - **No strike in the band passes → next candidate.** Do not widen the band ad hoc.
+   - **OI is static intraday**: a strike that fails on OI stays failed all day; do not
+     re-pull it (but DO re-pull the others — a strike can fail on spread or depth at 12:27
+     and pass at 12:31; NBIS did exactly that).
+   - **Log the whole band to `data/chain_log.csv`** per §2.5, pass or fail.
+
+4. **Sizing, then the depth gate — in that order.** The depth requirement depends on the
+   order, so quantity must be known first.
+   - quantity = floor(min(`max_premium_per_trade`, live buying power) / (mid × 100)),
+     minimum 1. `max_premium_per_trade` is the dollar figure computed once in today's
+     premarket section — read it, don't recompute. Pull buying power fresh at selection
+     time. If even 1 contract is unaffordable that is a no-trade for this underlying —
+     journal and notify. **Notify the user whenever buying power, not the premium cap, is
+     what binds the size**, and journal both figures side by side.
+   - **Required displayed size**, on `bid_size` AND `ask_size` both:
+     ```
+     required = max(min_quote_size_floor, ceil(quantity × quote_size_coverage_multiple))
+     ```
+     A flat constant was wrong in both directions: it demanded 3.3× coverage on a 3-lot and
+     1× on a 10-lot. This scales with what is actually being bought, so it **tightens**
+     large orders (a 16-lot needs 32 a side) and relaxes only small ones.
+   - If the depth gate fails at the chosen quantity, **try the next-smaller affordable
+     quantity once** before moving to the next strike in the band — a smaller order needs
+     less displayed depth, and taking a 2-lot beats declining a 3-lot.
+   - **Displayed size is ephemeral, not a property of the contract.** NBIS $250C showed
+     1/1 at 12:27 and 32/93 at 12:31 with OI unchanged. A depth block is expected to clear
+     on its own; it is never a reason to abandon a name for the day.
    - **THIN flag:** if the selected contract's OI < `thin_liquidity_oi_threshold`, journal
      "LIQUIDITY: THIN (OI X < Y)" — this follows the position for life and switches
      monitor.md/exit.md to the tightened cascade.
+
+5. **§2.5 — chain log (mandatory, every cycle a chain is priced).**
+   Append one row per strike evaluated to `data/chain_log.csv`, pass or fail. **Also run
+   this probe for the top-ranked candidates whose tape did NOT qualify this cycle** — one
+   batched `get_option_quotes` on their ATM strike, logged the same way. Tape (§1) runs
+   before contract selection, so without this probe a name blocked on tape is never
+   re-priced and the belief that "spreads tighten later" stays untested. On 8/14 all four
+   candidates were priced once at 9:38 and never again. Cheap call, and it is the only
+   way the OI and spread thresholds ever get evidence.
 
 ## 3. Review → authorize → place
 1. `review_option_order` (limit buy-to-open at mid, GFD, regular hours, with
@@ -180,24 +219,8 @@ the morning was quiet.
 
 ---
 
-## TEMPORARY: single-gate-exception shadow track (2026-08-10 → 2026-08-14)
-**Review due after the 2026-08-14 close, then remove or promote.** PAPER ONLY —
-`gate_exception_shadow_only: true` is a hard switch; no real order may use the exception.
-
-1. During any §2 pass, when a tape-qualified candidate's contract fails the three-gate
-   check, test the exception: exactly ONE gate failed, AND it is **not** quote-size (which
-   must always pass), AND the miss is bounded (OI ≥ `gate_exception_min_oi`, or spread ≤
-   `gate_exception_max_spread_pct`%). If it qualifies and no shadow is open today, journal
-   "GATE-EXCEPTION SHADOW ENTRY (paper only)" with contract, failing gate + value,
-   hypothetical entry at mid, quantity = floor(`max_premium_per_trade` ×
-   `gate_exception_size_factor` / (mid × 100)), and the THIN flag. One per day; the real
-   search continues unaffected.
-2. Each later firing, quote the shadow and apply the THIN exit cascade on paper (stop
-   −25%, THIN arm/trail, floors subject to the FLOOR CLAMP, hard TP). Journal
-   "GATE-EXCEPTION SHADOW: mark $X (±Y%) — [action]". On a paper exit, journal the fill
-   and P&L and stop tracking for the day.
-3. If still open when the loop ends, exit.md closes it at the then-current mid.
-4. After the 8/14 close: compile results vs. the week-of-8/4 backtest and review before
-   flipping `gate_exception_shadow_only`. **Known limitation: the exception can never
-   apply to quote-size — precisely the gate that blocked NBIS (8/12) and several 8/14
-   candidates — so as written it would not have helped the cases that hurt most.**
+## Retired: single-gate liquidity exception (2026-08-10 → 2026-08-14)
+The paper window produced exactly one shadow trade — SE $130C 8/11, stopped out at
+**−25.9% (−$360)** — and by construction could never apply to quote-size, the gate that
+actually blocks. Retired 2026-08-14 along with its config keys. Do not reintroduce a
+single-gate bypass without evidence from `data/chain_log.csv`; see RATIONALE.

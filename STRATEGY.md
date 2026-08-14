@@ -123,14 +123,25 @@ heavier theta): the volume bar is the compensation, not optional.
   chains (no expiry in window): nearest monthly up to `dte_max_no_weekly` (45) is allowed.
 - **Strike:** at-the-money, or the first strike beyond spot in the direction of the trade
   (above spot for calls, below spot for puts).
-- **Liquidity gates:** open interest ≥ 500; bid-ask spread ≤ 10% of mid. If ATM fails the
-  gates, step one strike out (further out-of-the-money); if still failing, skip the
-  underlying. **OI updates only once daily (after settlement) — it cannot improve
-  intraday**, so a strike that fails the OI gate at first check stays failed for the day
-  (only spreads move intraday); re-checks must not re-pull quotes on OI-failed contracts
-  unless spot has shifted the ATM to an unchecked strike. The premarket run pre-screens
-  each candidate's ATM OI for exactly this reason (both added 2026-07-24, after all five
-  tape qualifiers burned the whole entry window failing on OI that was knowable at 8 AM).
+- **Liquidity gates:** open interest ≥ 500; bid-ask spread ≤ 10% of mid; displayed
+  `bid_size` AND `ask_size` ≥ max(`min_quote_size_floor`, ceil(qty ×
+  `quote_size_coverage_multiple`)) — **order-relative since 2026-08-14**, because a flat
+  constant demanded 3.3× coverage on a 3-lot and 1× on a 10-lot.
+- **Strike search (revised 2026-08-14):** price the whole band —
+  `strike_search_steps_itm` strikes on the near side of spot through
+  `strike_search_steps_otm` on the far side — and among strikes passing every gate take
+  the one **closest to ATM**. The old "step one strike further OTM" rule made OI worse in
+  7 of 9 measured cases (as bad as −99%): liquidity clusters at **round strikes**, not by
+  distance from spot. No strike in the band passes → skip the underlying.
+- **OI updates only once daily (after settlement) — it cannot improve intraday**, so a
+  strike that fails the OI gate at first check stays failed for the day; spread and
+  displayed size DO move both ways and must be re-pulled fresh (NBIS $250C went from 1/1
+  to 32/93 in four minutes). The premarket run pre-screens each candidate's ATM OI for
+  exactly this reason (added 2026-07-24, after all five tape qualifiers burned the whole
+  entry window failing on OI that was knowable at 8 AM).
+- Every strike evaluated is logged to `data/chain_log.csv`, pass or fail, plus an ATM
+  probe for candidates whose tape did not qualify — otherwise a name blocked on tape is
+  never re-priced and the liquidity thresholds stay untestable.
 - **Order:** limit buy at mid, GFD, regular hours. If unfilled in 5 min, reprice once to
   mid + 40% of half-spread. Never market-buy an option.
 

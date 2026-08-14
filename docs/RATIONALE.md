@@ -59,12 +59,87 @@ BIIB $210C 81%, STX 16–28%). Thin OI and wide spreads move together — both r
 the same absent market-maker interest. Lowering this gate alone would unlock nothing,
 only admit worse execution.
 
-**`min_quote_size_for_entry: 10` (2026-08-06).** U $40C 8/14: OI (1,393) and spread
-(7.7%) both cleared, but live `ask_size` was 2–4 contracts against a 16-lot buy.
-Displayed depth then swung wildly (2–4 → 463/243 six minutes later → 2 right after
-the stop fired) and the resting stop_market swept **~26% below its $1.70 trigger**.
-Neither OI nor spread catches this — both are static/percentage measures blind to
-top-of-book size.
+**Re-examined 2026-08-14, and held at 500 — but it is the weakest of the three.** OI
+measures *accumulated stock*, not current flow, and the two worst execution outcomes in
+the sample both cleared it comfortably: NBIS $250C had OI 5,872 and displayed **one
+contract a side**; U $40C had OI 1,393 and swept 26% through its stop. Spread and depth
+measure the thing we actually care about; OI is a proxy that the record repeatedly
+contradicts. It stays at 500 for now because (a) the argument above still holds — thin OI
+and wide spreads co-move, so lowering it in isolation unlocks nothing, and (b) the
+band search above should clear most OI failures by finding the round strike without
+touching the threshold. Revisit only with evidence from `data/chain_log.csv`.
+
+**Is the liquidity constraint costing money? On the evidence, no (2026-08-14).** The two
+cases most often cited as "the gates blocked the best setup" both resolve against the
+complaint: NBIS 8/12 was blocked six minutes and the resulting trade lost $40; SE 8/11
+was blocked all morning, paper-traded through the gate-exception shadow, and **stopped
+out at −25.9% (−$360)**. Meanwhile the trades that *do* clear every gate have realized
+**−$3,012 across 12 trading days** (4 win days, 8 loss days). Nothing here says the gates
+select well — the blocked set is not a random sample — but there is no evidence they are
+expensive, and the burden of proof sits with loosening.
+
+**Retired: the single-gate liquidity exception (2026-08-10 → 2026-08-14).** A paper-only
+bypass allowing exactly one failing gate (never quote-size) within bounded limits. Its
+whole live output was one shadow trade: SE $130C, stopped out −25.9% / −$360. Combined
+with its structural limitation — it could never apply to quote-size, the gate that
+actually blocks — there was nothing to promote. Config keys removed. Do not reintroduce
+a single-gate bypass without evidence from `chain_log.csv`.
+
+**Spread is the best-behaved gate; do not "wait for it to tighten."** % of mid correctly
+normalizes crossing cost as a fraction of the position, and quotes are penny-increment
+below $3.00, so the gate is not rejecting cheap options for being cheap. It demonstrably
+works both ways: U $40C read 30.8% at 9:37, 12.0% at 9:44, 7.7% at 9:49 — held out, then
+let in. But convergence is not reliable: SE oscillated **12–59% across six cycles with no
+trend**, and CELH *widened* 16.4% → 30.3% as its premium richened. Leave at 10.
+
+**Why `chain_log.csv` exists (2026-08-14).** Tape (§1) runs before contract selection
+(§2), so a name blocked on tape is never re-priced — on 8/14 all four candidates were
+priced once at 9:38 and never again, which means the standing belief that "spreads
+tighten later" was untested for exactly the names it kept being invoked for. The log
+records every strike evaluated, pass or fail, plus a cheap ATM probe for candidates whose
+tape did not qualify. Backfilled with the 41 readings reconstructable from the journals.
+First correction it produced: counting *distinct strike readings* rather than prose
+mentions, spread (21) blocks marginally more often than OI (19), not far less.
+
+**Depth gate — `min_quote_size_floor: 5` + `quote_size_coverage_multiple: 2`
+(2026-08-06, made order-relative 2026-08-14).** Origin: U $40C 8/14 cleared OI (1,393)
+and spread (7.7%), but live `ask_size` was 2–4 contracts against a **16-lot** buy;
+displayed depth swung 2–4 → 463/243 six minutes later → 2 right after the stop fired,
+and the resting stop_market swept **~26% below its $1.70 trigger**. Neither OI nor
+spread catches that — both are blind to top-of-book size.
+
+The flat `10` that came out of it was wrong in both directions. It demanded 3.3×
+coverage on a 3-lot and 1× on a 10-lot, i.e. it was **most restrictive exactly when the
+order was smallest** and least able to move the market — while under-covering the large
+order that caused the incident. `max(floor, ceil(qty × multiple))` scales with what is
+actually being bought: a 16-lot now needs 32 a side (roughly the depth U lacked), a
+3-lot needs 6.
+
+What it cost while flat: NBIS 8/12, the strongest tape in the sample (+27.4%, 2.9×
+volume, spread 2.08%, OI 534), blocked at 12:27 on bid 5 / ask 8 while needing **3**
+contracts. Under the revised rule it would have passed.
+
+**Displayed size is ephemeral — do not treat a depth block as a property of the
+contract.** NBIS $250C showed **1/1 at 12:27 and 32/93 at 12:31**, four minutes apart,
+OI unchanged at 5,872. U behaved the same way. A depth block is expected to clear on
+its own within a cycle or two, which is also why the gate is cheap: the measured cost of
+that NBIS block was six minutes, and the trade taken at 12:33 realized **−$40**.
+
+Note the honest limit of this gate: the founding incident was an **exit** event, and an
+entry-side depth check cannot guarantee depth at exit time hours later. The exit path
+has its own gate (`min_quote_size_for_stop_update`).
+
+**Strike search: evaluate a band, don't step OTM (2026-08-14).** The old cascade
+answered a gate failure with "next strike further OTM once." Measured across every case
+in the journals, that made OI **worse in 7 of 9** cases: RDDT $180→$182.50 −99% (OI 6),
+NVS $155→$160 −88%, $52→$53 −71%, NU $16.50→$17 −70%, GOOG $520→$525 −65%. Both
+improvements were steps *onto round strikes* — 7/20's $530 (+126%) and 7/21 NBIS's $200C
+(OI 4,570). **Liquidity clusters at round and psychological strikes; it is not monotonic
+in moneyness.** The OTM direction is also where premium falls and percentage spread
+mechanically worsens, so the old remedy searched the wrong axis in the worse direction.
+Now: price the whole band (`strike_search_steps_itm` / `_otm`), and among strikes passing
+every gate take the one **closest to ATM** — the band widens the search, it does not
+change the strike preference.
 
 **`thin_liquidity_oi_threshold: 2500` (2026-08-06).** A contract can clear every gate
 and still be far thinner than a genuinely liquid name. U's $40C had OI 1,393
