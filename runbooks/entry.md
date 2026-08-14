@@ -1,300 +1,180 @@
-# Runbook: Entry (9:35 AM ET, Mon–Fri; re-checks every 1 min until 1:30 PM on no-trade)
+# Runbook: Entry (from 9:35 AM ET; re-checks until 1:30 PM on a no-trade)
 
-Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (pre-market section) first.
-All times US/Eastern. Account = `account_number` from config.
-Re-check cadence tightened from 3 min to 1 min on 2026-08-06 per user (applies to both
-the no-trade re-check loop and the initial monitor-loop kickoff after a fill).
+Read `config.yaml` and today's `journal/YYYY-MM-DD.md` (Pre-market section) first.
+All times US/Eastern. Account = `account_number`.
+**Why each rule exists: `docs/RATIONALE.md`.** Read thresholds from `config.yaml` by
+name, never from a number written in prose.
 
-## Loop resilience (added 2026-08-05 per user, after a `get_equity_historicals` call
-during a no-trade re-check failed on a transient "model temporarily unavailable"
-auto-mode classifier error and the re-check loop died silently — no `send_later` had
-been armed yet for the next cycle, so nothing woke it back up until the user
-manually said "continue")
-If any tool call in a re-check firing fails on a transient/infrastructure error
-(classifier unavailable, timeout, rate limit — not a logic or data error): retry
-once or twice within the same firing. Whether or not the retry succeeds, still reach
-the re-arm step at the end of this firing — journal "data fetch failed this cycle,
-retrying next" (or similar) in place of the normal no-trade note if the retries also
-failed, and call `send_later` for the next cycle regardless (guards permitting — see
-§0.2). A re-check must never end a firing without either filling a position or
-arming the next one; a single bad tool call should cost at most one cycle, never
-the rest of the day's search.
+## Cadence (revised 2026-08-14)
+**Re-check every 5 minutes**, not every minute.
 
-## 0. Guards — every one must pass or the day is a no-trade
-1. Trading day check (same as premarket). Market closed → journal, push, stop.
-2. Time check: if before 9:35 ET, schedule a self check-in (`send_later`) for 9:35 ET and
-   stop; if after 1:30 PM ET, skip the day (momentum entries decay) — journal why.
-   **2026-08-12: entry was moved 9:35 → 10:30, then REVERTED to 9:35 the same evening.**
-   The move was made on a 20-name-day backtest showing stop-out rates falling with later
-   entry (09:30 60% → 11:00 30%). An expanded test the same night — **47 name-days across
-   14 sessions**, including 27 the strategy never traded — did not replicate it: the cells
-   came out non-monotonic (09:30 +1.06%, 10:00 −0.65%, 10:30 −7.81%, 11:00 −1.40%), which
-   is a signature of noise rather than effect. **And once `dte_target` was raised to 14 the
-   sign flipped entirely:** 09:30 +5.78% vs 10:30 +2.18%. The DTE change subsumes the
-   timing change — widening the stop's tolerance from 1.46% to 2.90% of underlying movement
-   solves the opening-volatility problem *without* giving up the move, and once solved,
-   entering early is better because more of the day's range is still ahead. Holding 10:30
-   cost −3.60pp. Full tables in journal/2026-08-12.md.
-   *Earlier history:* 9:35 → 9:45 on 2026-07-31, back to 9:35 on 2026-08-03, "permanent" on
-   2026-08-07. The original 9:35 has now survived three separate challenges.
-   **Consequence: the 9:30-9:45 stop_market blackout is REACHABLE again** — a fill before
-   9:45 needs the stop_limit path in §4, upgraded to stop_market at 9:45 by monitor.md.
-   Both are live code again, not the dead code they briefly became.
-3. `get_option_positions` (nonzero=true): count total open positions (calls + puts
-   combined). If total ≥ `max_open_positions`, stop (no room). Otherwise continue.
-4. `get_option_orders` (state=queued/confirmed, created today): no duplicate entry if an
-   order is already working. Also check today's journal — if an entry was already made
-   today (max_new_positions_per_day), stop.
-5. `get_portfolio`: options buying power < `min_buying_power_to_trade` → journal
-   "insufficient settled cash", notify user once (not every day — check whether yesterday's
-   journal already flagged it), stop.
+The reason is structural, not a compromise: **§1.3's late-re-check bar requires a leg
+sustained 15+ minutes.** Any qualifying setup must therefore persist for at least 15
+minutes by definition, so a 1-minute cadence cannot detect anything a 5-minute cadence
+would miss — it only costs a marginally worse entry price in the worst case. Evidence:
+94 re-check cycles across 8/11–8/14 produced 3 entries, all on 8/12; the last 79 cycles
+produced none. (Wake delivery is also running ~10 min late in practice, so the
+1-minute figure was already fiction — see RATIONALE.)
 
-## 1. Confirm momentum (live)
-1. `run_scan` on `scan_id` (calls) and, if `enable_puts` is true, `scan_id_puts` (puts) —
-   live matches now meaningful.
-2. Merge both scan results with pre-market candidates (top 10, each tagged call/put); drop
-   anything that hit its "disqualify if".
-3. For each surviving candidate (check the best-ranked first), tape check scaled to how
-   much session exists, direction-aware:
-   - **Initial 9:35 pass (only the 9:30-9:35 minute bars exist yet):**
-     `get_equity_historicals` interval=minute from 9:30 to now (five 1-minute bars).
-     Compute VWAP from those bars and the opening-window low/high.
-     - **Calls:** require price > the 9:30 open, price ≥ prior close × (1 +
-       min_day_change_pct/100), price > this VWAP, and no full gap-fade.
-     - **Puts:** invert every leg.
-     A thinner read than the version below (5 minutes of tape vs. 15) — the accepted
-     tradeoff for capturing the move earlier, and why the resting stop in §4 must go on
-     immediately rather than waiting for a stop_market slot.
-   - **Later re-checks (any check at/after 9:45 — no qualifier at 9:35, or a position
-     closed and this is hunting for a new one):** `get_equity_historicals` interval=5minute
-     from 9:30 — require price > open, price ≥ prior close × (1 + min_day_change_pct/100),
-     price > VWAP, and no full gap-fade across all available 5-minute bars. Puts invert.
-     PLUS the §4 late-re-check volume bar: several consecutive closes in the trade direction
-     on rising/elevated volume, sustained 15+ minutes. Measure "elevated" against the name's
-     own trailing baseline, not by eye — on 2026-08-12 this test correctly passed NBIS
-     (2.9× baseline) and SMCI's third push (3.4×) while rejecting SMCI's first two (0.9×,
-     an advance on *declining* volume), and was decisive four times in one session.
-4. **Opening gap-fade guard (added 2026-08-12 per user — see config.yaml
-   "Opening gap-fade guard" for the full derivation and the 7-candidate evidence
-   table).** Skip entirely if `opening_fade_guard_enabled` is false. Both gates are
-   blocking-only: they can veto a candidate, never promote one, and they run AFTER the
-   §1.3 tape check on candidates that already passed it.
-   First compute the gap: `open_price` of the 9:30 5-min bar vs. prior close. If
-   |gap| < `opening_fade_guard_min_gap_pct`, neither gate applies — this name has no
-   premarket gap supply to distribute. Otherwise:
-   - **Gate A — opening-bar acceptance.** From the FIRST 5-min regular-session bar
-     (09:30-09:35), compute `close_position = (close − low) / (high − low)`.
-     - Calls: require `close_position ≥ opening_bar_min_close_position`.
-     - Puts: require `close_position ≤ 1 − opening_bar_min_close_position`.
-     A failure means the gap is being sold into, not bought — **skip this candidate**
-     and move to the next. It is not dead for the day: the name becomes eligible again
-     once a later 5-min bar CLOSES above the opening bar's high (below its low for
-     puts) on volume at least matching the prior bar — the overhead supply clearing.
-     Journal the reclaim when it happens ("GAP-FADE GATE A cleared: SYM reclaimed
-     $X opening-bar high on rising volume"). After a reclaim the candidate returns to
-     the normal flow and must still pass Gate B and every §2-§3 gate.
-     Not computable on the initial 9:35 pass (the bar has not closed yet) — on that pass
-     apply Gate B only, and evaluate Gate A from the first re-check onward.
-   - **Gate B — opening-window chase guard.** (Live again as of the 2026-08-12 evening
-     revert to a 9:35 entry — it was briefly inactive-by-construction while entry started
-     at 10:30, the same time its window ends.)
-     While the current ET time is before
-     `opening_window_end_et`, compute the session high (session low for puts) across
-     all bars so far and reject the candidate if the live price is within
-     `opening_window_chase_guard_pct`% of it — that is buying the top of the push
-     rather than a pullback's higher low. Journal it ("GAP-FADE GATE B: SYM $X is
-     0.74% under its $Y session high, inside the 1.5% chase guard — waiting for a
-     pullback"), and re-check it on the normal 1-minute cadence; a name blocked this
-     cycle frequently qualifies a few minutes later once it has pulled back and based,
-     which is precisely the SMCI entry that worked on 2026-08-12. After
-     `opening_window_end_et` this gate is inactive and the §4 late-re-check volume bar
-     governs instead.
-   Journal every veto with the measured numbers, not just the verdict — these two gates
-   are new and their live hit rate needs to be reviewable against outcomes.
-5. `get_earnings_results` on finalists — reject if earnings before option expiry.
-6. Rank the qualifiers (catalyst > relative volume > tape), calls and puts together, and
-   take **up to (max_open_positions − currently open positions total)** qualifiers, best
-   first across BOTH directions combined (no fixed split between calls and puts) — each
-   independently passing every gate in §2–§3. Re-entering a symbol
-   already open, or one closed earlier today (including after a stop-out), is allowed —
-   the only same-symbol restriction is never both a call and a put on the same underlying
-   at once. A symbol closed earlier today for a PROFIT ranks first among qualifiers
-   (leader re-entry, STRATEGY.md §3) — but only on a volume-confirmed resumption after
-   its pullback, never on the dip itself, and funded by settled cash only. A position MAY hold multiple contracts — see §2 sizing. No qualifier → no
-   trade; journal it.
+## Loop resilience
+If a tool call fails on a transient/infrastructure error: retry once or twice in the same
+firing. **Whether or not it succeeds, still reach the re-arm step** — journal "data fetch
+failed this cycle, retrying next" and `send_later` regardless. A firing must never end
+without either filling a position or arming the next one.
 
-## 2. Select the contract (per chosen underlying)
-1. `get_option_chains` (underlying_symbol) → **select the expiry in [dte_min, dte_max]
-   whose DTE is CLOSEST TO `dte_target` (14)** — ties break toward the LONGER expiry.
-   **CHANGED 2026-08-12 per user: was "pick the NEAREST expiration in the window."**
-   With `dte_min` then at 2, "nearest" always resolved to the shortest contract on the
-   board, which is simultaneously the worst on both axes that matter — highest leverage
-   (so the −25% stop trips on the smallest underlying move) and highest theta. That was
-   never a deliberate choice; it fell out of the word "nearest". Measured on the live
-   SMCI $38C chain (same strike, five expiries): 2 DTE = 17.1× leverage / −26.9% theta
-   per day / stop trips at a **1.46%** adverse move, vs. 16 DTE = 7.9× / −3.3% / **3.16%**.
-   Backtest over 20 name-days showed 2 DTE was the only negative bucket (avg −1.25%,
-   **median −25%** — the modal outcome was a full stop-out) while 9-16 DTE returned
-   +6% to +7% with a 65-75% win rate. `dte_min` raised 2 → 7 at the same time. Full
-   tables in config.yaml and journal/2026-08-12.md.
-   **Procedure:** list the chain's expirations, keep those with DTE in [dte_min, dte_max],
-   sort by |DTE − dte_target|, and take the first that clears §2.3's liquidity gates. If
-   it fails those gates, advance to the NEXT-closest expiry in the window (this is a real
-   step-out path, unlike the structural-cap case below) before abandoning the underlying —
-   weekly chains thin out badly 3+ weeks out and then recover at the monthly, so the
-   nearest-to-target expiry is not reliably the most liquid. Journal which expiry was
-   chosen and its distance from target.
-   **Expiry step-out on structural cap (LIVE, added 2026-08-07 per user):** if the
-   selected expiry's chain is structurally capped short of spot — no ATM or OTM strike
-   exists in the trade's direction (calls: no strike ≥ spot; puts: no strike ≤ spot),
-   as happened with TEAM on 2026-08-07 (spot $146-153 all session, highest 8/14 strike
-   $145) — step to the next-closest-to-target expiration inside [dte_min, dte_max] and run
-   the normal §2 gates there instead. Structural-cap cases ONLY: never step out because a strike
-   exists but fails OI/spread/size — those failures follow the normal
-   next-strike-then-next-candidate cascade at the chosen expiry. Journal the step-out
-   explicitly ("EXPIRY STEP-OUT: 8/14 capped at $X < spot $Y → using 8/21").
-2. `get_option_instruments` (chain, expiration, type=call for a bullish qualifier / put for
-   a bearish qualifier) → ATM or first strike beyond spot in the trade's direction (above
-   spot for calls, below spot for puts).
-3. `get_option_quotes` → gates: open_interest ≥ `min_open_interest`; spread ≤
-   `max_spread_pct_of_mid`% of mid; **bid_size ≥ `min_quote_size_for_entry` AND
-   ask_size ≥ `min_quote_size_for_entry`** (added 2026-08-06 after U $40C 8/14 —
-   OI and spread both cleared but ask_size was only 2-4 against a 16-lot buy, and the
-   resting stop later swept ~26% through its trigger on a thin book; OI/spread are
-   static/percentage measures and don't see top-of-book depth, so check it directly).
-   Any one of the three failing is a gate failure — same next-strike-then-next-candidate
-   cascade as OI/spread below. **Quantity** = floor(`max_premium_per_trade` /
-   (mid × 100)), minimum 1 — multiple contracts of the same call or put are allowed.
-   `max_premium_per_trade` is the dollar figure computed once in today's premarket run
-   (`daily_start_balance × max_premium_per_trade_pct_of_daily_start / 100`, from today's
-   journal) — read it from there, don't recompute mid-day.
-   **Buying-power scaling (CHANGED 2026-08-12 per user — "Remove the forbidding scaling
-   down rule, use whatever is in the buying power"):** the premium budget is
-   **min(`max_premium_per_trade`, live options buying power)**. Pull buying power fresh
-   from `get_portfolio` at selection time and size to whichever is smaller:
-   quantity = floor(min(max_premium_per_trade, buying_power) / (mid × 100)), minimum 1.
-   A qualifying setup is now taken at whatever size settled cash allows rather than
-   skipped. If even 1 contract is unaffordable, that IS a no-trade for the underlying —
-   journal it and notify the user.
-   *Prior rule, replaced:* quantity was sized off `max_premium_per_trade` alone and
-   explicitly "not capped or scaled by live buying power," with an insufficient-cash
-   rejection treated as a hard stop and chasing a smaller size forbidden (added
-   2026-07-30 after an MSFT setup was rejected on `OPTION_NOT_ENOUGH_BP_FOR_PREMIUM`).
-   That rule cost a fully-qualified trade on 2026-08-12: SMCI $37.50C 8/14 passed every
-   tape gate (3.4× volume expansion, leader re-entry, new session high) and every
-   liquidity gate (OI 1,154, spread 5.71%, depth 167/183), but sizing demanded 31
-   contracts ($3,255) against $1,429.66 of buying power — 13 contracts were affordable
-   and the trade was skipped entirely. Per user, taking the smaller position is
-   preferred to taking none.
-   **Still notify the user directly** whenever buying power (not the premium cap) is what
-   binds the size, so the funding constraint stays visible instead of silently shrinking
-   positions — and journal the two figures side by side (budget vs. buying power).
-   Gates fail ATM → next strike further out-of-the-money once → otherwise next candidate.
-   **Thin-liquidity flag (added 2026-08-06):** once a contract clears all gates and is
-   selected, if its OI is below `thin_liquidity_oi_threshold`, journal it explicitly —
-   "LIQUIDITY: THIN (OI X < threshold Y)" — alongside the fill record in §4. This doesn't
-   block the trade (it already cleared every gate); it flags the position for the
-   tightened exit cascade in monitor.md/exit.md (lower ratchet-arm trigger, tighter trail,
-   no last-leg hold at exit) for the rest of its life, since OI is static intraday.
-4. **OI is static intraday (learned 2026-07-24):** open interest updates once daily,
-   after settlement — a strike that fails the OI gate stays failed ALL DAY no matter how
-   strong the tape gets; only the spread and quote size can improve intraday (2026-08-06:
-   both can also move against you between checks — re-verify size fresh each re-check,
-   don't assume a prior pass still holds). On re-checks, do NOT
-   re-pull quotes for a contract that already failed on OI today. A name whose ATM and
-   step-out strikes have both failed on OI is dead for the day UNLESS spot has moved far
-   enough that the ATM shifts to a strike not yet checked. The premarket journal records
-   each candidate's ATM OI (chain pre-screen) — trust it; a "chain dead" flag from
-   premarket means skip contract selection for that name entirely.
+---
 
-## 3. Review → authorize → place (per chosen underlying, best-ranked first)
-1. `review_option_order`: limit buy-to-open at mid, GFD, regular hours, with chain_symbol +
-   underlying_type for fees/collateral. Surface all order_checks alerts verbatim in the
+## 0. Guards — every one must pass
+1. **Trading day.** Market closed → journal, push, stop.
+2. **Time.** Before 9:35 → `send_later` to 9:35, stop. **After 1:30 PM → skip the day**
+   (momentum entries decay); journal why, do not re-arm.
+3. `get_option_positions` (nonzero=true) — total open (calls + puts) < `max_open_positions`.
+4. `get_option_orders` (queued/confirmed, today) — no duplicate entry already working.
+   Also check today's journal against `max_new_positions_per_day`.
+5. `get_portfolio` — options buying power ≥ `min_buying_power_to_trade`, else journal
+   "insufficient settled cash", notify once (not daily), stop.
+
+## 1. Confirm momentum
+1. `run_scan` on `scan_id`, and `scan_id_puts` if `enable_puts`.
+2. Merge scan results with the pre-market candidate list; drop anything that hit its
+   journaled "disqualify if".
+3. **Tape check** — best-ranked candidate first, direction-aware. Puts invert every leg.
+
+   | | initial 9:35 pass | later re-checks (≥ 9:45) |
+   |---|---|---|
+   | bars | 1-min, 9:30→now (five bars) | 5-min from 9:30 |
+   | require | price > open · price ≥ prior close × (1 + `min_day_change_pct`/100) · price > VWAP · no full gap-fade | same, across all available bars |
+   | plus | — | **the volume/sustain bar below** |
+
+   **Volume/sustain bar (later re-checks only).** Price beyond the open is necessary but
+   NOT sufficient. Require several consecutive closes in the trade direction on
+   rising/elevated volume, **sustained 15+ minutes**. A quiet low-volume grind back
+   through the open does not qualify.
+   - **Measure "elevated" against the name's own trailing baseline** — compute it, do not
+     eyeball it. Do **not** benchmark against the opening range, which is always inflated
+     and makes every later leg look weak.
+   - **A leg that is already rolling over does not qualify by aging into the window.**
+     Five such legs have been declined and all five then failed (RATIONALE).
+   - Declining volume in a *consolidation* is healthy (a flag); declining volume in an
+     *advance* is a failing thrust. Same direction, opposite meaning.
+
+4. **Opening gap-fade guard** — skip entirely if `opening_fade_guard_enabled` is false.
+   Blocking-only: can veto, never promote. Runs AFTER the §1.3 tape check.
+   First compute the gap (9:30 5-min bar open vs prior close). If
+   |gap| < `opening_fade_guard_min_gap_pct`, **neither gate applies** — no gap supply to
+   distribute.
+   - **Gate A — opening-bar acceptance.** From the FIRST 5-min RTH bar (09:30–09:35):
+     `close_position = (close − low) / (high − low)`. Calls require
+     ≥ `opening_bar_min_close_position`; puts ≤ 1 − it. Failure = the gap is being sold
+     into: **skip this candidate**, not dead for the day. It becomes eligible again on a
+     volume-confirmed 5-min close above that bar's high (below its low for puts). Not
+     computable on the initial 9:35 pass — apply Gate B only there.
+   - **Gate B — chase guard.** While now < `opening_window_end_et`, reject if price is
+     within `opening_window_chase_guard_pct`% of the session high (session low for puts).
+     Re-check next cycle; a name blocked now frequently qualifies after a pullback.
+     Inactive after that time.
+   - **Journal every veto with its measured numbers**, not just the verdict — both gates
+     are under review and their live hit rate must stay auditable.
+
+5. `get_earnings_results` on finalists — **reject if earnings fall before the option's
+   expiry.** We trade momentum, not event lotteries.
+6. **Rank and select.** Catalyst strength > relative volume > cleanest tape, calls and
+   puts on one list. Take up to (`max_open_positions` − currently open) qualifiers, best
+   first, each independently passing every gate in §2–§3. A symbol closed earlier today
+   for a PROFIT ranks first (leader re-entry — resumption only, never the dip). Re-buying
+   a symbol closed earlier today is allowed; a symbol may not hold a call and a put at
+   once. No qualifier → journal, re-arm.
+
+## 2. Select the contract
+1. `get_option_chains` → keep expiries with DTE in [`dte_min`, `dte_max`], sort by
+   |DTE − `dte_target`|, take the closest. **Ties break toward the LONGER expiry.**
+   If it fails the §2.3 gates, advance to the next-closest expiry in the window before
+   abandoning the underlying — weekly chains thin out ~3 weeks out and recover at the
+   monthly. Journal which expiry was chosen and its distance from target.
+   - **Structural-cap step-out only:** if the chosen expiry has no ATM or OTM strike in
+     the trade's direction at all (calls: no strike ≥ spot), step to the next-closest
+     expiry. **Never** step out because a strike exists but fails a gate — that follows
+     the normal next-strike-then-next-candidate cascade.
+2. `get_option_instruments` → ATM, or the first strike beyond spot in the trade's
+   direction. **Re-derive this each cycle** — spot moves, and the ATM anchor moves with it.
+3. `get_option_quotes` → all three gates must pass:
+
+   | gate | threshold |
+   |---|---|
+   | open interest | ≥ `min_open_interest` |
+   | spread | ≤ `max_spread_pct_of_mid`% of mid |
+   | depth | `bid_size` AND `ask_size` ≥ `min_quote_size_for_entry` |
+
+   Any one failing → next strike further OTM **once** → otherwise next candidate.
+   **OI is static intraday**: a strike that fails on OI stays failed all day; do not
+   re-pull it. Spread and size DO move both ways — re-verify them fresh every cycle.
+   - **Sizing:** quantity = floor(min(`max_premium_per_trade`, live buying power) /
+     (mid × 100)), minimum 1. `max_premium_per_trade` is the dollar figure computed once
+     in today's premarket section — read it, don't recompute. Pull buying power fresh at
+     selection time. If even 1 contract is unaffordable that is a no-trade for this
+     underlying — journal and notify. **Notify the user whenever buying power, not the
+     premium cap, is what binds the size**, and journal both figures side by side.
+   - **THIN flag:** if the selected contract's OI < `thin_liquidity_oi_threshold`, journal
+     "LIQUIDITY: THIN (OI X < Y)" — this follows the position for life and switches
+     monitor.md/exit.md to the tightened cascade.
+
+## 3. Review → authorize → place
+1. `review_option_order` (limit buy-to-open at mid, GFD, regular hours, with
+   chain_symbol + underlying_type). Surface every `order_checks` alert verbatim in the
    journal and to the user.
-2. If `entry_auto_execute` is **false**: present the trade (symbol, catalyst, contract,
-   quote, alerts, cost) via AskUserQuestion and wait. No approval → no trade; journal it.
-   If **true**: config records the user's standing authorization — proceed.
-3. **Re-verify the spread immediately before placing (added 2026-08-06):** on a contract
-   that only just cleared the gates this cycle, the `review_option_order` quote can already
-   be stale by the time it returns — U $40C 8/14 cleared `max_spread_pct_of_mid` at 8.7% at
-   the gate check, then the review call came back seconds later at 12.86%, back over the
-   line. Pull one more fresh `get_option_quotes` right before `place_option_order` and
-   recompute the spread; if it's back above `max_spread_pct_of_mid`, **abort — do not
-   place** — journal it as an aborted attempt (contract, both spread reads, timing) and
-   fall through to the normal no-trade/re-check path for this cycle. Do not chase it by
-   repricing to the wider spread; that defeats the gate's purpose. This is a pre-placement
-   check only, not a new gate — OI/spread/size were already confirmed once in §2.
-4. `place_option_order` with a fresh UUID ref_id (reuse the same ref_id only on transport
-   retries). If unfilled after 1 min (`get_option_orders`), cancel and re-place once at
-   mid + 40% of half-spread. Still unfilled after 1 more min → cancel, no-trade day.
-   (Reprice windows tightened from 5 min to 1 min on 2026-08-06 per user.)
+2. `entry_auto_execute` **false** → present via AskUserQuestion and wait; no approval =
+   no trade. **true** → standing authorization, proceed.
+3. **Re-verify the spread immediately before placing.** Pull one more fresh
+   `get_option_quotes` and recompute. If it is back above `max_spread_pct_of_mid`,
+   **abort — do not place.** Journal the aborted attempt with both spread reads and the
+   timing. Do not chase it by repricing wider; that defeats the gate.
+4. `place_option_order` with a fresh UUID ref_id (reuse only on transport retries).
+   Unfilled after 1 min → cancel, re-place once at mid + 40% of half-spread. Unfilled
+   after 1 more min → cancel, no-trade.
 
-## 4. Record
-Journal the entry: contract, fill price (from the filled order), thesis, planned exits
-(`stop_loss_pct`% hard stop / discretionary profit-taking / forced flat), order ids. Commit
-("journal: YYYY-MM-DD entry") and push. Then:
-- **Position opened** → two follow-ups, in order:
-  1. **Place the resting protective order** per `resting_order_type` (only one sell order
-     can rest per contract — Robinhood has no OCO for options):
-     - `stop_loss`: **if the fill lands before 9:45 ET** — Robinhood rejects stop_market
-       until 9:45 (`OPTION_STOP_MARKET_INVALID_TIME_MARKET_OPEN`, confirmed still true on
-       2026-08-03), so place a **stop_limit** sell-to-close instead: stop_price =
-       entry × (1 + stop_loss_pct/100) rounded to tick (the same trigger a stop_market
-       would use), limit_price = stop_price × 0.85 rounded to tick (widened from a 5%
-       buffer to 15% on 2026-08-03 per user, for a more realistic chance of filling if
-       touched during the blackout — a too-tight limit risks sitting unmarketable on a
-       fast move, defeating the point of resting protection at all; confirmed the order
-       type itself is acceptable at this time of day via the 2026-08-03 diagnostic test).
-       Record it in the journal as a stop_limit, flagged **"upgrade at 9:45."** **If the
-       fill lands at/after 9:45
-       ET** (a later same-day re-entry, well past the blackout): place stop_market
-       directly, no blackout concern, nothing to upgrade later.
-     - `take_profit`: limit sell-to-close at entry × (1 + take_profit_pct/100), rounded to
-       tick, GFD. Monitor loop handles the stop in software.
-     Quantity = the full filled position quantity. Fresh ref_id; covered by the same
-     standing authorization as the entry. Record the order id (and type — stop_limit or
-     stop_market) in the journal — every later close must CANCEL this order first.
-  2. Start the **monitor loop**: `send_later` in 1 minute to execute
-     `runbooks/monitor.md` (the software side of stop/TP, discretion, re-entries, and —
-     while a position's resting order is still the pre-9:45 stop_limit — the upgrade to
-     stop_market once 9:45 arrives).
-- **No trade** → arm a **re-check**: `send_later` in 1 minute to re-run this runbook
-  from §0 (guards apply fresh each time; journal only changes, not full re-writes).
-  Re-checks stop at 1:30 PM ET or when an entry fills, whichever comes first. A late
-  qualifier must pass the same gates — no loosening because the morning was quiet — PLUS
-  the late-re-check volume bar (STRATEGY.md §3): several consecutive closes in the trade
-  direction on rising/elevated volume, sustained 15+ minutes. A quiet low-volume reclaim
-  of the open does not qualify.
+## 4. Record and hand off
+Journal: contract, fill price (from the filled order), thesis, planned exits, order ids.
+Commit ("journal: YYYY-MM-DD entry") and push. Then:
 
-## TEMPORARY: single-gate-exception shadow track (2026-08-10 through 2026-08-14 —
-review with user after Friday 8/14 close, then remove or promote to live)
-Per user decision 2026-08-07 (analysis in journal/2026-08-07.md "DRAFT proposal"
-section). PAPER ONLY — `gate_exception_shadow_only: true` in config.yaml is a hard
-switch; no real order may use the exception while it is true.
-1. During any §2 contract-selection pass (initial or re-check), when a tape-qualified
-   candidate's contract fails the standard three-gate check, test the exception:
-   - exactly ONE of the three gates (OI / spread / quote-size) failed, AND
-   - the failing gate is NOT quote-size (bid_size ≥ `min_quote_size_for_entry` AND
-     ask_size ≥ `min_quote_size_for_entry` must both hold), AND
-   - the miss is bounded: OI ≥ `gate_exception_min_oi` if OI failed, or spread ≤
-     `gate_exception_max_spread_pct`% of mid if spread failed.
-   If it qualifies AND no gate-exception shadow is already open today: journal
-   "GATE-EXCEPTION SHADOW ENTRY (paper only): contract, failing gate + value,
-   hypothetical entry (mid), quantity = floor(max_premium_per_trade ×
-   `gate_exception_size_factor` / (mid × 100)), THIN flag". One shadow per day,
-   first-qualified-first-tracked; the real search continues unaffected.
-2. On every subsequent loop firing (entry re-check or monitor cycle), pull the shadow
-   contract's quote and apply the THIN exit cascade on paper (stop −25%, THIN ratchet
-   arm at `thin_liquidity_take_profit_pct` 8% / trail
-   `thin_liquidity_stop_ratchet_trail_pct` 15% — subject to the monitor.md §3 FLOOR
-   CLAMP, so the effective floor on a THIN shadow is +8%, not `take_profit_floor_pct`'s
-   +10% — early/midday/late-day floors, hard TP
-   +50%). Journal "GATE-EXCEPTION SHADOW: mark $X (±Y%) — [action]" each cycle. On a
-   paper exit, journal the hypothetical fill and P&L and stop tracking for the day.
-3. If the shadow is still open when the entry re-check loop ends (1:30 PM cutoff or a
-   real fill switching to monitor.md), it stays open on paper; the EXIT phase (~3:30,
-   exit.md reads today's journal and will see the open shadow line) closes it at the
-   then-current mid and journals the result.
-4. After Friday 8/14's close: compile the week's shadow results (entry, exit, P&L,
-   which gate was excepted) vs. the week-of-8/4 backtest, and review with the user
-   before deciding whether to flip `gate_exception_shadow_only` to false.
+**Position opened** — two follow-ups, in order:
+1. **Place the resting protective order** (only one sell can rest per contract — no OCO
+   for options). Per `resting_order_type`:
+   - `stop_loss`, **fill before 9:45 ET** → Robinhood rejects stop_market until 9:45, so
+     place a **stop_limit**: stop = entry × (1 + `stop_loss_pct`/100) tick-rounded,
+     limit = stop × 0.85. Record it as stop_limit, flagged **"upgrade at 9:45"**.
+   - `stop_loss`, **fill at/after 9:45** → **stop_market** directly, nothing to upgrade.
+   - `take_profit` → limit sell at entry × (1 + `take_profit_pct`/100), GFD; the monitor
+     loop handles the stop in software.
+   Quantity = full filled position. Fresh ref_id; covered by the same standing
+   authorization as the entry. **Record the order id and type — every later close must
+   CANCEL this order first.**
+2. **Start the monitor loop:** `send_later` 2 min → `runbooks/monitor.md`.
+
+**No trade** — `send_later` 5 min to re-run this runbook from §0 (guards fresh each
+time; journal only material changes, not repetitive "still fading" lines). Re-checks stop
+at 1:30 PM ET or on a fill. A late qualifier passes the same gates — no loosening because
+the morning was quiet.
+
+---
+
+## TEMPORARY: single-gate-exception shadow track (2026-08-10 → 2026-08-14)
+**Review due after the 2026-08-14 close, then remove or promote.** PAPER ONLY —
+`gate_exception_shadow_only: true` is a hard switch; no real order may use the exception.
+
+1. During any §2 pass, when a tape-qualified candidate's contract fails the three-gate
+   check, test the exception: exactly ONE gate failed, AND it is **not** quote-size (which
+   must always pass), AND the miss is bounded (OI ≥ `gate_exception_min_oi`, or spread ≤
+   `gate_exception_max_spread_pct`%). If it qualifies and no shadow is open today, journal
+   "GATE-EXCEPTION SHADOW ENTRY (paper only)" with contract, failing gate + value,
+   hypothetical entry at mid, quantity = floor(`max_premium_per_trade` ×
+   `gate_exception_size_factor` / (mid × 100)), and the THIN flag. One per day; the real
+   search continues unaffected.
+2. Each later firing, quote the shadow and apply the THIN exit cascade on paper (stop
+   −25%, THIN arm/trail, floors subject to the FLOOR CLAMP, hard TP). Journal
+   "GATE-EXCEPTION SHADOW: mark $X (±Y%) — [action]". On a paper exit, journal the fill
+   and P&L and stop tracking for the day.
+3. If still open when the loop ends, exit.md closes it at the then-current mid.
+4. After the 8/14 close: compile results vs. the week-of-8/4 backtest and review before
+   flipping `gate_exception_shadow_only`. **Known limitation: the exception can never
+   apply to quote-size — precisely the gate that blocked NBIS (8/12) and several 8/14
+   candidates — so as written it would not have helped the cases that hurt most.**

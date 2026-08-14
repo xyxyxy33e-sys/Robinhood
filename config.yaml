@@ -1,662 +1,126 @@
 # Daily Momentum Calls — user-owned parameters.
 # Every runbook reads this file first. Edit + push to change behavior; the next
 # scheduled run picks it up automatically.
+#
+# WHY each value is what it is: docs/RATIONALE.md. Read it before changing anything —
+# most of these are scar tissue from a specific incident, and the reason is rarely
+# obvious from the number. Do not "tidy" a threshold without checking there.
 
-account_number: "576391551"                       # "Agentic" cash account (the only agentic_allowed account)
-scan_id: "5399dce3-8430-476c-ba65-89ac920af0bf"   # saved Robinhood scanner "Daily Momentum Calls" (bullish, % change > +2%)
-scan_id_puts: "1849aba7-1d06-4269-b58f-b4e42d9bfb02"  # saved scanner "Daily Momentum Puts" (bearish, % change < -2%, RSI 20-45)
-enable_puts: true                                 # true: also trade puts on confirmed bearish momentum (added 2026-07-21)
+# --- Account ------------------------------------------------------------------
+account_number: "576391551"                          # "Agentic" cash account (only agentic_allowed one)
+scan_id: "5399dce3-8430-476c-ba65-89ac920af0bf"      # saved scanner "Daily Momentum Calls" (>+2%)
+scan_id_puts: "1849aba7-1d06-4269-b58f-b4e42d9bfb02" # saved scanner "Daily Momentum Puts" (<-2%, RSI 20-45)
+enable_puts: true                # also trade puts on confirmed bearish momentum
 
-# --- Execution authorization -------------------------------------------------
-# entry_auto_execute=true is your standing instruction to buy without asking.
-entry_auto_execute: true   # false: review order + ask for confirmation before buying
-exit_auto_execute: true     # true: closes (TP/SL/forced flat) execute without asking
+# --- Execution authorization --------------------------------------------------
+entry_auto_execute: true         # true = standing authorization to buy without asking
+exit_auto_execute: true          # true = closes execute without asking
 
-# --- Position sizing ---------------------------------------------------------
+# --- Position sizing ----------------------------------------------------------
 min_buying_power_to_trade: 10    # USD; below this the entry run skips the day
 max_premium_per_trade_pct_of_daily_start: 25
-                                 # Cap per position = this % of the account's total_value
-                                 # at the START of today's trading day (changed from a
-                                 # flat $2000 cap on 2026-07-23 per user). "Daily start" =
-                                 # prior session's closing account value (this is a cash
-                                 # account, flat on options overnight, so last night's
-                                 # close IS this morning's open) — captured via
-                                 # get_portfolio in the premarket runbook, before any
-                                 # entries, and journaled as `daily_start_balance` +
-                                 # `max_premium_per_trade` (the computed dollar figure)
-                                 # for entry.md to read. Recomputed fresh every morning;
-                                 # sizing still uses this computed figure alone, not live
-                                 # buying power. If actual settled cash is insufficient the
-                                 # order will simply be rejected/fail at the broker.
-                                 # Today (2026-07-23): daily_start_balance $10,286.87 (per
-                                 # 2026-07-22 EOD report, captured retroactively since
-                                 # today's premarket run predates this rule) -> effective
-                                 # max_premium_per_trade = $2,571.72 for the rest of today.
-# Contracts per trade (CHANGED 2026-08-12 per user — "use whatever is in the buying
-# power"): quantity = floor(min(max_premium_per_trade, live options buying power) /
-# (premium × 100)), minimum 1 — multiple contracts of the same call (or put) are
-# allowed. Buying power is pulled fresh from get_portfolio at selection time and the
-# SMALLER of the two budgets binds, so a qualifying setup is taken at whatever size
-# settled cash allows rather than skipped. Previously sizing ignored buying power
-# entirely and an insufficient-cash rejection was a hard stop with downsizing
-# forbidden; that cost a fully-qualified SMCI trade on 2026-08-12 (31 contracts
-# required vs. 13 affordable — see journal). Mechanics in entry.md §2.
-max_open_positions: 6            # combined cap across calls AND puts together (changed
-                                 # 2026-07-28 per user from separate max_open_calls=5 /
-                                 # max_open_puts=5 [10 total] back to a single combined
-                                 # limit — up to 6 total open positions, any mix of calls
-                                 # and puts, no fixed split between the two).
-                                 # Re-entering the same underlying is allowed — no
-                                 # one-position-per-symbol limit and no "never re-buy after
-                                 # a stop-out" rule (both removed 2026-07-21 per user
-                                 # instruction). A symbol still can't hold a call AND a put
-                                 # at the same time.
+                                 # Cap per position = this % of account total_value at the
+                                 # START of today (captured in premarket, journaled as
+                                 # `max_premium_per_trade`; entry.md reads that figure).
+                                 # Sizing budget = min(that figure, LIVE buying power);
+                                 # take the smaller position rather than skipping.
+max_open_positions: 6            # combined across calls AND puts, no fixed split.
+                                 # Re-entering the same underlying is allowed; a symbol
+                                 # may not hold a call AND a put simultaneously.
 max_new_positions_per_day: 30
 
-# --- Contract selection ------------------------------------------------------
-dte_min: 7                       # RAISED 2 -> 7 on 2026-08-12 per user. Previously 2 (and
-                                 # 1 before 2026-07-21). The old rule "pick the NEAREST
-                                 # expiration in [dte_min, dte_max]" meant we ALWAYS landed
-                                 # on the shortest contract available, which is the worst
-                                 # on both axes at once: highest leverage (so the tightest
-                                 # effective stop) AND highest theta. That was a side
-                                 # effect of "nearest", never a deliberate choice.
-                                 # Measured on the live SMCI $38C chain 2026-08-12 (same
-                                 # strike, same underlying, five expiries):
-                                 #   2 DTE: 17.1x leverage, -26.9%/day theta, -25% stop
-                                 #          trips on a 1.46% adverse underlying move
-                                 #   9 DTE: 10.4x,  -5.9%/day, 2.40%
-                                 #  16 DTE:  7.9x,  -3.3%/day, 3.16%
-                                 #  37 DTE:  5.7x,  -1.4%/day, 4.39%
-                                 # A 2-DTE contract bleeds ~27% of premium PER DAY — nearly
-                                 # the whole -25% stop distance — so the underlying has to
-                                 # move ~1.6% in your favour just to break even on the clock.
-                                 # Backtested over 20 name-days / 8 sessions (10:30 entry,
-                                 # forced close 15:40, full cascade, theta charged pro-rata):
-                                 #   DTE  stops  avg P&L  median  win%
-                                 #     2     11   -1.25%  -25.0%   45%
-                                 #     9      6   +6.07%  +10.0%   65%
-                                 #    16      4   +7.35%  +10.0%   75%   <- peak
-                                 #    23      3   +4.67%  +10.0%   65%
-                                 #    37      1   +5.11%  +10.0%   65%
-                                 # 2 DTE is the only NEGATIVE bucket and its MEDIAN outcome
-                                 # is a full -25% stop-out. There is a real interior optimum:
-                                 # too short = stopped out by noise + decay, too long =
-                                 # leverage too weak to reach the profit rungs (ZERO hard-TP
-                                 # hits at 23 and 37 DTE). 7 chosen as the floor because the
-                                 # 9-16 band is where both stop-survival and upside coexist.
-dte_target: 14                   # Added 2026-08-12. Selection is now "the expiry in
-                                 # [dte_min, dte_max] CLOSEST TO THIS TARGET that passes the
-                                 # liquidity gates" — not the nearest expiry. 14 sits centrally
-                                 # in the strong 9-16 band rather than on the measured 16-DTE
-                                 # peak, deliberately: n=20 is too small to justify fitting the
-                                 # exact maximum, and the 9-16 range is statistically flat.
-                                 # Ties (equidistant expiries) break toward the LONGER one —
-                                 # lower theta and a wider stop tolerance.
-dte_max: 21                      # preferred window...
-dte_max_no_weekly: 45            # ...but when an underlying has NO expiry in [dte_min,
-                                 # dte_max] (monthly-only chains like TRV), the nearest
-                                 # monthly up to this DTE is allowed (user-approved 2026-07-17)
-min_open_interest: 500           # NOTE (added 2026-07-29): open interest visibly LAGS on
-                                 # earnings-reaction names — it updates once daily after
-                                 # settlement, so a name that gapped hard this morning on
-                                 # a real catalyst can still be sitting on yesterday's
-                                 # (pre-earnings-expectation) OI all session. Observed
-                                 # repeatedly on 2026-07-28/29: GNRC OI 7, VRT 33-65,
-                                 # GEHC 25-171, STX 23-93, BIIB 23-35 — all well-covered,
-                                 # real, catalyst-confirmed tape moves (STX even cleared
-                                 # its session open on rising volume by 1 PM ET) but with
-                                 # option chains that never came close to this gate.
-                                 # Checked whether lowering this threshold would help:
-                                 # in every single observed case, the SAME contract also
-                                 # failed `max_spread_pct_of_mid` (10%) independently —
-                                 # e.g. GEHC $71C 53% spread, BIIB $210C 81%, STX's
-                                 # various strikes 16-28% — often much more dramatically
-                                 # than it failed OI. Thin OI and wide spreads move
-                                 # together (both reflect the same lack of market-maker
-                                 # interest in that specific contract); lowering this gate
-                                 # alone would not have unlocked any of these trades, only
-                                 # admitted worse execution (thin quoted size, real
-                                 # slippage/market-impact risk sizing a position against
-                                 # single/low-double-digit bid/ask sizes, worse odds of a
-                                 # clean exit later). Left at 500 — revisit only if a case
-                                 # emerges where OI fails but spread would independently
-                                 # clear, which hasn't happened yet.
-max_spread_pct_of_mid: 10        # skip contracts with wider bid-ask
+# --- Contract selection -------------------------------------------------------
+dte_min: 7
+dte_target: 14                   # pick the expiry in [dte_min, dte_max] CLOSEST to this,
+                                 # NOT the nearest. Ties break toward the longer expiry.
+dte_max: 21
+dte_max_no_weekly: 45            # when no expiry exists in [dte_min, dte_max] (monthly-only
+                                 # chains), the nearest monthly up to this DTE is allowed
+min_open_interest: 500           # static intraday — a strike that fails stays failed all day
+max_spread_pct_of_mid: 10        # spread CAN improve intraday; re-check each cycle
+min_quote_size_for_entry: 10     # bid_size AND ask_size, both. Never exception-eligible.
+thin_liquidity_oi_threshold: 2500  # below this, flag the position "LIQUIDITY: THIN" for life
+                                 # and use the tightened THIN exit values below
 
-min_quote_size_for_entry: 10     # added 2026-08-06 per user, after U $40C 8/14: OI (1,393)
-                                 # and spread (7.7%) both cleared at entry, but the live
-                                 # ask_size was only 2-4 contracts against a 16-lot buy —
-                                 # OI is a stale once-daily figure and says nothing about
-                                 # real quoted depth. Displayed depth on that contract then
-                                 # swung wildly (2-4 at entry -> 463/243 six minutes later
-                                 # -> 2 right after the stop fired), and the resting
-                                 # stop_market swept straight through to a fill ~26% below
-                                 # its $1.70 trigger. Neither `min_open_interest` nor
-                                 # `max_spread_pct_of_mid` would have caught this — both are
-                                 # static/percentage measures blind to top-of-book size.
-                                 # Set a bit above `min_quote_size_for_stop_update` (5,
-                                 # which only gates RAISING an already-resting stop
-                                 # mid-trade, never removing protection) since this gate
-                                 # instead decides whether to take on the full position in
-                                 # the first place — same rationale as the OI/spread gates,
-                                 # applied to the dimension they miss.
-
-thin_liquidity_oi_threshold: 2500  # added 2026-08-06 per user: a contract can clear every
-                                 # entry gate (OI ≥ 500, spread ≤ 10%, size ≥ 10) and still
-                                 # be meaningfully thinner than a genuinely liquid name — U's
-                                 # $40C 8/14 had OI 1,393 (comfortably above the 500 minimum)
-                                 # but its spread flickered 6-30% all day and both of today's
-                                 # exits (a stop-out and a ratchet-stop) suffered real
-                                 # slippage against the same contract. At contract selection
-                                 # (entry.md §2), if the chosen contract's OI is below this
-                                 # threshold, journal it as "LIQUIDITY: THIN" for that
-                                 # position — OI is static intraday, so this classification
-                                 # doesn't change for the life of the trade. Roughly 5x
-                                 # `min_open_interest`, a round number distinguishing
-                                 # "barely qualifies" from genuinely deep (megacap names
-                                 # typically run OI in the 5,000-50,000+ range at ATM).
-thin_liquidity_take_profit_pct: 8  # for THIN-flagged positions only: replaces
-                                 # `take_profit_pct` (12) as the ratchet-arm trigger — bank
-                                 # the profit-lock ratchet sooner on a name with proven
-                                 # slippage risk, rather than waiting for the same +12% bar
-                                 # as a liquid name and giving the book more time to move
-                                 # against the exit. Liquid positions (OI ≥ threshold above)
-                                 # are unaffected — they keep using `take_profit_pct`.
-thin_liquidity_stop_ratchet_trail_pct: 15  # for THIN-flagged positions only: replaces
-                                 # `stop_ratchet_trail_pct` (20) once their (lower) ratchet
-                                 # has armed — a tighter trail gives back less of the move
-                                 # before locking in, compensating for the wider fill
-                                 # slippage already expected on this contract's exit.
-                                 # take_profit_floor_pct (+10%) still applies as the floor
-                                 # component either way; this only tightens the HWM-trail
-                                 # side of the max(...) calc.
-
-# --- Single-gate liquidity exception: PAPER-ONLY SHADOW TEST -----------------
-# Added 2026-08-07 per user, after a week-long counterfactual (journal 2026-08-07)
-# showed contracts failing exactly ONE liquidity gate by a bounded margin — with
-# the other two passing — were the only gate-blocked setups that would have won.
-# SHADOW ONLY through Fri 2026-08-14: no real order may ever use this exception
-# while gate_exception_shadow_only is true. Mechanics in entry.md TEMPORARY
-# section; review with user after the 8/14 close before any live use.
+# --- Single-gate liquidity exception: PAPER-ONLY SHADOW TEST ------------------
+# Review due after the 2026-08-14 close; see entry.md TEMPORARY section.
 gate_exception_shadow_only: true # HARD SWITCH — true means paper tracking only
-gate_exception_min_oi: 200       # if OI is the (single) failing gate it must still be
-                                 # ≥ this (40% of min_open_interest 500)
-gate_exception_max_spread_pct: 20  # if spread is the (single) failing gate it must
-                                 # still be ≤ this % of mid (2x max_spread_pct_of_mid)
-gate_exception_size_factor: 0.5  # exception trades size at half the normal
-                                 # max_premium_per_trade (applies to the shadow's
-                                 # hypothetical sizing now, and to real sizing if/when
-                                 # this ever goes live). Quote-size gate
-                                 # (min_quote_size_for_entry) must ALWAYS pass — it is
-                                 # never the exception-eligible gate.
+gate_exception_min_oi: 200       # floor if OI is the single failing gate
+gate_exception_max_spread_pct: 20  # ceiling if spread is the single failing gate
+gate_exception_size_factor: 0.5  # exception trades size at half the normal cap
 
-# === EXIT-THRESHOLD RECALIBRATION, 2026-08-12 — TRIED AND **REVERTED** THE SAME DAY.
-# === Values below are the ORIGINAL ones (20/50/40/10/...). The scaling described in
-# === this block was implemented, then reverted per user after an expanded backtest
-# === (47 name-days / 14 sessions) showed it COST 1.43pp of expectancy: at the best
-# === configuration (14 DTE, 09:30 entry) old thresholds returned +5.78% vs the scaled
-# === set's +4.35%. Scaling the triggers down also raises the ratchet floor, which
-# === truncates runners — the "equivalent underlying move" arithmetic was right in
-# === isolation but is not what maximises P&L. Kept as a record of what was tested.
-# === DO NOT re-apply without re-running the backtest. Original note follows.
-# Expiry selection moved to dte_target=14 the same day (see "Contract selection"),
-# which roughly HALVES contract leverage: today's five actual fills averaged 14.6x
-# (option % move per 1% underlying move); a ~14 DTE contract runs ~8.6x. Every
-# PROFIT-side threshold was multiplied by 0.59 so it still represents the SAME
-# underlying move it always did — the thresholds were never really about option
-# percentages, they were proxies for "how far has the stock gone":
+# --- Exits: the cascade -------------------------------------------------------
+# Checked in this order each monitor cycle:
+#   hard TP (50) -> scale-out (40) -> ratchet arm (12) -> floors -> otherwise hold
+stop_loss_pct: -25               # hard floor. Deliberately NOT scaled when leverage
+                                 # halved — that is what widens stop tolerance. Do not touch.
+hard_take_profit_pct: 50         # instant sale at mid, no discretion
+scale_out_pct: 40                # sell floor(qty/3) once, qty>=2, then raise the stop
+scale_out_floor_pct: -15         # remainder's floor after a scale-out, keyed to original entry
+take_profit_pct: 12              # ratchet ARMS here (no forced sale)
+take_profit_floor_pct: 10        # floor once armed — but see FLOOR CLAMP below
+stop_ratchet_trail_pct: 20       # normal trail from high-water mark once armed
+stop_ratchet_stall_trail_pct: 10 # tighter trail applied on a STALLING bar
+thin_liquidity_take_profit_pct: 8         # THIN arms earlier than normal (8 < 12)
+thin_liquidity_stop_ratchet_trail_pct: 15 # THIN trails tighter than normal (15 < 20)
 #
-#   parameter                        old -> new   underlying move required
-#   take_profit_pct (ratchet arm)     20 -> 12     1.37% -> 1.39%   unchanged
-#   hard_take_profit_pct              50 -> 30     3.42% -> 3.48%   unchanged
-#   scale_out_pct                     40 -> 24     2.74% -> 2.79%   unchanged
-#   take_profit_floor_pct             10 ->  6     0.68% -> 0.70%   unchanged
-#   thin_liquidity_take_profit_pct    12 ->  7     0.82% -> 0.81%   unchanged
-#   early_floor_trigger_pct            8 ->  5     0.55% -> 0.58%   unchanged
-#   early_floor_pct                   -3 -> -2     0.21% -> 0.23%   unchanged
-#   midday_floor_trigger_pct           3 ->  2     0.21% -> 0.23%   unchanged
-#   late_day_floor_trigger/floor_pct   5 ->  3     0.34% -> 0.35%   unchanged
-#   scale_out_floor_pct              -15 -> -9     1.03% -> 1.04%   unchanged
+# FLOOR CLAMP: the effective floor once armed is
+#   min(take_profit_floor_pct, the arm level that applied)
+# = 10 normally, 8 for THIN. Without this a THIN position arming at +8% against a +10%
+# floor would need a stop ABOVE the mark at the instant of arming, forcing an instant sell.
 #
-# DELIBERATELY NOT SCALED:
-#  * stop_loss_pct stays -25. Halving it would put the stop back at ~1.45% of
-#    underlying movement and undo the entire point of the DTE change. Holding it at
-#    -25% while leverage falls is precisely what widens the tolerance from 1.71% to
-#    2.90% — that widening IS the change. Do not "finish the job" by scaling it.
-#  * The trail percentages (stop_ratchet_trail_pct 30, thin 20, stall 10) stay put.
-#    They are proportional give-back from a high-water mark, so they are already
-#    leverage-neutral: 30% of the peak is 30% of the peak at any leverage.
-#  * midday_floor_pct stays 0 — breakeven is breakeven.
-#
-# NOTE ON hard_take_profit_pct 50 -> 30: this is NOT a reversal of the 2026-07-28
-# decision that raised it 30 -> 50 because +30% was cutting winners short. That
-# lesson was learned at ~15x leverage where +30% meant a 2.0% underlying move. At
-# 8.6x, +30% means a 3.48% move — the same bar as the old +50%. Equivalent, not a
-# regression.
-#
-# Verified on the same 20 name-day sample (14 DTE profile, 10:30 entry, theta charged):
-#   old thresholds at new leverage:  5 stops, 3 TPs, 2 scale-outs, +7.52%, 70% win
-#   NEW thresholds at new leverage:  3 stops, 5 TPs, 4 scale-outs, +8.11%, 80% win
-# The gain is modest in average P&L; the real effect is that the cascade FUNCTIONS
-# again — hard-TP and scale-out actually fire instead of every exit defaulting to the
-# ratchet floor. Median falls +10.0% -> +6.0% purely because the floor itself moved.
-# CAVEAT: same 20 name-days as the DTE and entry-timing tests, so these three findings
-# are NOT independent confirmations of each other.
+# INVARIANTS (assert before changing any of the above):
+#   arm 12 < scale-out 40 < hard TP 50 · THIN arm 8 < arm 12
+#   THIN trail 15 < trail 20 · stall 10 < THIN trail 15
 
-# === EXIT-THRESHOLD SCAN, 2026-08-12 evening (per user) — THE CHANGES BELOW ARE LIVE.
-# Each exit parameter was scanned individually at the 14-DTE profile (8.6x leverage,
-# 4.04%/day theta, 2.8% measured vega cost), entry 9:35, 47 name-days, with a
-# July(31)/August(16) split-sample stability check on every parameter. Full tables in
-# journal/2026-08-12.md. Only two parameters showed a stable, monotonic effect:
-#   take_profit_pct        20 -> 12   (scan optimum 10; both subsamples agreed)
-#   stop_ratchet_trail_pct 30 -> 20   (scan optimum 15; both subsamples agreed)
-#   thin_liquidity_take_profit_pct        12 -> 8    (kept below the normal arm)
-#   thin_liquidity_stop_ratchet_trail_pct 20 -> 15   (kept tighter than the normal trail)
-# Combined effect on the sample: +4.71% -> +6.05%, improving ALL THREE of the full
-# sample, July and August. Stops 18 -> 17, median +7.7% -> +10.5%.
-#
-# DELIBERATELY STOPPED SHORT OF THE SCAN OPTIMUM (arm 10 / trail 15, which measured
-# +6.98%). The response curve stayed monotonic to the edge of the tested range, which
-# usually means the simulation is missing a cost rather than that an optimum was found —
-# and here the missing cost is identified: the backtest checks the trail on 30-MINUTE
-# bars (9 checks/session) while monitor.md checks it EVERY MINUTE, so tight trails are
-# systematically flattered. The arm is a one-time trigger and far less resolution-
-# sensitive, which is why it was moved closer to its optimum than the trail was.
-#
-# NOT CHANGED, and why:
-#   stop_loss_pct  -25  : the LEAST stable parameter in the scan (ALL says -30, July -20,
-#                         August -25). That spread is what an overfit parameter looks like.
-#   take_profit_floor_pct 10 : completely FLAT in the scan — 0/3/5/8/10 all returned an
-#                         identical +4.71%. No evidence either way, so left alone.
-#   hard_take_profit_pct 50, scale_out_pct 40 : near-flat and subsample-unstable.
-#
-# ORDERING CONSTRAINT (found via a scan bug, now an explicit rule): the effective floor
-# once armed is min(take_profit_floor_pct, the arm level that applied). With THIN arming
-# at +8% and the floor at +10%, an unclamped floor would sit ABOVE the mark at the moment
-# of arming and force an instant sell — see monitor.md 4.
+# --- Exits: pre-arm floors (no-ops once the ratchet arms) ---------------------
+early_floor_trigger_pct: 8       # first touch of +8% ...
+early_floor_pct: -3              # ... raises the floor to -3% (just below breakeven)
+midday_floor_trigger_pct: 3      # inside the midday window, first touch of +3% ...
+midday_floor_pct: 0              # ... raises the floor to breakeven
+midday_floor_window_start_et: "11:30"
+midday_floor_window_end_et: "13:30"
+late_day_floor_trigger_pct: 5    # inside the late window, first touch of +5% ...
+late_day_floor_pct: 5            # ... locks in +5% (trigger = floor; banks real profit)
+late_day_floor_window_start_et: "13:30"
+late_day_floor_window_end_et: "15:00"
+# Whenever several floors are eligible, take the highest. Stops only ever move UP.
 
-# --- Intraday risk -----------------------------------------------------------
-# Robinhood holds only ONE sell order per contract (no OCO for options), so only one of
-# the two protective orders can rest broker-side; the monitor loop enforces the other.
-blackout_stop_check_interval_sec: 30
-                                 # Software-side stop-check cadence during the 9:30-9:45
-                                 # stop_market blackout (Robinhood rejects resting
-                                 # stop_market orders until 9:45). Added at 30s on
-                                 # 2026-07-31 after AAPL (entered 9:39:46, reversed hard,
-                                 # -39.6% before a ~60s-cadence check could act), when
-                                 # entry briefly moved 9:35→9:45 to dodge the blackout
-                                 # entirely. EDGE-CASE SAFEGUARD ONLY as of 2026-08-03:
-                                 # entry moved back to 9:35 after confirming stop_limit
-                                 # IS accepted during the blackout (unlike stop_market) —
-                                 # a fill before 9:45 now gets a real resting stop_limit
-                                 # immediately (see entry.md §4), upgraded to stop_market
-                                 # at 9:45 (monitor.md). This interval only matters if a
-                                 # stop_market is ever unexpectedly rejected with the
-                                 # blackout error outside that normal flow.
-min_quote_size_for_stop_update: 5
-                                 # Added 2026-07-31 per user, after AMZN's ratchet
-                                 # computed a new (higher) stop off a live mark, then
-                                 # cancelled the old resting stop and placed the new
-                                 # stop_market — which filled INSTANTLY at $3.50 (vs. a
-                                 # $3.60 trigger) because the option's own quote had
-                                 # cratered on a print backed by only single-digit
-                                 # contract depth, even though the underlying (AMZN
-                                 # stock) was still sitting near its session highs.
-                                 # Before any ratchet/stall-trail/early-floor/scale-out
-                                 # cancel+replace of the resting stop (monitor.md §3),
-                                 # a FRESH quote must show bid_size AND ask_size both
-                                 # ≥ this value; if either side is thinner, skip the
-                                 # replacement this cycle and hold the current resting
-                                 # stop (journal it, retry next cycle) rather than firing
-                                 # a stop_market off an untrustworthy print. Never removes
-                                 # protection — only delays raising it — and is a plain
-                                 # numeric threshold, not a discretionary override of the
-                                 # stop system. Starting value; revisit if it proves too
-                                 # strict (stops rarely get to raise on this contract) or
-                                 # too loose (another noise-triggered fill slips through).
-resting_order_type: "stop_loss"  # "stop_loss" (default: resting stop_market at the stop
-                                 # level; monitor handles profit-taking) or "take_profit"
-                                 # (resting sell limit at the target; monitor handles stops)
-scale_out_pct: 40                # partial profit lock (added 2026-07-23 per user, after
-                                 # GOOGL peaked +44.1% — under the +50% ratchet arm — and
-                                 # round-tripped to −3.9%): on positions holding 2+
-                                 # contracts, when the mark FIRST touches entry ×
-                                 # (1 + this%), sell floor(quantity/3) contracts (min 1)
-                                 # at mid. Once per position per day. Mechanics: cancel
-                                 # the resting stop, place the partial sell, confirm the
-                                 # fill, re-place the resting stop for the REMAINING
-                                 # quantity at the same (or ratcheted) stop price.
-                                 # 1-contract positions skip this — nothing to split.
-                                 # Re-activated 2026-07-28 (had been dormant while
-                                 # hard_take_profit_pct sat below 40; now the cascade is
-                                 # ratchet-arm 12% → scale-out 40% (qty≥2) → hard-TP 50%).
-scale_out_floor_pct: -15         # after a scale-out fills, the remainder's stop is raised
-                                 # to at least entry × (1 + this%/100) (rounded to tick,
-                                 # keyed to ORIGINAL entry; stops only move up). Guarantees
-                                 # the whole trade stays net-positive once the scale-out
-                                 # banks (1/3 × 40% > 2/3 × 15%) while sitting below normal
-                                 # chop. Superseded by the ratchet's breakeven+ trail once
-                                 # +50% arms. (Added 2026-07-23; breakeven floor evaluated
-                                 # and rejected — would have chopped out GOOGL's remainder
-                                 # in the −3.9% midday dip.)
-                                 # RE-BUY of the scaled-out tranche (user-approved
-                                 # 2026-07-23, LIGHTER bar than leader re-entry): while the
-                                 # remainder is still open, the sold tranche (up to the
-                                 # scaled-out quantity, same contract) may be re-bought on
-                                 # a 5-min close with the underlying back on the trade-
-                                 # direction side of VWAP — no volume/15-min sustain
-                                 # requirement. Once per position per day, before 3:00 PM
-                                 # ET, settled cash only (the scale-out proceeds settle
-                                 # T+1 and cannot fund it), restores the position to at
-                                 # most its original size. After the re-buy, the resting
-                                 # stop is cancelled and re-placed for the full new
-                                 # quantity at the same (unchanged) stop level.
-take_profit_pct: 12              # ratchet trigger (lowered from 50 to 20 on 2026-07-28
-                                 # per user — "start considering sale" at +20%): when the
-                                 # mark first touches entry × (1 + this%), the stop
-                                 # ratchet arms (see below) — required stop rises toward
-                                 # the high-water mark, tightening the leash, but no
-                                 # forced sale yet. The winner can keep running under this
-                                 # discretion/trailing window between +12% and the hard
-                                 # cap below, where it is forced out regardless.
-stop_loss_pct: -25               # hard floor: entry premium × (1 + this%). Tightened from
-                                 # -30 to -25 on 2026-07-30 per user, after discussing
-                                 # today's MSFT #2 stop-out: the stop_market trigger fired
-                                 # correctly at exactly -30% ($5.60) but filled at $4.80
-                                 # (-40%) due to ordinary slippage on a fast-moving
-                                 # underlying — stop_market guarantees the exit, not the
-                                 # fill price. Tightening the trigger to -25% gives more
-                                 # cushion against that gap before the position reaches an
-                                 # unacceptable actual loss.
-hard_take_profit_pct: 50         # instant sale: mark ≥ entry × (1 + this%) → cancel the
-                                 # resting stop and sell-to-close at mid NOW, no
-                                 # discretion. Raised from 30 to 50 on 2026-07-28 per user
-                                 # — a backtest of the prior week's trades showed the
-                                 # +30% cap would have cut several big winners (NBIS ×2,
-                                 # TSLA, SMCI) far short of their eventual/actual exits
-                                 # (e.g. NBIS 7/21: capped at +33% vs the +80% actually
-                                 # banked), costing roughly $1,050 net over the week vs.
-                                 # what a +30% cap would have produced — +30% only clearly
-                                 # helped on 2026-07-28 itself, where MU/AMD/MRVL peaked
-                                 # +21-35% and round-tripped fast. +50% is a middle ground:
-                                 # still well below the old +100% cap that let NBIS run to
-                                 # +113% unprotected on 7/21, but wide enough to not choke
-                                 # off genuine multi-session-type runners. Software-side
-                                 # via the monitor loop — Robinhood holds only one resting
-                                 # sell per contract and the stop keeps that slot. Checked
-                                 # BEFORE scale-out and the ratchet in the monitor loop,
-                                 # since it fires first and closes the FULL position once
-                                 # reached. The +12% ratchet-arm above now gives a live
-                                 # 12%-50% window to trail before the hard cap fires, and
-                                 # `scale_out_pct` (40%) sits live inside that window too.
-take_profit_floor_pct: 10        # added 2026-07-28 per user: once the ratchet is armed
-                                 # (mark ≥ entry × (1 + take_profit_pct/100), i.e. +12%),
-                                 # the floor is entry × (1 + this%/100) — +10% — instead
-                                 # of plain breakeven. Combined with stop_ratchet_trail_pct
-                                 # below: required stop = max(entry × 1.10, high-water mark
-                                 # × (1 − stop_ratchet_trail_pct/100)). Even with the
-                                 # 12%-50% window (hard_take_profit_pct raised to 50 the
-                                 # same day), the HWM tops out at +50% above entry, so the
-                                 # trail component (≤ entry × 1.05) still rarely exceeds
-                                 # this +10% floor until the position is well into ratchet
-                                 # territory — in practice, crossing +12% snaps the stop
-                                 # close to entry × 1.10 first, then the HWM trail takes
-                                 # over as the position extends further, until either the
-                                 # +50% hard-TP full exit or a stop-out at the trailed
-                                 # level (floor +10% minimum).
-stop_ratchet_trail_pct: 20       # once armed (mark touched the take_profit level), the
-                                 # resting stop is raised to max(take_profit_floor_pct
-                                 # level, high-water mark × (1 − this%/100)), rounded to
-                                 # tick, and only ever moves UP — a big winner can no
-                                 # longer round-trip below the floor (added 2026-07-21
-                                 # after NBIS peaked +113% with the stop still at −30%;
-                                 # floor raised from breakeven to +10% on 2026-07-28)
-stop_ratchet_stall_trail_pct: 10 # added 2026-07-28 per user (secondary layer, once
-                                 # armed): at EACH check, classify the latest bar on the
-                                 # underlying as extending (new high, still on the
-                                 # trade-direction side of VWAP, volume steady/rising) or
-                                 # stalling (anything short of that — a lighter bar than
-                                 # the full "momentum broken" discretionary check, which
-                                 # requires ALL of lower highs + VWAP lost + volume faded
-                                 # together). On a stalling read, ALSO compute high-water
-                                 # mark × (1 − this%/100) and take the higher of it vs.
-                                 # the normal required stop (max(take_profit_floor_pct
-                                 # level, HWM × (1 − stop_ratchet_trail_pct/100))) — a much
-                                 # tighter 10% trail instead of 20%, reacting to a pause
-                                 # immediately rather than waiting for the wider trail or
-                                 # the +10% floor to eventually be breached. Stops only
-                                 # move up, so a tightening from one stalling cycle sticks
-                                 # even if the next cycle looks strong again. If the
-                                 # computed level is already at/above the current mark
-                                 # (a sharp single-cycle pullback jumped past it), a
-                                 # stop_market can't be placed above the live price — sell
-                                 # to close at mid immediately instead (same mechanic as
-                                 # the hard-TP cap), cancelling the resting stop first.
-                                 # Motivation: a same-day backtest of today's own MU/AMD
-                                 # trades (using the actual monitor checkpoints) showed
-                                 # this would have caught MU's stall at 10:26 ET (peaked
-                                 # +35.4% at 10:16, essentially flat at 10:26) and exited
-                                 # ~+22% instead of waiting for the 30%-trail/floor-based
-                                 # stop to eventually catch a much larger round-trip down
-                                 # to +10% (or, as actually happened before these rules
-                                 # existed, into a loss) — roughly +$538 better across
-                                 # MU+AMD in that reconstruction. Does not replace the
-                                 # discretionary momentum-broken check below, which can
-                                 # still force a full exit on a fully confirmed reversal
-                                 # even if the tightened stop hasn't been touched yet.
-ratchet_stop_type: "stop_limit"  # added 2026-08-06 per user, after U's second trade: the
-                                 # resting stop_market fired at 15:33:52 ET on a $2.41
-                                 # trigger but filled at $2.24 (~7% slippage) — mild
-                                 # compared to the SAME contract's ~26% slippage on trade 1
-                                 # that morning, but still gave back real banked profit.
-                                 # Once the take-profit ratchet ARMS (mark first touches
-                                 # take_profit_pct), and only if there's still runway before
-                                 # ratchet_stop_limit_cutoff_et (below), switch the resting
-                                 # order from stop_market to stop_limit for the rest of its
-                                 # life — bounding slippage now that a real profit cushion
-                                 # exists to protect, rather than accepting unbounded
-                                 # stop_market slippage on a contract with today's proven
-                                 # thin-book history. Set to "stop_market" to disable and
-                                 # keep the pre-2026-08-06 behavior (stop_market throughout).
-ratchet_stop_limit_buffer_pct: 5 # limit_price = stop_price × (1 − this/100) whenever a
-                                 # ratchet-armed stop is (re)placed as stop_limit — tighter
-                                 # than the 15% buffer used for the pre-9:45 blackout
-                                 # stop_limit (that one exists purely to get SOME resting
-                                 # order on before 9:45; this one exists to actually bound
-                                 # slippage close to the trigger, so it should stay tight).
-ratchet_stop_limit_cutoff_et: "15:30" # 10 min before forced_close_start_et (15:40) — the
-                                 # "meaningful runway" boundary. The ratchet only switches TO
-                                 # stop_limit before this time. If a stop_limit is already
-                                 # resting and current time reaches this cutoff, monitor.md
-                                 # upgrades it back to stop_market at the same stop_price
-                                 # (mirrors the existing pre-9:45 upgrade mechanic) — past
-                                 # this point, certainty of getting flat before the forced
-                                 # close matters more than bounding a few more % of slippage;
-                                 # a stuck unfilled limit order this late risks scrambling at
-                                 # 3:59 ET or an unwanted hold into the close.
-early_floor_trigger_pct: 8       # added 2026-07-30 per user, after AMD (peaked +11.5%,
-                                 # never armed the +20% ratchet, ground down on theta for
-                                 # ~an hour, round-tripped to a full stop-out) and MSFT's
-                                 # failed leader re-entry (peaked +8.44%, same story) both
-                                 # gave back a real early gain with zero protection between
-                                 # 0% and the +20% arm level. Once the mark FIRST touches
-                                 # entry × (1 + this%/100), raise the required stop to
-                                 # entry × (1 + early_floor_pct/100) (see below) — a much
-                                 # lower bar than the full ratchet, just enough to stop a
-                                 # genuine early pop from fully round-tripping into a loss.
-                                 # Stops only move up, same as the ratchet; superseded once
-                                 # take_profit_pct (+12%) arms the full ratchet/stall-trail,
-                                 # whose floor (take_profit_floor_pct, +10%) is higher
-                                 # anyway. Checked in the monitor loop after hard-TP/
-                                 # scale-out/ratchet-arm but before plain "otherwise hold" —
-                                 # only applies pre-arm; a no-op once armed.
-early_floor_pct: -3              # floor level once early_floor_trigger_pct is touched —
-                                 # set slightly below breakeven (not exactly 0) to leave
-                                 # slippage room so the stop_market mechanism itself
-                                 # doesn't whipsaw the position out right at the breakeven
-                                 # knife-edge (same slippage lesson as stop_loss_pct above).
-                                 # Backtested 2026-07-30 against the prior two weeks (19
-                                 # trades, 07/16-07/30): would have improved 4 trades that
-                                 # touched +8% but never armed the ratchet before round-
-                                 # tripping into a loss (IREN 7/21, NBIS 7/22, and the two
-                                 # motivating trades AMD + MSFT 7/30) for +$2,423 combined
-                                 # (2% slippage assumed past trigger), with 11 other trades
-                                 # unaffected (already governed by the ratchet at +20%+)
-                                 # and zero winners found where the floor would have clipped
-                                 # a later recovery — every early dip below -3% in the
-                                 # sample happened before the position ever touched +8%.
-midday_floor_window_start_et: "11:30"  # added 2026-08-03 per user, after BABA (8/03) peaked
-                                 # only +5% at 11:40 ET — below early_floor_trigger_pct's 8%,
-                                 # so no protection engaged — then ground down through the
-                                 # midday session to a full -25% stop-out. Backtested against
-                                 # 07/16-08/03 (23 trades): only 3 trades had a high-water
-                                 # mark that occurred in this 11:30-13:30 window AND were
-                                 # still open past 13:30 (the only ones that can actually test
-                                 # "does a midday peak keep extending?") — ALL THREE faded,
-                                 # averaging -28% (IREN 7/21 -30.8%, BABA 122C 7/20 -27.7%,
-                                 # BABA 8/03 -26.09%). Zero counterexamples in the sample, but
-                                 # n=3 is thin — treat as directionally supportive, not proven.
-midday_floor_window_end_et: "13:30"  # window end — matches the existing 1:30 PM entry cutoff
-                                 # for symmetry (the same hour treated as "weak" for new
-                                 # entries is now also treated as "weak" for letting an
-                                 # existing position's gain ride unprotected).
-midday_floor_trigger_pct: 3      # much lower than early_floor_trigger_pct (8) — set low
-                                 # enough to have caught today's BABA (+5% peak). Pre-arm
-                                 # only (no-op once take_profit_pct/12% has armed the full
-                                 # ratchet, same restriction as early_floor_trigger_pct).
-                                 # Checked in the monitor loop only while the current ET time
-                                 # is within [midday_floor_window_start_et,
-                                 # midday_floor_window_end_et]; outside that window this has
-                                 # no effect and early_floor_trigger_pct/early_floor_pct alone
-                                 # apply as before.
-midday_floor_pct: 0              # floor level once midday_floor_trigger_pct is touched during
-                                 # the window — breakeven (per user), tighter than
-                                 # early_floor_pct's -3% since the backtest showed zero
-                                 # midday-peak trades continuing to a new high afterward.
-                                 # Stops only move up; whenever both this and the plain early
-                                 # floor are eligible during the window, this floor (0%) is
-                                 # always the higher constraint and wins. No re-entry
-                                 # restriction is tied to this rule — a close it triggers is
-                                 # followed by the standard §4 re-entry check exactly like any
-                                 # other exit (still subject to the existing 1:30 PM cutoff).
-late_day_floor_window_start_et: "13:30"  # added 2026-08-06 per user, after U's second
-                                 # trade: sat around +10-11% at 15:00-15:06 ET (well before
-                                 # the +20% ratchet armed at 15:20), then the eventual stop
-                                 # only banked +2.28% after slippage. Same window-based
-                                 # mechanism as midday_floor, but for the afternoon and —
-                                 # per user — actually LOCKING IN a real profit rather than
-                                 # just protecting breakeven. Starts right where
-                                 # midday_floor_window_end_et (13:30) leaves off, so there's
-                                 # no protection gap through the afternoon.
-late_day_floor_window_end_et: "15:00"    # "by 3 o'clock" per user — matches the point where
-                                 # forced_close_start_et (15:40) is close enough that a
-                                 # position should already be locking in gains rather than
-                                 # still hoping for the full +12% ratchet to arm.
-late_day_floor_trigger_pct: 5    # first touch of entry × (1 + this%) during the window.
-                                 # Higher than midday_floor_trigger_pct (3, breakeven-only)
-                                 # since this floor actually banks profit rather than just
-                                 # preventing a loss — set above typical noise but well
-                                 # below the +8% early_floor_trigger_pct and +12% ratchet
-                                 # arm, so it catches positions (like U's second trade) that
-                                 # spend real time in the +5-15% range without ever reaching
-                                 # either of those. Pre-arm only — a no-op once take_profit_pct
-                                 # (12%) has armed the full ratchet, since that floor (at
-                                 # least +10% per take_profit_floor_pct) is already higher.
-late_day_floor_pct: 5            # floor level once late_day_floor_trigger_pct is touched
-                                 # during the window — locks in the SAME +5% (trigger and
-                                 # floor equal, unlike early_floor/midday_floor's
-                                 # trigger-above-floor gap), since the point here is banking
-                                 # a real minimum gain this late in the day, not leaving
-                                 # room for further upside before protection engages. Stops
-                                 # only move up; whenever this, early_floor, and/or
-                                 # midday_floor are all eligible, take the highest of the
-                                 # three (mechanically, not a special case). No re-entry
-                                 # restriction tied to this rule.
+# --- Order mechanics ----------------------------------------------------------
+resting_order_type: "stop_loss"  # "stop_loss" = resting stop at the stop level (monitor
+                                 # handles profit-taking) | "take_profit" = the inverse
+min_quote_size_for_stop_update: 5  # bid AND ask must both clear before any stop
+                                 # cancel+replace. Only ever DELAYS raising a stop.
+ratchet_stop_type: "stop_limit"  # once armed, switch the resting stop to stop_limit to
+                                 # bound slippage. "stop_market" disables.
+ratchet_stop_limit_buffer_pct: 5 # limit = stop x (1 - this/100)
+ratchet_stop_limit_cutoff_et: "15:30"  # past this, revert to stop_market — certainty of
+                                 # getting flat beats bounding slippage this late
+blackout_stop_check_interval_sec: 30  # edge case only: software stop-check cadence if a
+                                 # stop_market is unexpectedly rejected in the 9:30-9:45
+                                 # blackout. Normal path is a stop_limit, upgraded at 9:45.
 forced_close_start_et: "15:40"   # begin flattening
 forced_close_cross_et: "15:53"   # cross the spread if still open
 
-# --- Opening gap-fade guard --------------------------------------------------
-# Added 2026-08-12 per user ("crwv and nbis are in a similar situation, after massive
-# spike, people start to selloff, take profit after market open — is there a way we can
-# monitor that to avoid what happened today"). Both of today's stop-outs were entries
-# placed INTO the opening distribution of a large premarket gap: CRWV bought 9:40 at
-# $110.99 (0.74% under its $111.82 session high) -> -27.19%; NBIS bought 9:48 at ~$230
-# (0.84% under its $231.95 high) -> -25.63%. The one winner, SMCI, was bought 9:56 at
-# $35.82 — 3.63% BELOW its $37.17 high, i.e. after the first pullback had completed.
-# Two independent measures separated the winners from the losers cleanly across 7
-# candidate-days spanning 2026-08-11 and 2026-08-12 (analysis + tables in
-# journal/2026-08-12.md):
-#
-#   opening-bar close position = (close − low) / (high − low) of the FIRST 5-min
-#   regular-session bar (09:30-09:35) — i.e. where in its own range the bar closed.
-#     failures: CRWV 0.21, NBIS 0.27, RIOT 0.14 (8/11), LEGN 0.24 (8/11)
-#     winners : SMCI 0.83, SE 0.63 (8/11, the strongest/most durable name of that day)
-#     HIMS 8/11 (a PUT candidate) closed 0.72 = gap-DOWN being bought back — correctly
-#     rejected by the inverted test, and its gap-down was indeed fully bought in 15 min.
-#   7 of 7 classified correctly, and the two clusters are far apart (max failure 0.27
-#   vs. min success 0.63) so any threshold in 0.35-0.55 separates them — not a
-#   knife-edge fit. Mechanism (not just curve-fitting): the opening bar is the first
-#   time real regular-session size meets the premarket gap; a close near the bar's LOW
-#   means that size is distributing into the spike, and the overhead supply needs time
-#   to clear before the name can trend.
-#
-# Both gates below are BLOCKING-ONLY — they can only veto an entry, never create one,
-# so the worst case is a missed trade, never a worse one. Evidence is n=7 over two
-# days: directionally strong and mechanically motivated, but NOT proven. Review with
-# more data before tightening; set opening_fade_guard_enabled: false to disable both.
-opening_fade_guard_enabled: true
-opening_fade_guard_min_gap_pct: 5   # only apply these two gates to names that actually
-                                 # gapped this much (|open vs prior close|), since the
-                                 # premarket-spike-distribution dynamic is what they
-                                 # describe. All of today's and 8/11's candidates gapped
-                                 # 6.6-20.1%, so this exempts only ordinary non-gap
-                                 # movers, which have no gap supply to distribute.
-opening_bar_min_close_position: 0.50  # GATE A. On a gapped name, require the first
-                                 # 5-min RTH bar to close in the upper half of its own
-                                 # range for a CALL (≥ this), or the lower half for a
-                                 # PUT (≤ 1 − this). A rejected opening bar means the
-                                 # gap is being sold; skip the name rather than buying
-                                 # into the distribution. Chosen at the midpoint of the
-                                 # empty 0.35-0.55 band between the two observed
-                                 # clusters. Not computable before ~9:35 ET (the bar
-                                 # must complete) — the initial 9:35 pass therefore
-                                 # leans on Gate B plus the existing 5×1-min tape read.
-                                 # A name failing this gate is not dead for the day: it
-                                 # becomes eligible again on a volume-confirmed 5-min
-                                 # close back above the opening bar's HIGH (proof the
-                                 # overhead supply cleared), after which the normal
-                                 # gates — including Gate B — still apply. NBIS did
-                                 # exactly that today, reclaiming its $228.44 opening-bar
-                                 # high by 9:50 and running to $234+ by 10:05.
-opening_window_chase_guard_pct: 1.5   # GATE B. Inside the opening window below, do not
-                                 # enter when the underlying is within this % of its
-                                 # session high — that is buying the top of the push,
-                                 # which is exactly what both of today's stop-outs did
-                                 # (0.74% and 0.84% under the high). Wait for the
-                                 # pullback and a higher low instead, as the SMCI winner
-                                 # did at 3.63% under its high. 1.5% sits inside the gap
-                                 # between the observed losers (≤0.84%) and the entries
-                                 # that worked (SMCI 3.63%, SE 8/11 ~2.05% at its first
-                                 # near-miss). Applies to puts symmetrically against the
-                                 # session LOW.
-opening_window_end_et: "10:30"   # Gate B applies only until this time. After it, a push
-                                 # to new highs is an ordinary momentum breakout and
-                                 # blocking it would gut the strategy; the existing
-                                 # late-re-check volume bar (entry.md §4 / STRATEGY.md
-                                 # §3) governs from there. Gate A has no time limit —
-                                 # it is cleared by the reclaim condition above, not by
-                                 # the clock.
-                                 # 2026-08-12: entry briefly moved 9:35 -> 10:30, which made
-                                 # this gate inactive by construction (its window ended
-                                 # exactly when trading began). That timing change was
-                                 # REVERTED the same evening after an expanded backtest, so
-                                 # Gate B is LIVE again and guards 9:35-10:30 as designed —
-                                 # exactly the window in which both of 2026-08-12's fast
-                                 # stop-outs were entered (0.74% and 0.84% under the session
-                                 # high). No action needed; noted so the brief inactivity
-                                 # does not confuse a later reader.
+# --- Signal thresholds --------------------------------------------------------
+min_day_change_pct: 2            # underlying must move at least this % in the trade
+                                 # direction. NOTE: measures against YESTERDAY's close and
+                                 # says nothing about who is winning today — the
+                                 # above-open and VWAP gates do that. (W, 2026-08-14:
+                                 # crossed +2% while fading all day from its own open.)
 
-# --- Signal thresholds -------------------------------------------------------
-min_day_change_pct: 2            # underlying must move at least this % (up for calls,
-                                 # down for puts) at entry check
+# --- Opening gap-fade guard ---------------------------------------------------
+# BLOCKING-ONLY: can veto a candidate, never promote one. Worst case is a missed trade.
+# UNDER REVIEW — the live record is weaker than the derivation (Gate A passed 4 names,
+# 3 closed below their open; Gate B is structurally biased against the strongest trends
+# because it measures from a RATCHETING session high). See docs/RATIONALE.md before
+# changing. Do not tighten on current evidence. Set enabled: false to disable both.
+opening_fade_guard_enabled: true
+opening_fade_guard_min_gap_pct: 5     # gates apply only to names that actually gapped this much
+opening_bar_min_close_position: 0.50  # GATE A: first 5-min RTH bar must close in the upper
+                                 # half of its range for a call (lower half for a put).
+                                 # Cleared not by the clock but by a volume-confirmed 5-min
+                                 # close back above that bar's high.
+opening_window_chase_guard_pct: 1.5   # GATE B: before opening_window_end_et, reject an entry
+                                 # within this % of the session high (session low for puts)
+opening_window_end_et: "10:30"   # Gate B inactive after this. Gate A has no time limit.

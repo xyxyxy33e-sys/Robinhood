@@ -17,14 +17,19 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 |-----------|-------|---------|
 | ~8:00 AM | Pre-market news + candidate research | `runbooks/premarket.md` |
 | ~9:00 AM | Pre-entry sentiment-shift check (added 2026-07-27) — re-reads the same candidates against the 8 AM read to catch reversals/fades before entry | `runbooks/premarket_confirm.md` |
-| 9:35 AM | Entry — confirm momentum after the open, buy call or put. **2026-08-12: moved to 10:30, then REVERTED to 9:35 the same evening** — an expanded 47-name-day / 14-session backtest did not replicate the 20-name-day result, and once `dte_target` was raised to 14 the effect reversed (09:30 +5.78% vs 10:30 +2.18%). The DTE change subsumes the timing change: a wider stop tolerance (2.90% vs 1.46%) absorbs opening volatility without giving up the move. | `runbooks/entry.md` |
-| every 3 min until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
-| every 3 min while a position is open | Monitor — stop-loss, discretionary profit-taking, re-entries, and (temporary) the 9:45 stop_limit→stop_market upgrade | `runbooks/monitor.md` |
+| 9:35 AM | Entry — confirm momentum after the open, buy call or put | `runbooks/entry.md` |
+| every **5 min** until 1:30 PM (only if no trade yet) | Entry re-check — catch late qualifiers | `runbooks/entry.md` |
+| every **2 min** while a position is open (+ a ~10 min backup wake) | Monitor — stops, profit-taking, re-entries | `runbooks/monitor.md` |
 | ~3:30 PM | Exit — discretionary profit-taking / hard stop / forced flat by 3:55 | `runbooks/exit.md` |
 
-The 8:00/9:35/3:30 phases are cron Routines; the 3-minute monitor (tightened from 5 min
-on 2026-07-28 per user) is a self-re-arming `send_later` loop started by a fill and stood
-down at 3:25 ET when the exit run takes over.
+The 8:00/9:35/3:30 phases are cron Routines; the monitor is a self-re-arming
+`send_later` loop started by a fill and stood down at 3:25 ET when the exit run takes over.
+
+**Cadence rationale (2026-08-14).** The entry re-check is 5 min, not 1, because §3's
+late-re-check bar requires a leg sustained **15+ minutes** — so a tighter cadence cannot
+detect anything a 5-minute one would miss. The monitor stays tight (2 min) because that
+is where money is actually at risk, and carries a redundant backup wake because
+scheduled-wake delivery has degraded materially. See `docs/RATIONALE.md`.
 
 Scheduled via Claude Code Routines (cron is UTC — see README for DST note). Every runbook
 begins with a market-open check and a time check; if fired at the wrong time it reschedules
@@ -185,31 +190,11 @@ heavier theta): the volume bar is the compensation, not optional.
   firing the stop_market instantly at $3.50 even though the underlying stock itself
   was still near its session highs. A plain numeric threshold, not a discretionary
   override — the mechanical no-discretion property of the stop system is unchanged.
-> **NOTE — threshold scaling was tried and REVERTED on 2026-08-12.** A 0.59x scaling
-> (arm 20→12, hard TP 50→30, etc.) was implemented to match the lower leverage of ~14 DTE
-> contracts, then reverted the same afternoon: an expanded 47-name-day backtest showed it
-> cost 1.43pp of expectancy (+5.78% old vs +4.35% scaled at 14 DTE / 09:30). Scaling the
-> triggers also lifts the ratchet floor, which truncates runners.
-> **A SEPARATE change that same evening moved arm and trail again** — this time via a
-> per-parameter scan, not a blanket 0.59x scale: `take_profit_pct` 20→**12**,
-> `stop_ratchet_trail_pct` 30→**20** (THIN 12→**8** / 20→**15**). Everything else this
-> revert restored (hard TP 50, scale-out 40, floor 10, stop −25) is unaffected by that
-> later change. `config.yaml` is the single source of truth for all of it — the section
-> below documents the *reasoning*, but read the current section 6 above (or config.yaml
-> directly) for today's live numbers rather than trusting any number in this note.
-> ~~Superseded banner:~~
-> On 2026-08-12 expiry selection moved to `dte_target: 14`, roughly halving contract
-> leverage (~14.6x → ~8.6x), and every profit-side threshold was scaled by 0.59 so it
-> represents the **same underlying move** as before. Current values live in
-> `config.yaml`, which is authoritative — the runbooks read them by name, so behaviour
-> is already correct; only the prose numbers below are stale.
-> **arm 20→12 · hard TP 50→30 · scale-out 40→24 · TP floor 10→6 · THIN arm 12→7 ·
-> early floor 8→5 / −3→−2 · midday trigger 3→2 · late-day 5→3 · scale-out floor −15→−9.**
-> **`stop_loss_pct` stays −25 deliberately** — not scaling it is what widens the stop's
-> tolerance from 1.71% to 2.90% of underlying movement, which is the entire point.
-> Trail percentages (30/20/10) also unchanged: give-back from a peak is leverage-neutral.
-> Rationale, arithmetic and verification: `config.yaml` "EXIT-THRESHOLD RECALIBRATION"
-> and `journal/2026-08-12.md`.
+> **Exit thresholds: current values live in `config.yaml` and are authoritative.**
+> Two rounds of change on 2026-08-12 (a blanket 0.59x scaling, reverted the same day;
+> then a per-parameter scan that moved arm 20→12 and trail 30→20). Full derivation,
+> what was rejected and why: `docs/RATIONALE.md`. Do not trust any threshold written
+> in prose anywhere — read it from config by name.
 
 - **Partial scale-out at +40% (added 2026-07-23; re-activated 2026-07-28 now that the
   hard cap sits above it again):** on a position holding 2+ contracts, the first touch

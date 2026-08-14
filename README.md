@@ -8,30 +8,42 @@ directions under it.
 
 ## How it works
 
-Three Claude Code Routines fire into the trading session every weekday (times ET):
+Claude Code Routines fire into the trading session every weekday (times ET):
 
-1. **~8:00 — Pre-market** (`runbooks/premarket.md`): news, earnings calendar, top-10
-   ranked candidates (calls and puts together) → journal.
-2. **9:35 — Entry** (`runbooks/entry.md`): live momentum confirmation via the saved
-   "Daily Momentum Calls" and "Daily Momentum Puts" scanners + direction-aware tape check
-   → ATM calls or puts, 1–21 DTE, limit at mid. Sized and authorized per `config.yaml`,
-   always reviewed via `review_option_order`. On a no-trade, re-checks every 3 minutes
-   until 1:30 PM ET.
-3. **Every 3 min while a position is open — Monitor** (`runbooks/monitor.md`):
-   self-re-arming check-in loop — hard stop enforcement, discretionary profit-taking,
-   and re-entries up to the daily limits (until 1:30 PM ET).
-4. **~3:30 — Exit** (`runbooks/exit.md`): hard stop −30%, discretionary profit-taking
-   (agent judgment on momentum/tape), forced flat by 3:53 ET. Never holds overnight.
+1. **~8:00 — Pre-market** (`runbooks/premarket.md`): news, earnings calendar, ranked
+   candidates (calls and puts together) → journal. Research only, no orders.
+2. **~9:00 — Pre-entry confirm** (`runbooks/premarket_confirm.md`): re-reads the same
+   candidates against the 8 AM view to catch overnight reversals. Research only.
+3. **9:35 — Entry** (`runbooks/entry.md`): live momentum confirmation via the saved
+   "Daily Momentum Calls" / "Daily Momentum Puts" scanners + a direction-aware tape check
+   → ATM calls or puts, DTE per `config.yaml`, limit at mid. Sized and authorized per
+   `config.yaml`, always reviewed via `review_option_order`. On a no-trade it re-checks
+   **every 5 minutes** until 1:30 PM ET (the late-entry rule requires a leg sustained
+   15+ minutes, so a faster cadence cannot surface anything a 5-minute one misses).
+4. **Every 2 min while a position is open — Monitor** (`runbooks/monitor.md`):
+   self-re-arming check-in loop — stop ratcheting, profit floors, scale-out, and
+   re-entries up to the daily limits (until 1:30 PM ET). Each firing also arms a ~10 min
+   backup wake, because scheduled-wake delivery has been running late.
+5. **~3:30 — Exit** (`runbooks/exit.md`): close the position, forced flat before the bell.
+   Never holds overnight.
 
-The full ruleset lives in [`STRATEGY.md`](STRATEGY.md). Every run appends to
-`journal/YYYY-MM-DD.md` and pushes, so the journal is the durable memory across sessions.
+The hard stop rests **broker-side** from the moment of entry, so it does not depend on the
+monitor loop running on time.
+
+Where to look:
+- [`config.yaml`](config.yaml) — every live parameter, and nothing else.
+- [`docs/RATIONALE.md`](docs/RATIONALE.md) — *why* each value is what it is. Almost all of
+  them are scar tissue from a specific incident; read this before changing anything.
+- [`STRATEGY.md`](STRATEGY.md) — the full ruleset.
+- `journal/YYYY-MM-DD.md` — every run appends and pushes, so the journal is the durable
+  memory across sessions.
 
 ## Controls
 
 - **All knobs:** `config.yaml` — sizing, DTE, stops, and the two authorization flags
   (`entry_auto_execute`, `exit_auto_execute`). Edit + push; next run picks it up.
-- **Pause/stop:** disable or delete the three Routines (ask Claude, or manage Routines in
-  the Claude UI). Deleting the Routines fully stops the system.
+- **Pause/stop:** disable or delete the Routines (ask Claude, or manage Routines in the
+  Claude UI). Deleting the Routines fully stops the system.
 - **Funding:** the Agentic account is a cash account — calls need settled cash, and sale
   proceeds settle T+1. The entry run skips the day (and tells you) below
   `min_buying_power_to_trade`.
