@@ -8,13 +8,16 @@ name, never from a number written in prose.
 ## Cadence (revised 2026-08-14)
 **Re-check every 5 minutes**, not every minute.
 
-The reason is structural, not a compromise: **§1.3's late-re-check bar requires a leg
-sustained 15+ minutes.** Any qualifying setup must therefore persist for at least 15
-minutes by definition, so a 1-minute cadence cannot detect anything a 5-minute cadence
-would miss — it only costs a marginally worse entry price in the worst case. Evidence:
-94 re-check cycles across 8/11–8/14 produced 3 entries, all on 8/12; the last 79 cycles
-produced none. (Wake delivery is also running ~10 min late in practice, so the
-1-minute figure was already fiction — see RATIONALE.)
+§1.3 measures legs over `late_entry_min_bars` consecutive **5-minute** bars, so a
+sub-5-minute cadence re-reads the same bar and cannot produce a new verdict. The cost of
+the slower loop is bounded: at worst one bar's worth of entry price, and on a leg that
+qualifies and then immediately dies, the slower sampler is the one that stays out.
+
+Not a proof, and it should not be quoted as one — a leg can qualify at one sample and be
+dead at the next (BIRK, 8/13). What the record supports is that the loop is not where
+opportunity is being lost: 94 re-check cycles across 8/11–8/14 produced 3 entries, all on
+8/12, and the last 79 produced none. Wake delivery is also running ~10 min late in
+practice, so the 1-minute figure was already fiction. See RATIONALE.
 
 ## Loop resilience
 If a tool call fails on a transient/infrastructure error: retry once or twice in the same
@@ -44,19 +47,39 @@ without either filling a position or arming the next one.
    |---|---|---|
    | bars | 1-min, 9:30→now (five bars) | 5-min from 9:30 |
    | require | price > open · price ≥ prior close × (1 + `min_day_change_pct`/100) · price > VWAP · no full gap-fade | same, across all available bars |
-   | plus | — | **the volume/sustain bar below** |
+   | plus | — | **the leg confirmation bar below** |
 
-   **Volume/sustain bar (later re-checks only).** Price beyond the open is necessary but
-   NOT sufficient. Require several consecutive closes in the trade direction on
-   rising/elevated volume, **sustained 15+ minutes**. A quiet low-volume grind back
-   through the open does not qualify.
-   - **Measure "elevated" against the name's own trailing baseline** — compute it, do not
-     eyeball it. Do **not** benchmark against the opening range, which is always inflated
-     and makes every later leg look weak.
-   - **A leg that is already rolling over does not qualify by aging into the window.**
-     Five such legs have been declined and all five then failed (RATIONALE).
+   **Leg confirmation bar (later re-checks only) — revised 2026-08-14.** Price beyond the
+   open is necessary but NOT sufficient. Two things must hold, and **both are vetoes**:
+
+   | test | requirement |
+   |---|---|
+   | **volume** | leg volume ÷ the name's own **pre-leg trailing baseline** ≥ `late_entry_min_volume_ratio`, measured over `late_entry_min_bars` consecutive 5-min closes in the trade direction |
+   | **structure** (`late_entry_require_structure`) | the leg has made **and held** a higher low (lower high for puts) or a new local extreme — and has **not** broken the low the sequence was built on |
+
+   - **Compute the baseline, do not eyeball it.** Use the quiet period immediately
+     *preceding* the leg. Never benchmark against the opening range: it is always inflated
+     and makes every later leg look weak by comparison (BIRK 8/13 read 0.58× against the
+     open and 3.35× against its own baseline — same leg, opposite verdict).
+   - **Breaking the structure low is an immediate disqualification**, no waiting for the
+     next cycle. This is what killed RDDT at 10:26 on 8/14 and BIRK at 10:42 on 8/13.
    - Declining volume in a *consolidation* is healthy (a flag); declining volume in an
      *advance* is a failing thrust. Same direction, opposite meaning.
+   - **Leg age is NOT a gate.** `late_entry_advisory_leg_minutes` (15) is recorded for
+     analysis only. It never blocks and never promotes. A leg meeting volume + structure
+     at 11 minutes qualifies; one failing them at 40 minutes does not. The old rule made
+     the clock a co-equal veto, and review found it was the sole binding constraint exactly
+     once in its life — decided by 60 seconds. See RATIONALE before reinstating it.
+   - **Log every leg you evaluate** to `data/leg_log.csv` per §1.3b — declined *and*
+     accepted. This is the only way the thresholds above ever become testable.
+
+   **§1.3b — leg log (mandatory, every evaluated leg, every cycle).**
+   Append one row to `data/leg_log.csv` for each candidate whose tape you measured this
+   cycle, whether or not it qualified. Columns are in the file header. Leave a field blank
+   rather than guessing it. Fill `outcome_30m` / `outcome_eod` on a later cycle or in the
+   exit/EOD phase, retro-editing the row you wrote earlier. Without both the declines and
+   the acceptances the sample stays survivorship-biased and no threshold here can be
+   validated — that is the entire point of the file.
 
 4. **Opening gap-fade guard** — skip entirely if `opening_fade_guard_enabled` is false.
    Blocking-only: can veto, never promote. Runs AFTER the §1.3 tape check.

@@ -18,8 +18,8 @@ Claude Code Routines fire into the trading session every weekday (times ET):
    "Daily Momentum Calls" / "Daily Momentum Puts" scanners + a direction-aware tape check
    → ATM calls or puts, DTE per `config.yaml`, limit at mid. Sized and authorized per
    `config.yaml`, always reviewed via `review_option_order`. On a no-trade it re-checks
-   **every 5 minutes** until 1:30 PM ET (the late-entry rule requires a leg sustained
-   15+ minutes, so a faster cadence cannot surface anything a 5-minute one misses).
+   **every 5 minutes** until 1:30 PM ET — the late-entry rule measures legs over
+   consecutive 5-minute bars, so a faster loop re-reads the same bar.
 4. **Every 2 min while a position is open — Monitor** (`runbooks/monitor.md`):
    self-re-arming check-in loop — stop ratcheting, profit floors, scale-out, and
    re-entries up to the daily limits (until 1:30 PM ET). Each firing also arms a ~10 min
@@ -35,6 +35,9 @@ Where to look:
 - [`docs/RATIONALE.md`](docs/RATIONALE.md) — *why* each value is what it is. Almost all of
   them are scar tissue from a specific incident; read this before changing anything.
 - [`STRATEGY.md`](STRATEGY.md) — the full ruleset.
+- `data/leg_log.csv` — every momentum leg the entry phase has evaluated, accepted and
+  declined, with the measurements behind each call. This is the sample the entry
+  thresholds get validated against; declines alone would be survivorship-biased.
 - `journal/YYYY-MM-DD.md` — every run appends and pushes, so the journal is the durable
   memory across sessions.
 

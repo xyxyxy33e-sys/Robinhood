@@ -88,32 +88,79 @@ tolerance from 1.46% to 2.90% solves the opening-volatility problem without givi
 the move, and once solved, entering early is better because more of the day's range
 is still ahead. Holding 10:30 cost −3.60pp.
 
-**§3.2 late-re-check volume/sustain bar (codified 2026-07-21).** Price beyond the
-open is necessary but not sufficient: require several consecutive closes in the trade
-direction on rising/elevated volume, **sustained 15+ minutes**. A quiet low-volume
-grind back through the open does not qualify. Measure "elevated" against the name's
-own trailing baseline, not by eye — and *not* against the opening range, which is
-always inflated and will make any later leg look weak by comparison.
+**§1.3 late-re-check leg confirmation (codified 2026-07-21, revised 2026-08-14).**
+Price beyond the open is necessary but not sufficient. The current rule has two
+vetoes — a **volume ratio** against the name's own pre-leg baseline, and **intact
+structure** (a higher low or new extreme, made and held, sequence low unbroken).
+Leg age is recorded but does not block. Measure "elevated" against the trailing
+baseline, never against the opening range, which is always inflated and will make any
+later leg look weak by comparison.
 
-Live record — **five consecutive declines, five subsequent failures, zero capital
-risked**:
+**Why the 15-minute clock was demoted (review, 2026-08-14).**
 
-| date | name | leg age when declined | how it failed |
+The original rule made duration a co-equal veto: "sustained 15+ minutes." Four
+findings retired it as a gate.
+
+*1. It was never independent of the volume clause.* On 5-minute bars, "several
+consecutive closes" **is** 15 minutes — three bars, by construction. The rule stated
+one measurement twice and presented it as two tests, which is why it so rarely added
+anything.
+
+*2. The founding cases turned on volume, never duration.* The rule was codified from
+the NVS-declined / TSM-declined-then-accepted precedents. Reading them back:
+
+| case | leg age | decision | what actually decided it |
 |---|---|---|---|
-| 8/12 | SMCI (1st) | ~2 min | round-tripped within 6 min, back below VWAP |
-| 8/13 | BIRK (1st) | ~4 min | round-tripped on collapsing volume |
-| 8/13 | BIRK (2nd) | ~14 min | largest-volume bar of the leg printed DOWN at the mark |
-| 8/14 | RDDT (1st) | ~15 min | broke below its structure low at the mark |
-| 8/14 | RDDT (2nd) | ~10 min | dissolved to a flat drift on 0.42× volume, pinned to VWAP |
+| NVS 9:55 | ~20 min (4 higher closes) | declined | volume *declining* 34K→17K |
+| NVS 10:13 | ~15 min | accepted | volume *rising* 16.5K→27.1K |
+| TSM 11:13 | ~90 min of grind | declined | no volume surge on the reclaim |
+| TSM 11:29 | ~20 min | accepted | moderate-but-real volume |
 
-The 8/12 SMCI case is the cleanest demonstration in both directions on one afternoon:
-the volume test passed NBIS (2.9× baseline, which trended) while rejecting SMCI's two
-failing pushes (0.9×, an advance on *declining* volume).
+Duration was *satisfied* in both declines. The 15-minute figure appears to have been
+back-derived from the bar count, not measured against outcomes.
 
-**Caveat, stated plainly: this is survivorship-friendly evidence by construction.**
-Every case is a *declined* trade. We never observe the legs the rule wrongly blocked
-that would have won, so 5/5 is not the success rate of the rule — it is the failure
-rate of legs we already suspected. Needs a proper test on the 47-name-day sample.
+*3. In four of the five live declines, volume failed independently* — the clock was
+redundant. SMCI 0.9×; BIRK-1st collapsing; RDDT-1st 1.23% inside Gate B *and* 1.23×
+volume *and* 7 minutes (three fails); RDDT-2nd 0.42×.
+
+*4. The one case where the clock bound alone was decided by 60 seconds.* BIRK's second
+leg on 8/13: volume 3.35× its own trailing baseline, a new session high made and held,
+Gate A passed, Gate B inactive, above open. The journal is explicit — "**holding
+strictly on the clock, not the setup quality** — 14 min, need 15." It then failed at
+~16 minutes on the largest-volume down bar of the leg. Vindicated, but had the leg
+begun one minute earlier it qualifies, we buy, and we lose. That is a coin landing
+well, not a validated threshold.
+
+There is a further tell: the old rule needed a patch saying "a leg already rolling over
+does not qualify by aging into the window." That concedes time-in-force is meaningless
+without a health check — and if the health check decides, the clock is not load-bearing.
+The revised rule promotes that health check (structure) to the veto and drops the patch.
+
+**What replaced it.** Structure is what the journals were *actually* tracking, and it
+separates the cases the clock could not: it fails a rolling-over leg immediately rather
+than waiting for a timer, and breaking the low the sequence was built on is a crisp,
+computable disqualification — precisely what killed RDDT at 10:26 (8/14) and BIRK at
+10:42 (8/13). `late_entry_min_volume_ratio: 1.5` codifies existing discretion rather
+than changing it: it is consistent with every live judgment on record (passed NBIS 2.9×
+and BIRK 3.35×; rejected RDDT 1.23× as "weak", SMCI 0.9×, RDDT 0.42×).
+
+**The clock is not disproven, only unproven.** There is a plausible mechanism — in a
+gapped name the first 10–15 minutes is where the marginal buyer absorbs gap supply, so
+surviving it should carry information. `late_entry_advisory_leg_minutes` keeps the
+figure recorded so the hypothesis stays testable. Restore it as a veto only on evidence
+from `data/leg_log.csv`, not on intuition.
+
+**Why the log exists (2026-08-14).** The old evidence was survivorship-friendly by
+construction, and worse than first stated: not only do we never observe the legs the
+rule wrongly blocked, the sample is *generated by the rule* — we only measure legs at
+the moment they are "almost qualified," which is exactly when a dying leg is most
+conspicuous. "Five for five" was never a hit rate; it described how the sample was
+drawn. `data/leg_log.csv` records every evaluated leg, **accepted and declined**, with
+age, volume ratio, structure, the blocking reason, and the subsequent outcome. Until it
+holds acceptances as well as declines, no threshold in this section can be validated and
+none should be tightened. It is backfilled with the twelve cases reconstructable from
+the journals; `blocking_reason: CLOCK_ONLY` marks legs the retired clock would have
+vetoed on its own.
 
 **Volume direction means opposite things depending on price (2026-08-12).** Declining
 volume during a *consolidation* is healthy — that is what a proper flag looks like.

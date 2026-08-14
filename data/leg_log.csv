@@ -1,0 +1,13 @@
+date,time_et,symbol,direction,leg_start_et,leg_age_min,bars_in_direction,volume_ratio,baseline_window,structure_intact,gate_a,gate_b,decision,blocking_reason,outcome_30m,outcome_eod,notes
+2026-07-21,09:55,NVS,call,09:35,20,4,0.6,prior quiet period,yes,,,declined,volume,recovered,qualified_later,"vol declining 34K->17K; leg age satisfied, volume was the discriminator"
+2026-07-21,10:13,TSM,call,,,,,,,,,skipped,tape,,,"below open all morning"
+2026-07-21,10:13,NVS,call,09:58,15,3,1.6,prior quiet period,yes,,,accepted,,,no_trade_liquidity,"vol rising 16.5K->27.1K; blocked at contract stage: spread 12.8% then OI 221"
+2026-07-21,11:13,TSM,call,09:45,90,,1.0,session,no,,,declined,volume,,qualified_later,"90-min low-conviction grind, no volume surge; age vastly exceeded any clock"
+2026-07-21,11:29,TSM,call,11:09,20,3,1.4,prior quiet period,yes,,,accepted,,,loss,"filled 1x 422.5C @ 9.30; day closed -105.00 overall"
+2026-08-12,,SMCI,call,,2,,0.9,prior quiet period,no,,,declined,volume+structure,round_tripped_6min,failed,"advance on declining volume"
+2026-08-12,,NBIS,call,,,,2.9,prior quiet period,yes,,,accepted,,trended,win,"cleanest positive case for the volume test"
+2026-08-13,09:59,BIRK,call,09:51,4,1,1.42,opening 21 min,no,0.59,,declined,volume+structure,round_tripped,failed,"collapsing volume; baseline used was the inflated opening range"
+2026-08-13,10:31,BIRK,call,10:17,14,3,3.35,13:56-14:16 UTC quiet,yes,0.59,inactive,declined,CLOCK_ONLY,failed_at_16min,failed,"THE decisive case: volume+structure both passed, blocked solely on 14min<15. Failed on its largest-volume down bar ~1 min later. Under the revised rule this WOULD have been taken."
+2026-08-14,10:17,RDDT,call,10:10,7,,1.23,27500/min decline baseline,yes,0.988,fail 1.23%,declined,volume+gateB,broke_structure_low,failed,"three independent fails"
+2026-08-14,10:26,RDDT,call,10:10,16,,,,no,0.988,pass 2.07%,declined,structure+VWAP,failed,failed,"broke the 180.58 structure low the sequence was built on"
+2026-08-14,11:42,RDDT,call,11:10,10,,0.42,prior quiet period,no,0.988,inactive,declined,volume+structure,dissolved,failed,"flat drift pinned to VWAP"

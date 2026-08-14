@@ -109,6 +109,27 @@ min_day_change_pct: 2            # underlying must move at least this % in the t
                                  # above-open and VWAP gates do that. (W, 2026-08-14:
                                  # crossed +2% while fading all day from its own open.)
 
+# --- Late-re-check leg confirmation (entry.md §1.3) ---------------------------
+# Revised 2026-08-14. The veto now rests on VOLUME + STRUCTURE. Leg age is a
+# measurement window, NOT a gate — review in RATIONALE found the 15-minute clock
+# was the sole binding constraint exactly once in the rule's life (BIRK 8/13),
+# and that call came down to 60 seconds. Do not restore it as a veto without data
+# from leg_log.csv.
+late_entry_min_bars: 3           # consecutive 5-min closes in the trade direction.
+                                 # 3 bars IS the 15 minutes the old rule asked for —
+                                 # stated once now, not twice.
+late_entry_min_volume_ratio: 1.5 # leg volume vs the name's OWN pre-leg trailing baseline.
+                                 # Codifies existing discretion, does not change it:
+                                 # passed NBIS 2.9x / BIRK 3.35x, rejected RDDT 1.23x
+                                 # ("weak"), SMCI 0.9x, RDDT 0.42x. Never benchmark
+                                 # against the opening range — it is always inflated.
+late_entry_require_structure: true  # leg must have made AND HELD a higher low or a new
+                                 # local extreme; breaking the structure low it was built
+                                 # on is an immediate disqualification. This is the veto
+                                 # the clock used to pretend to be.
+late_entry_advisory_leg_minutes: 15  # ADVISORY ONLY — journal it, never block on it.
+                                 # Legs dying near this mark is the hypothesis under test.
+
 # --- Opening gap-fade guard ---------------------------------------------------
 # BLOCKING-ONLY: can veto a candidate, never promote one. Worst case is a missed trade.
 # UNDER REVIEW — the live record is weaker than the derivation (Gate A passed 4 names,

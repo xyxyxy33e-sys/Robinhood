@@ -25,11 +25,13 @@ single-leg only: long calls/puts, covered calls, cash-secured puts).
 The 8:00/9:35/3:30 phases are cron Routines; the monitor is a self-re-arming
 `send_later` loop started by a fill and stood down at 3:25 ET when the exit run takes over.
 
-**Cadence rationale (2026-08-14).** The entry re-check is 5 min, not 1, because §3's
-late-re-check bar requires a leg sustained **15+ minutes** — so a tighter cadence cannot
-detect anything a 5-minute one would miss. The monitor stays tight (2 min) because that
-is where money is actually at risk, and carries a redundant backup wake because
-scheduled-wake delivery has degraded materially. See `docs/RATIONALE.md`.
+**Cadence rationale (2026-08-14).** The entry re-check is 5 min, not 1, because §3 measures
+legs over consecutive **5-minute** bars — a faster loop re-reads the same bar and cannot
+produce a new verdict. It is not a proof that nothing is missed (a leg can qualify at one
+sample and be dead at the next), only that the loop is not where opportunity is being lost.
+The monitor stays tight (2 min) because that is where money is actually at risk, and carries
+a redundant backup wake because scheduled-wake delivery has degraded materially. See
+`docs/RATIONALE.md`.
 
 Scheduled via Claude Code Routines (cron is UTC — see README for DST note). Every runbook
 begins with a market-open check and a time check; if fired at the wrong time it reschedules
@@ -69,12 +71,15 @@ candidate with a live chain.
    - **Puts**: below open and holding below VWAP on the same bars, no full
      gap-fill-back-to-open (still below the opening window's high).
    - **Later re-checks** (any entry at/after 9:45, or a fresh candidate hunt after a
-     position closes): the fuller multi-bar version applies, plus
-     price beyond the open is necessary but NOT sufficient — require a volume-confirmed
-     breakout: several consecutive closes in the trade direction on rising/elevated
-     volume, sustained for 15+ minutes. A quiet, low-volume grind back through the open
-     does not qualify (codified 2026-07-21 from the NVS-declined / TSM-declined-then-
-     accepted precedents).
+     position closes): the fuller multi-bar version applies, plus price beyond the open is
+     necessary but NOT sufficient. Two vetoes, both must clear (revised 2026-08-14):
+     **volume** — `late_entry_min_bars` consecutive directional 5-min closes at
+     ≥ `late_entry_min_volume_ratio` × the name's *own pre-leg* baseline; and
+     **structure** — a higher low (lower high for puts) or new local extreme, made *and
+     held*, with the sequence's low unbroken. A quiet low-volume grind back through the
+     open does not qualify. **Leg age is advisory, not a gate**: the 15-minute clock
+     codified on 2026-07-21 was demoted after review found it independently binding exactly
+     once, on a 60-second margin. Every evaluated leg is logged to `data/leg_log.csv`.
 3. **No earnings between now and the option's expiry** (check `get_earnings_results`) —
    we trade momentum, not event lotteries.
 4. A concrete catalyst or sector tailwind identified in the pre-market journal entry.
@@ -92,8 +97,8 @@ take-profit, ratcheted stop above breakeven, or discretionary win) stays FIRST i
 re-check rotation until the 1:30 PM entry cutoff — it has already proven its catalyst,
 liquidity, and tape, which makes it a better-than-random candidate for a second leg. The
 trigger is a **resumption, never a dip**: the pullback must stabilize (higher low), then
-resume with the full late-re-check volume bar above (consecutive directional closes on
-rising/elevated volume, 15+ min). All standard gates re-apply, and — cash account — the
+resume with the full late-re-check leg confirmation above (volume ratio + intact
+structure). All standard gates re-apply, and — cash account — the
 re-entry can only be funded by remaining settled cash, never by the just-banked proceeds
 (T+1). Expect the second entry to be structurally worse than the first (pumped IV,
 heavier theta): the volume bar is the compensation, not optional.
@@ -220,7 +225,7 @@ heavier theta): the volume bar is the compensation, not optional.
   is open, the sold tranche may be re-bought — same contract, up to the scaled-out
   quantity, once per position per day, before 3:00 PM ET, settled cash only — on a
   LIGHTER signal than leader re-entry: a 5-minute close with the underlying back on
-  the trade-direction side of VWAP, with no volume or sustain requirement. The
+  the trade-direction side of VWAP, with no volume or structure requirement. The
   position may not exceed its original size, and the resting stop is re-placed for
   the full quantity at the unchanged level after the fill. (Agent's strict-bar
   recommendation was declined; risks accepted: chop re-buys and double spread cost.)

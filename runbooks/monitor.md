@@ -76,9 +76,11 @@ live mark, forcing an instant sell.
    1-contract positions skip.
    - **Tranche re-buy** (lighter bar, before 3:00 PM, once per position, settled cash
      only): if a 5-min bar closes with the underlying back on the trade-direction side of
-     VWAP, re-buy up to the scaled-out quantity of the SAME contract at mid. No volume or
-     15-min requirement. Then cancel and re-place the stop for the full new quantity at
-     the SAME level. Position may not exceed original size.
+     VWAP, re-buy up to the scaled-out quantity of the SAME contract at mid. Deliberately
+     exempt from the §1.3 volume and structure vetoes — this re-buys a position whose
+     thesis already proved out, at a level already banked. Then cancel and re-place the
+     stop for the full new quantity at the SAME level. Position may not exceed original
+     size.
 
 3. **Ratchet arm** — mark ≥ entry × (1 + `take_profit_pct`/100) → the ratchet ARMS
    (no forced sale). While armed:
