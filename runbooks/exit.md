@@ -4,7 +4,16 @@ Read `config.yaml` and today's journal first. All times US/Eastern.
 Account = `account_number`. This runbook may not end its turn while a position is open —
 work the close until flat or 4:00 ET.
 
-## 0. Guards
+## 0a. Dry run
+If `dry_run` is true, there is nothing at the broker to close. Check today's journal for an
+open **PAPER ENTRY**: if one exists, quote it live, journal the paper close at the current
+mid with P&L and the reason (cascade level hit, or forced flat), and fill in the
+`outcome_eod` column for its `data/leg_log.csv` row. Then run §4's reporting as normal and
+stop — §1–§3 are broker operations and do not apply. Still verify with
+`get_option_positions` that the account really is flat; if it is not, `dry_run` was enabled
+while a real position was open, so **ignore this section and close it for real**.
+
+## 0b. Guards
 1. Market closed today / half-day: on half-days (1:00 PM close) this must run by 12:30 —
    the premarket run flags half-days in the journal; honor `send_later` reschedules from it.
 2. If fired before 3:25 ET, `send_later` to 3:30 ET and stop. If after 3:55 ET, go straight

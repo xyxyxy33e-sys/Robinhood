@@ -13,6 +13,19 @@ scan_id_puts: "1849aba7-1d06-4269-b58f-b4e42d9bfb02" # saved scanner "Daily Mome
 enable_puts: true                # also trade puts on confirmed bearish momentum
 
 # --- Execution authorization --------------------------------------------------
+# DRY RUN — set 2026-08-14 for the week of 2026-08-17. HARD SWITCH: while true, NO
+# order-placing tool may be called for any reason — not place_option_order, not a
+# resting stop, not a close. Every phase runs in full and journals what it WOULD have
+# done, with paper fills marked to market through the real exit cascade, so the week
+# produces leg_log/chain_log rows without capital at risk.
+#
+# This does NOT auto-expire. A switch that silently restores live trading on a date is
+# the wrong failure direction — turning it off is a deliberate edit. Review after the
+# 2026-08-21 close.
+dry_run: true
+#
+# Both flags below are IGNORED while dry_run is true. They are the live-mode settings,
+# preserved so flipping dry_run back to false restores the prior behavior exactly.
 entry_auto_execute: true         # true = standing authorization to buy without asking
 exit_auto_execute: true          # true = closes execute without asking
 

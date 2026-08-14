@@ -6,6 +6,11 @@ intraday only, and be flat by the close. News is gathered pre-market every tradi
 build a candidate thesis before any money moves. The name predates the puts addition; it
 still trades both directions under it.
 
+> **DRY RUN, week of 2026-08-17.** `dry_run: true` in `config.yaml` is a hard switch: every
+> phase runs in full against live market data, but **no order-placing tool is called** and
+> fills are paper, marked to market through the real exit cascade. It does not auto-expire —
+> restoring live trading is a deliberate edit. Review after the 2026-08-21 close.
+
 **Account:** Robinhood "Agentic" cash account `576391551` (agentic_allowed, options Level 2 —
 single-leg only: long calls/puts, covered calls, cash-secured puts).
 

@@ -25,6 +25,16 @@ without either closing a position or arming the next one.
 
 ---
 
+## 0. Dry run
+If `dry_run` is true the position is a **paper position recorded in today's journal**, not
+a broker position. Everything below runs unchanged and for real — live `get_option_quotes`,
+the full cascade, the depth gate, the stall classification — but **no order tool is ever
+called**. "Cancel and replace the stop" becomes "journal the new paper stop level";
+"sell at mid" becomes "journal the paper exit at the live mid, with P&L". Skip §1's broker
+reconciliation and §2's order-type upgrades (nothing rests), and enforce the paper stop in
+software: if the live mark trades through it, that is a paper stop-out — journal it and
+stop the loop. Everything else, including §5 re-entry, behaves as normal.
+
 ## 1. Reconcile
 1. `git pull` (config may have changed), read config + today's journal.
 2. `get_option_positions` (nonzero=true); match against positions recorded in today's

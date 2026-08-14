@@ -45,6 +45,10 @@ Where to look:
 
 ## Controls
 
+- **Dry run:** `dry_run: true` in `config.yaml` (currently ON, week of 2026-08-17) runs
+  every phase against live data but places **no orders at all** — fills are paper and
+  marked to market through the real exit cascade, so the logs still fill up. It never
+  auto-expires; turning it off is a deliberate edit.
 - **All knobs:** `config.yaml` — sizing, DTE, stops, and the two authorization flags
   (`entry_auto_execute`, `exit_auto_execute`). Edit + push; next run picks it up.
 - **Pause/stop:** disable or delete the Routines (ask Claude, or manage Routines in the

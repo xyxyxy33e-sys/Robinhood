@@ -193,23 +193,33 @@ without either filling a position or arming the next one.
 1. `review_option_order` (limit buy-to-open at mid, GFD, regular hours, with
    chain_symbol + underlying_type). Surface every `order_checks` alert verbatim in the
    journal and to the user.
-2. `entry_auto_execute` **false** → present via AskUserQuestion and wait; no approval =
+2. **`dry_run` true → PAPER FILL. Do not call `place_option_order`, now or later this
+   cycle.** Everything above still runs for real (real scan, real quotes, real gates,
+   real `review_option_order` — it places nothing). Journal
+   **"DRY RUN — PAPER ENTRY"** with contract, quantity, the mid you would have paid, every
+   `order_checks` alert, and the THIN flag, then go to §4. `entry_auto_execute` is not
+   consulted while `dry_run` is true.
+3. `entry_auto_execute` **false** → present via AskUserQuestion and wait; no approval =
    no trade. **true** → standing authorization, proceed.
-3. **Re-verify the spread immediately before placing.** Pull one more fresh
+4. **Re-verify the spread immediately before placing.** Pull one more fresh
    `get_option_quotes` and recompute. If it is back above `max_spread_pct_of_mid`,
    **abort — do not place.** Journal the aborted attempt with both spread reads and the
    timing. Do not chase it by repricing wider; that defeats the gate.
-4. `place_option_order` with a fresh UUID ref_id (reuse only on transport retries).
+5. `place_option_order` with a fresh UUID ref_id (reuse only on transport retries).
    Unfilled after 1 min → cancel, re-place once at mid + 40% of half-spread. Unfilled
    after 1 more min → cancel, no-trade.
 
 ## 4. Record and hand off
-Journal: contract, fill price (from the filled order), thesis, planned exits, order ids.
-Commit ("journal: YYYY-MM-DD entry") and push. Then:
+Journal: contract, fill price (from the filled order; under `dry_run`, the mid at the
+paper fill), thesis, planned exits, order ids. Commit ("journal: YYYY-MM-DD entry") and
+push. Then:
 
 **Position opened** — two follow-ups, in order:
-1. **Place the resting protective order** (only one sell can rest per contract — no OCO
-   for options). Per `resting_order_type`:
+1. **Place the resting protective order.** **Under `dry_run`: compute the stop level and
+   type exactly as below and journal it as "PAPER STOP $X (type)", but place nothing.**
+   monitor.md enforces it in software against live quotes.
+   Live mode — only one sell can rest per contract (no OCO for options).
+   Per `resting_order_type`:
    - `stop_loss`, **fill before 9:45 ET** → Robinhood rejects stop_market until 9:45, so
      place a **stop_limit**: stop = entry × (1 + `stop_loss_pct`/100) tick-rounded,
      limit = stop × 0.85. Record it as stop_limit, flagged **"upgrade at 9:45"**.
