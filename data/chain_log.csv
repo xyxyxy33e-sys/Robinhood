@@ -40,3 +40,9 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-14,09:38,RDDT,call,2026-08-28,182.5,OTM1,6,13.2,,,,OI+spread,no,"HALF-strike: OI 6, -99% vs ATM"
 2026-08-14,09:38,GLOB,put,2026-08-21,35,ATM,1239,40,1,,,spread+size,no,
 2026-08-14,09:38,STNE,put,2026-08-21,9,ATM,523,100,1,,,spread+size,no,
+2026-08-17,09:37,MRVL,call,2026-08-28,235,ITM1,357,3.92,16,10,2,OI,no,"band search: closest to spot (0.98 away) but fails OI"
+2026-08-17,09:37,MRVL,call,2026-08-28,237.5,ATM,28,4.80,51,60,2,OI,no,"ATM anchor — HALF-strike, OI 28. Old ATM-first rule would call the chain dead here"
+2026-08-17,09:37,MRVL,call,2026-08-28,240,OTM1,4068,6.50,62,97,2,none,no,"ROUND strike: 145x the anchor's OI. Passed all three gates; selected by band search, then the NAME was rejected at §1.5 on earnings"
+2026-08-17,09:37,MRVL,call,2026-09-04,240,OTM1,748,8.07,69,82,2,none,no,"alternate expiry also clears gates; 8/28 closer to dte_target 14. Both post-date 8/27 earnings"
+2026-08-17,09:38,RDDT,put,2026-08-28,170,ATM,276,14.11,68,37,,OI+spread,no,"ATM probe, tape not qualified — chain dead both gates"
+2026-08-17,09:38,SMCI,put,2026-08-28,38,ATM,853,12.31,214,188,,spread,no,"ATM probe, tape not qualified — OI and depth fine, single-gate spread failure (spread-watch)"
