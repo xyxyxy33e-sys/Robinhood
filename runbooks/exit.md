@@ -13,6 +13,16 @@ stop — §1–§3 are broker operations and do not apply. Still verify with
 `get_option_positions` that the account really is flat; if it is not, `dry_run` was enabled
 while a real position was open, so **ignore this section and close it for real**.
 
+**Then update the paper ledger — this is mandatory and closes the loop on sizing.**
+Append one row to `data/paper_ledger.csv` for every paper trade closed today, and set
+`paper_equity` = the previous row's `paper_equity` + this trade's `net_pnl`. Charge the
+same frictions a real fill would incur: fees, and the spread actually crossed (paper exits
+fill at the live mid, so if the runbook would have repriced toward the bid, use that).
+On a **no-trade day append nothing** — equity is unchanged and a zero row adds noise.
+Tomorrow's premarket reads the last row for its `daily_start_balance`, so an unwritten
+row silently freezes position sizing; if you closed a paper trade, the ledger row is not
+optional.
+
 ## 0b. Guards
 1. Market closed today / half-day: on half-days (1:00 PM close) this must run by 12:30 —
    the premarket run flags half-days in the journal; honor `send_later` reschedules from it.

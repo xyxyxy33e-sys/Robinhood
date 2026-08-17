@@ -1,0 +1,2 @@
+date,time_et,event,symbol,contract,qty,price,gross_pnl,fees,net_pnl,paper_equity,note
+2026-08-16,23:31,OPENING_BALANCE,,,,,,,,11858.54,"snapshot of get_portfolio total_value; paper book starts 2026-08-17"

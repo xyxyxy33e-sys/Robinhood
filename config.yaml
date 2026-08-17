@@ -13,15 +13,17 @@ scan_id_puts: "1849aba7-1d06-4269-b58f-b4e42d9bfb02" # saved scanner "Daily Mome
 enable_puts: true                # also trade puts on confirmed bearish momentum
 
 # --- Execution authorization --------------------------------------------------
-# DRY RUN — set 2026-08-14 for the week of 2026-08-17. HARD SWITCH: while true, NO
-# order-placing tool may be called for any reason — not place_option_order, not a
-# resting stop, not a close. Every phase runs in full and journals what it WOULD have
-# done, with paper fills marked to market through the real exit cascade, so the week
-# produces leg_log/chain_log rows without capital at risk.
+# PAPER-ONLY STRATEGY (2026-08-16, user directive: "this strategy will only do test run,
+# not with real money"). This is no longer a one-week trial — it is the standing mode, and
+# there is no scheduled review that flips it back.
 #
-# This does NOT auto-expire. A switch that silently restores live trading on a date is
-# the wrong failure direction — turning it off is a deliberate edit. Review after the
-# 2026-08-21 close.
+# HARD SWITCH: while dry_run is true, NO order-placing tool may be called for any reason —
+# not place_option_order, not a resting stop, not a close. Every phase runs in full against
+# live market data and journals what it WOULD have done, with paper fills marked to market
+# through the real exit cascade.
+#
+# Turning it off is a deliberate edit, and would also require a capital split agreed with
+# the other strategy first — see "Shared account" below.
 dry_run: true
 #
 # Both flags below are IGNORED while dry_run is true. They are the live-mode settings,
@@ -36,32 +38,47 @@ exit_auto_execute: true          # true = closes execute without asking
 # an $11,858.54 balance — leaving $60.54 spendable. Once they fill, this account holds
 # roughly $11.8k of equity and ~$60 of cash.
 shared_account: true
+
+# --- Paper account (2026-08-16) -----------------------------------------------
+# The paper book runs on a FIXED snapshot of the account balance taken the night before
+# it started, NOT on a live read of get_portfolio.
 #
-# Which figure the sizing/guard logic treats as available while dry_run is true.
-# "account_balance" = get_portfolio total_value; "live" = the broker's buying_power.
-# Paper fills consume nothing, and live buying power now reflects the OTHER strategy's
-# commitments — on "live" the dry run would fail the §0 guard or size to zero contracts
-# every single day and produce no data at all, which defeats the point of the week.
-dry_run_notional_buying_power: "account_balance"
+# Why a snapshot and not total_value: total_value now includes the other strategy's
+# equity. Reading it live would let that strategy's gains and losses move this one's
+# position sizing — an NVDA rally would silently inflate paper option sizes here, and the
+# two books' results would be impossible to separate. A frozen number keeps this
+# strategy's equity curve entirely its own.
+paper_account_starting_balance: 11858.54   # get_portfolio total_value, 2026-08-16 23:31 ET
+paper_account_start_date: "2026-08-17"
 #
-# LIVE MODE IS UNCHANGED AND MUST STAY THAT WAY. When dry_run is false, sizing reads
-# the broker's real buying power, never the balance. The balance is shared with another
-# strategy, so spending against it would be spending money that is not there.
+# Paper equity = paper_account_starting_balance + cumulative realized paper P&L from
+# data/paper_ledger.csv. It COMPOUNDS, which is the faithful analogue of the live system
+# (max_premium_per_trade was always a % of the then-current account value). Every sizing
+# and buying-power decision under dry_run reads paper equity and nothing else.
+#
+# get_portfolio is still called each day, but for the RECORD ONLY — to log what the real
+# account is doing and to confirm no real order was placed. It must not feed sizing.
+#
+# LIVE MODE IS UNCHANGED AND MUST STAY THAT WAY. If dry_run is ever false, sizing reads
+# the broker's real buying power — never the snapshot, never paper equity. Those numbers
+# describe a simulation, not money.
 
 # --- Position sizing ----------------------------------------------------------
 min_buying_power_to_trade: 10    # USD; below this the entry run skips the day
 max_premium_per_trade_pct_of_daily_start: 25
-                                 # Cap per position = this % of account total_value at the
-                                 # START of today (captured in premarket, journaled as
+                                 # Cap per position = this % of the START-of-day balance
+                                 # (captured in premarket, journaled as
                                  # `max_premium_per_trade`; entry.md reads that figure).
-                                 # Sizing budget = min(that figure, available buying power);
+                                 # Start-of-day balance = PAPER EQUITY from the last row of
+                                 # data/paper_ledger.csv — NOT get_portfolio total_value.
+                                 # Sizing budget = min(that figure, available funds);
                                  # take the smaller position rather than skipping.
-                                 # "Available" = live buying power normally, or the
-                                 # `dry_run_notional_buying_power` figure while dry_run.
-                                 # NOTE (shared account): total_value now includes the
-                                 # other strategy's equity, so this % is a claim on money
-                                 # that strategy may already hold. Revisit before live
-                                 # trading resumes — see docs/RATIONALE.md.
+                                 # "Available" = PAPER EQUITY under dry_run (the standing
+                                 # mode); real broker buying power only if it were ever off.
+                                 # Because it is a % of paper equity, and paper equity
+                                 # compounds with realized paper P&L, position size grows
+                                 # after paper wins and shrinks after paper losses — the
+                                 # same behaviour the live account had.
 max_open_positions: 6            # combined across calls AND puts, no fixed split.
                                  # Re-entering the same underlying is allowed; a symbol
                                  # may not hold a call AND a put simultaneously.

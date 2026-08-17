@@ -558,26 +558,38 @@ CAT $549 — **$11,798 against an $11,858.54 balance**, leaving **$60.54** spend
 figures reconcile exactly, so this is the whole explanation for the collapse in buying
 power, not a settlement artifact.
 
-**Why sizing changed.** `dry_run_notional_buying_power: "account_balance"` makes dry-run
-sizing read `total_value` rather than the broker's `buying_power`. Without it the dry-run
-week produces nothing: at $60.54 available, an ATM contract at any normal premium fails
-the affordability test, so every candidate would exit as "cannot afford 1 contract" — a
-funding artifact, not a strategy result, and the logs the week exists to fill would stay
-empty. Paper fills consume no cash, so simulating against the balance is the honest
-counterfactual: *what would this strategy have done with this account.*
+**Paper-only, on a frozen snapshot (2026-08-16).** The strategy was designated test-only
+— "this strategy will only do test run, not with real money" — and its book now runs on a
+**fixed** snapshot of the account balance, `paper_account_starting_balance: 11858.54`,
+taken at 23:31 ET the night before it started.
 
-**Why live mode was deliberately NOT changed.** With real money the broker's buying power
-is the only honest number, because the balance is shared — sizing off it would be spending
-money another strategy already holds. The switch is scoped to `dry_run` for that reason,
-and both figures get journalled every cycle so the gap stays visible.
+**Why frozen rather than a live `total_value` read.** The first version of this change
+sized from `get_portfolio` `total_value`. That was wrong, and the reason matters: since the
+account is shared, `total_value` contains the other strategy's equity. Reading it live
+would let an NVDA rally silently inflate this strategy's paper option sizes, and the two
+books' results would be permanently entangled — you could never say which strategy earned
+what. A frozen snapshot plus this book's own realized P&L (`data/paper_ledger.csv`) keeps
+the equity curve entirely its own.
+
+**Paper equity compounds**, which is the faithful analogue of the live system:
+`max_premium_per_trade` was always a percentage of the *then-current* account value, not of
+a fixed base. So the paper book grows and shrinks with its own results and sizing follows,
+exactly as the real one did.
+
+**`get_portfolio` is still called daily, for the record only** — to confirm no real order
+was placed, and to log how far paper equity has drifted from what the account could
+actually have funded. It must never feed sizing. Under `dry_run` an empty
+`get_option_orders` is a required daily check; the other strategy's equity orders will show
+in `get_equity_orders` and are not this strategy's.
 
 **Two unresolved conflicts, flagged rather than silently patched:**
 
-1. **`max_premium_per_trade_pct_of_daily_start: 25` is now a claim on shared capital.** It
-   is 25% of `total_value`, and `total_value` includes the other strategy's equity. Two
-   strategies sizing off the same total will jointly over-commit. Before live trading
-   resumes this needs an explicit split — a fixed dollar allocation per strategy, or a
-   percentage of *this* strategy's own sleeve rather than the whole account.
+1. **`max_premium_per_trade_pct_of_daily_start: 25` would be a claim on shared capital if
+   this ever went live.** Resolved for now — it is 25% of *paper equity*, which is this
+   book's own money and conflicts with nothing. It becomes a real problem the moment
+   `dry_run` is turned off, because it would then be 25% of a total the other strategy
+   also draws on. Any return to live needs an explicit split first: a fixed dollar sleeve
+   per strategy, or a percentage of this strategy's own allocation.
 2. **This strategy may simply be unfundable while the other is deployed.** It buys options
    with settled cash in a cash account. If ~$11.8k sits in equities, there is no cash to
    buy calls with, and no threshold change fixes that — it is an allocation decision, not

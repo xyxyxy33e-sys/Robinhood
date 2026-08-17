@@ -45,20 +45,19 @@ Where to look:
 
 ## Controls
 
-- **Dry run:** `dry_run: true` in `config.yaml` (currently ON, week of 2026-08-17) runs
-  every phase against live data but places **no orders at all** — fills are paper and
-  marked to market through the real exit cascade, so the logs still fill up. It never
-  auto-expires; turning it off is a deliberate edit.
+- **Paper only.** `dry_run: true` is the standing mode, not a trial: every phase runs
+  against live market data and places **no orders at all**. Fills are paper and marked to
+  market through the real exit cascade. It never auto-expires.
 - **All knobs:** `config.yaml` — sizing, DTE, stops, and the two authorization flags
   (`entry_auto_execute`, `exit_auto_execute`). Edit + push; next run picks it up.
 - **Pause/stop:** disable or delete the Routines (ask Claude, or manage Routines in the
   Claude UI). Deleting the Routines fully stops the system.
-- **Shared account (2026-08-16):** a second strategy also trades this account and now
-  holds nearly all the real buying power ($60.54 of $11,858.54 spendable at the time of
-  writing). While in dry run, sizing uses the account *balance* as notional buying power
-  (`dry_run_notional_buying_power`) so the week still produces data; live mode is
-  unchanged and always uses the broker's real buying power. Before live trading resumes,
-  the two strategies need an explicit capital split — see `docs/RATIONALE.md`.
+- **Paper book:** sizing runs on `paper_account_starting_balance` ($11,858.54, snapshot
+  2026-08-16) plus this strategy's own realized paper P&L, tracked in
+  `data/paper_ledger.csv`. Deliberately **not** a live read of the account: a second
+  strategy shares it, and its equity sits inside `total_value`, so reading that live would
+  let the other book's gains move this one's position sizes and entangle the two results.
+  `get_portfolio` is still called daily for the record — never for sizing.
 - **Funding:** the Agentic account is a cash account — calls need settled cash, and sale
   proceeds settle T+1. The entry run skips the day (and tells you) below
   `min_buying_power_to_trade`.
