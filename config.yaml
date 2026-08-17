@@ -29,14 +29,39 @@ dry_run: true
 entry_auto_execute: true         # true = standing authorization to buy without asking
 exit_auto_execute: true          # true = closes execute without asking
 
+# --- Shared account (added 2026-08-16) ----------------------------------------
+# A SECOND STRATEGY now trades this same account and holds the real buying power.
+# Observed 2026-08-16 23:24 ET: ten queued agentic market buys for Monday's open
+# (MU, NVDA, GOOGL, AVGO, JNJ, AMD, LRCX, XOM, INTC, CAT) totalling $11,798 against
+# an $11,858.54 balance — leaving $60.54 spendable. Once they fill, this account holds
+# roughly $11.8k of equity and ~$60 of cash.
+shared_account: true
+#
+# Which figure the sizing/guard logic treats as available while dry_run is true.
+# "account_balance" = get_portfolio total_value; "live" = the broker's buying_power.
+# Paper fills consume nothing, and live buying power now reflects the OTHER strategy's
+# commitments — on "live" the dry run would fail the §0 guard or size to zero contracts
+# every single day and produce no data at all, which defeats the point of the week.
+dry_run_notional_buying_power: "account_balance"
+#
+# LIVE MODE IS UNCHANGED AND MUST STAY THAT WAY. When dry_run is false, sizing reads
+# the broker's real buying power, never the balance. The balance is shared with another
+# strategy, so spending against it would be spending money that is not there.
+
 # --- Position sizing ----------------------------------------------------------
 min_buying_power_to_trade: 10    # USD; below this the entry run skips the day
 max_premium_per_trade_pct_of_daily_start: 25
                                  # Cap per position = this % of account total_value at the
                                  # START of today (captured in premarket, journaled as
                                  # `max_premium_per_trade`; entry.md reads that figure).
-                                 # Sizing budget = min(that figure, LIVE buying power);
+                                 # Sizing budget = min(that figure, available buying power);
                                  # take the smaller position rather than skipping.
+                                 # "Available" = live buying power normally, or the
+                                 # `dry_run_notional_buying_power` figure while dry_run.
+                                 # NOTE (shared account): total_value now includes the
+                                 # other strategy's equity, so this % is a claim on money
+                                 # that strategy may already hold. Revisit before live
+                                 # trading resumes — see docs/RATIONALE.md.
 max_open_positions: 6            # combined across calls AND puts, no fixed split.
                                  # Re-entering the same underlying is allowed; a symbol
                                  # may not hold a call AND a put simultaneously.

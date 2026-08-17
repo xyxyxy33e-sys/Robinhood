@@ -34,8 +34,14 @@ without either filling a position or arming the next one.
 3. `get_option_positions` (nonzero=true) — total open (calls + puts) < `max_open_positions`.
 4. `get_option_orders` (queued/confirmed, today) — no duplicate entry already working.
    Also check today's journal against `max_new_positions_per_day`.
-5. `get_portfolio` — options buying power ≥ `min_buying_power_to_trade`, else journal
+5. `get_portfolio` — **available buying power** ≥ `min_buying_power_to_trade`, else journal
    "insufficient settled cash", notify once (not daily), stop.
+   - **Available buying power** is `buying_power.buying_power` normally. **While `dry_run`
+     is true and `dry_run_notional_buying_power` is `account_balance`, use `total_value`
+     instead** — paper fills consume nothing, and this account is shared with another
+     strategy that holds the real buying power. Journal both figures every cycle
+     ("BP: notional $X (balance) / live $Y") so the gap stays visible and the paper sizes
+     are never mistaken for something the account could actually have funded.
 
 ## 1. Confirm momentum
 1. `run_scan` on `scan_id`, and `scan_id_puts` if `enable_puts`.
@@ -157,12 +163,19 @@ without either filling a position or arming the next one.
 
 4. **Sizing, then the depth gate — in that order.** The depth requirement depends on the
    order, so quantity must be known first.
-   - quantity = floor(min(`max_premium_per_trade`, live buying power) / (mid × 100)),
-     minimum 1. `max_premium_per_trade` is the dollar figure computed once in today's
-     premarket section — read it, don't recompute. Pull buying power fresh at selection
+   - quantity = floor(min(`max_premium_per_trade`, **available buying power**) / (mid × 100)),
+     minimum 1, where "available" is the §0.5 definition — live buying power normally, the
+     `dry_run_notional_buying_power` figure while `dry_run` is true.
+     `max_premium_per_trade` is the dollar figure computed once in today's premarket
+     section — read it, don't recompute. Pull the buying-power figure fresh at selection
      time. If even 1 contract is unaffordable that is a no-trade for this underlying —
      journal and notify. **Notify the user whenever buying power, not the premium cap, is
      what binds the size**, and journal both figures side by side.
+   - **Shared account:** the paper size a dry-run cycle computes is a simulation of what
+     the strategy *would* do with the balance, not a claim the account could fund it today.
+     If live buying power would NOT have covered the paper fill, say so explicitly in the
+     journal line — that difference is the whole point of tracking both numbers, and it is
+     what will decide whether this strategy can run live alongside the other one.
    - **Required displayed size**, on `bid_size` AND `ask_size` both:
      ```
      required = max(min_quote_size_floor, ceil(quantity × quote_size_coverage_multiple))

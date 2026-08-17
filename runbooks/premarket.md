@@ -8,12 +8,19 @@ Read `config.yaml` first. All times US/Eastern.
 - If fired before 7:00 ET or after 9:15 ET (DST drift), still run — this phase is research-only.
 
 ## 1. Gather news (no trading in this phase)
-0. `get_portfolio` (account_number): record `total_value` as today's `daily_start_balance`
-   (this is a cash account, flat on options overnight, so it starts every day all-cash —
-   this figure is the real start-of-day value). Compute today's
-   `max_premium_per_trade` = `daily_start_balance × max_premium_per_trade_pct_of_daily_start
-   / 100`, rounded to the cent. Journal both figures — entry.md reads the computed dollar
-   figure from today's journal rather than recomputing it mid-day.
+0. `get_portfolio` (account_number): record `total_value` as today's `daily_start_balance`.
+   Compute today's `max_premium_per_trade` = `daily_start_balance ×
+   max_premium_per_trade_pct_of_daily_start / 100`, rounded to the cent. Journal both —
+   entry.md reads the computed dollar figure rather than recomputing it mid-day.
+   - **Also journal `cash` and `buying_power.buying_power` separately, every day.** This
+     strategy is flat on options overnight, but since 2026-08-16 the account is **shared
+     with another strategy** that holds equity positions, so `total_value` is no longer
+     all cash and no longer equals what this strategy could spend. The old note here
+     claimed it did; that stopped being true when the other strategy's orders filled.
+   - If `buying_power` is far below `total_value`, say so plainly in the journal and carry
+     it into the entry phase. Under `dry_run` it changes nothing (sizing uses the notional
+     balance per `dry_run_notional_buying_power`); in live mode it is the binding
+     constraint and the day may be untradeable regardless of what the tape does.
 1. WebSearch: overnight market summary — S&P/Nasdaq futures, any macro data due today
    (CPI, Fed, jobs), and the general risk tone.
 2. `get_earnings_calendar` (start_date=today, days=2, filter=high_market_cap): who reports

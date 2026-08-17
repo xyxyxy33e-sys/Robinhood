@@ -549,6 +549,42 @@ skipped entirely. Per user, the smaller position is preferred to none.
 
 ---
 
+## Shared account (2026-08-16)
+
+**A second strategy now trades account 576391551.** Observed the Sunday night before the
+dry-run week: ten queued agentic market buy orders for Monday's open — MU $2,311, NVDA
+$1,942, GOOGL $1,691, AVGO $1,435, JNJ $958, AMD $889, LRCX $795, XOM $660, INTC $568,
+CAT $549 — **$11,798 against an $11,858.54 balance**, leaving **$60.54** spendable. The
+figures reconcile exactly, so this is the whole explanation for the collapse in buying
+power, not a settlement artifact.
+
+**Why sizing changed.** `dry_run_notional_buying_power: "account_balance"` makes dry-run
+sizing read `total_value` rather than the broker's `buying_power`. Without it the dry-run
+week produces nothing: at $60.54 available, an ATM contract at any normal premium fails
+the affordability test, so every candidate would exit as "cannot afford 1 contract" — a
+funding artifact, not a strategy result, and the logs the week exists to fill would stay
+empty. Paper fills consume no cash, so simulating against the balance is the honest
+counterfactual: *what would this strategy have done with this account.*
+
+**Why live mode was deliberately NOT changed.** With real money the broker's buying power
+is the only honest number, because the balance is shared — sizing off it would be spending
+money another strategy already holds. The switch is scoped to `dry_run` for that reason,
+and both figures get journalled every cycle so the gap stays visible.
+
+**Two unresolved conflicts, flagged rather than silently patched:**
+
+1. **`max_premium_per_trade_pct_of_daily_start: 25` is now a claim on shared capital.** It
+   is 25% of `total_value`, and `total_value` includes the other strategy's equity. Two
+   strategies sizing off the same total will jointly over-commit. Before live trading
+   resumes this needs an explicit split — a fixed dollar allocation per strategy, or a
+   percentage of *this* strategy's own sleeve rather than the whole account.
+2. **This strategy may simply be unfundable while the other is deployed.** It buys options
+   with settled cash in a cash account. If ~$11.8k sits in equities, there is no cash to
+   buy calls with, and no threshold change fixes that — it is an allocation decision, not
+   a parameter. The dry run is unaffected and will still produce data.
+
+---
+
 ## Execution mechanics
 
 **9:30–9:45 stop_market blackout.** Robinhood rejects resting stop_market orders until

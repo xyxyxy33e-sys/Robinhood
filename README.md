@@ -53,6 +53,12 @@ Where to look:
   (`entry_auto_execute`, `exit_auto_execute`). Edit + push; next run picks it up.
 - **Pause/stop:** disable or delete the Routines (ask Claude, or manage Routines in the
   Claude UI). Deleting the Routines fully stops the system.
+- **Shared account (2026-08-16):** a second strategy also trades this account and now
+  holds nearly all the real buying power ($60.54 of $11,858.54 spendable at the time of
+  writing). While in dry run, sizing uses the account *balance* as notional buying power
+  (`dry_run_notional_buying_power`) so the week still produces data; live mode is
+  unchanged and always uses the broker's real buying power. Before live trading resumes,
+  the two strategies need an explicit capital split — see `docs/RATIONALE.md`.
 - **Funding:** the Agentic account is a cash account — calls need settled cash, and sale
   proceeds settle T+1. The entry run skips the day (and tells you) below
   `min_buying_power_to_trade`.

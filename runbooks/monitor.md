@@ -138,7 +138,9 @@ live mark, forcing an instant sell.
 
 ## 5. Re-entry check
 Only if ALL of: now < 1:30 PM ET · open positions < `max_open_positions` · today's entries
-< `max_new_positions_per_day` · buying power ≥ `min_buying_power_to_trade`.
+< `max_new_positions_per_day` · **available buying power** ≥ `min_buying_power_to_trade`
+(entry.md §0.5 definition — live buying power normally, the notional figure while
+`dry_run`; this account is shared with another strategy).
 
 Run entry.md §1–§4 for a new candidate, call or put. **Leader re-entries rank first**: a
 symbol closed earlier today for a PROFIT is top priority — but only on a resumption
