@@ -46,3 +46,4 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-17,09:37,MRVL,call,2026-09-04,240,OTM1,748,8.07,69,82,2,none,no,"alternate expiry also clears gates; 8/28 closer to dte_target 14. Both post-date 8/27 earnings"
 2026-08-17,09:38,RDDT,put,2026-08-28,170,ATM,276,14.11,68,37,,OI+spread,no,"ATM probe, tape not qualified — chain dead both gates"
 2026-08-17,09:38,SMCI,put,2026-08-28,38,ATM,853,12.31,214,188,,spread,no,"ATM probe, tape not qualified — OI and depth fine, single-gate spread failure (spread-watch)"
+2026-08-17,09:45,LRCX,call,2026-08-28,340,ATM,1608,10.70,4,36,1,spread+size,no,"promoted candidate probe (premarket_confirm). Earnings 2026-10-21 CLEAR. Affordable at $1495/contract despite $338 underlying — the scanner's $5-250 band would never surface it. Both failures marginal and both move intraday"
