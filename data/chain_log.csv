@@ -51,3 +51,6 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-17,09:54,SMCI,put,2026-08-28,38,ATM,853,7.59,96,285,,none,no,"SPREAD HEALED 12.31%->7.59%, now CLEARS all three gates. Out of scope this cycle (calls only) — recorded because it is the first live instance of a spread-watch name actually clearing"
 2026-08-17,10:53,SMCI,put,2026-08-28,38,ITM1,853,9.39,64,186,13,none,yes,"SELECTED by band rule (closest to ATM among passers, 0.09 from spot). Spread now 9.39% — healed from 12.31% at 09:38 and holding under the gate. Would size 13 contracts @ $2.13 = $2,769.00. THIN (OI 853 < 2500)"
 2026-08-17,10:53,SMCI,put,2026-08-28,37,ATM,339,11.62,112,349,18,OI+spread,no,"anchor strike (first <= spot) FAILS both OI and spread — the band search again had to look ITM to find the viable strike"
+2026-08-17,11:02,LRCX,call,2026-08-28,335,ITM1,156,13.26,102,53,1,OI+spread,no,"band: 1 ITM fails both"
+2026-08-17,11:02,LRCX,call,2026-08-28,340,ATM,1608,7.12,14,35,1,none,yes,"SELECTED — ATM anchor passes cleanly for the first time today. Spread healed 11.96% (09:54) -> 7.12%. Re-verified at review: 6.49%"
+2026-08-17,11:02,LRCX,call,2026-08-28,345,OTM1,106,9.71,49,17,2,OI,no,"band: 1 OTM fails OI"
