@@ -1,2 +1,3 @@
 date,time_et,event,symbol,contract,qty,price,gross_pnl,fees,net_pnl,paper_equity,note
 2026-08-16,23:31,OPENING_BALANCE,,,,,,,,11858.54,"snapshot of get_portfolio total_value; paper book starts 2026-08-17"
+2026-08-17,12:37,PAPER_EXIT,LRCX,LRCX 260828C00340000,1,15.60,20.00,0.09,19.91,11878.45,"stop-out: mark 16.575 through the 16.60 armed floor; filled at the 15.60 bid (THIN, ~$1.95 spread) = $100/contract slippage below the stop. Entry 15.40 at 11:01. HWM 17.050 (+$165 unrealized) at 12:25."
