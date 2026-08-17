@@ -29,3 +29,6 @@ date,time_et,symbol,direction,leg_start_et,leg_age_min,bars_in_direction,volume_
 2026-08-17,10:44,SMCI,put,,,4,0.94,bars[7:13] med,yes,,,declined,VOLUME_ONLY,,,"still volume-only; new day low -4.09%, run 4/4, volume improving 0.59x->0.94x but short of 1.5"
 2026-08-17,10:44,LRCX,call,,,5,1.07,bars[7:13] med,yes,,,declined,tape+volume,,,"+1.50%, still below open; run 5/5 directional"
 2026-08-17,10:44,RDDT,put,,,3,0.61,bars[7:13] med,yes,,,declined,VWAP+volume,,,""
+2026-08-17,10:52,SMCI,put,,,6,1.87,bars[9:15] med,yes,,,QUALIFIED_NOT_TAKEN,scope-calls-only,,,"*** FIRST COMPLETE SETUP OF THE PAPER RUN *** All conditions met: below open 39.31, day -4.85% (new low), below VWAP, run 6/6 down-closes, decision bar 14:45 O38.165 C37.9087 directional, volume 1.87x vs 1.5 bar. Volume expanded 0.59->0.94->1.87x exactly as required, no relaxation. Chain also clears: $38P OI 853, spread 9.39%, depth 64/186 vs 26 required. NOT ENTERED — the entry instruction scoped this cycle to calls. enable_puts is true in config, so the block is the phase prompt, not the strategy."
+2026-08-17,10:52,LRCX,call,,,2,0.89,bars[9:15] med,yes,,,declined,day+1.87%+run+volume,,,"crept to +1.87%, still under the bar"
+2026-08-17,10:52,RDDT,put,,,1,1.60,bars[9:15] med,no,,,declined,VWAP+run+structure,,,"volume expanded 1.60x but decision bar is an UP candle and price is above VWAP"
