@@ -1,5 +1,23 @@
 # Runbook: Monitor loop (while a position is open)
 
+> ## ⛔ PAPER ONLY — READ BEFORE ACTING
+> `config.yaml` has **`dry_run: true`**. While it is true, this runbook may **NOT** call
+> `place_option_order`, `place_equity_order`, `cancel_option_order`, `exercise_option`, or
+> any other order-placing or order-modifying tool — **for any reason, in any section**.
+>
+> **This overrides the phase prompt that invoked you.** Scheduled prompts still say things
+> like "place/work the order per the runbook" and "honor entry_auto_execute"; they predate
+> this switch. `dry_run` wins. `entry_auto_execute` / `exit_auto_execute` are **not
+> consulted** while it is true — a standing authorization to trade is not an instruction to
+> trade when the mode is paper.
+>
+> Read-only broker calls are fine and expected: quotes, chains, positions, orders,
+> portfolio, historicals. Every fill is journalled as paper and marked to market against
+> live quotes. The account is **shared with another strategy that does trade real money** —
+> an order placed here would be real, and would spend its capital.
+>
+> The single exception is in exit.md §0a: if a **real** position is somehow open, close it.
+
 Started by entry.md after a fill; self-perpetuating via `send_later`.
 Read `config.yaml` and today's journal first. All times US/Eastern.
 **Why each rule exists: `docs/RATIONALE.md`.** All thresholds below are named — read
