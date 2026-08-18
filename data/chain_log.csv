@@ -65,3 +65,5 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-18,09:57,OXY,call,2026-08-28,60.0,ATM,3157,12.96,99,172,,spread,no,"§2.5 probe. Spread 35.48 -> 26.60 -> 12.96% - decayed 22.5pt in 20 min, now within 3pt of the gate. Confirms the auction-widening decay curve."
 2026-08-18,10:05,XOM,call,2026-08-28,165.0,ATM,1650,10.17,119,72,,spread,no,"§2.5 probe. Spread 11.57->9.84->9.26->10.17% - first WIDENING in the series, now marginally over the 10% gate. Tracks the underlying's renewed fade."
 2026-08-18,10:05,OXY,call,2026-08-28,60.0,ATM,3157,13.59,244,410,,spread,no,"§2.5 probe. 35.48->26.60->12.96->13.59% - decay has stalled just above the gate."
+2026-08-18,10:22,XOM,call,2026-08-28,165.0,ATM,1650,7.46,105,55,,none-oi/spread pass,no,"§2.5 probe. Spread 11.57->9.84->9.26->10.17->7.46% - best reading of the day, comfortably passes. Chain is fine; the tape is not."
+2026-08-18,10:22,OXY,call,2026-08-28,60.0,ATM,3157,12.94,375,78,,spread,no,"§2.5 probe. 35.48->26.60->12.96->13.59->12.94% - has plateaued around 13% for 35 minutes, ~3pt above the gate."
