@@ -54,3 +54,6 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-17,11:02,LRCX,call,2026-08-28,335,ITM1,156,13.26,102,53,1,OI+spread,no,"band: 1 ITM fails both"
 2026-08-17,11:02,LRCX,call,2026-08-28,340,ATM,1608,7.12,14,35,1,none,yes,"SELECTED — ATM anchor passes cleanly for the first time today. Spread healed 11.96% (09:54) -> 7.12%. Re-verified at review: 6.49%"
 2026-08-17,11:02,LRCX,call,2026-08-28,345,OTM1,106,9.71,49,17,2,OI,no,"band: 1 OTM fails OI"
+2026-08-18,09:37,SMCI,put,2026-08-28,37.0,ATM,649,12.64,294,322,,spread,no,"tape-declined probe per §2.5. OI passes (649>=500). Spread WIDENED 10.99% (8/17 close) -> 12.64% live at the open."
+2026-08-18,09:37,XOM,call,2026-08-28,165.0,ATM,1650,11.57,79,77,,spread,no,"tape-declined probe per §2.5. OI passes (1650). Spread WIDENED 9.12% (8/17 close) -> 11.57% live - was the cleaner of the two call chains pre-market and now fails."
+2026-08-18,09:37,OXY,call,2026-08-28,60.0,ATM,3157,35.48,903,559,,spread,no,"tape-declined probe per §2.5. OI passes (3157, best of the screen). Spread BLEW OUT 5.13% (8/17 close) -> 35.48% live. Depth huge (903/559) but the quote is a mile wide at the open."
