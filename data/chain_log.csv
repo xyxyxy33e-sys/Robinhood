@@ -69,3 +69,5 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-18,10:22,OXY,call,2026-08-28,60.0,ATM,3157,12.94,375,78,,spread,no,"§2.5 probe. 35.48->26.60->12.96->13.59->12.94% - has plateaued around 13% for 35 minutes, ~3pt above the gate."
 2026-08-18,10:32,OXY,call,2026-08-28,60.0,ATM,3157,15.96,340,309,,spread,no,"§2.5 probe. Spread WIDENED 12.94 -> 15.96% on the volume thrust - makers backing away as the underlying moves. OI 3157, depth 340/309. Would fail the gate even if the tape qualified."
 2026-08-18,10:32,XOM,call,2026-08-28,165.0,ATM,1650,6.61,65,23,,none-oi/spread pass,no,"§2.5 probe. Spread 7.46 -> 6.61%, best of the day. Chain immaculate; the tape is dead."
+2026-08-18,10:43,XOM,call,2026-08-28,165.0,ATM,1650,7.30,49,72,,none-oi/spread pass,no,"§2.5 probe. 6.61 -> 7.30%. Still passes comfortably."
+2026-08-18,10:43,OXY,call,2026-08-28,60.0,ATM,3157,10.95,127,72,,spread,no,"§2.5 probe. 15.96 -> 10.95% - narrowed sharply as the thrust died, now just 0.95pt over the gate. Consistent with makers widening on the push and re-tightening once it failed."
