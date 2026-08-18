@@ -75,3 +75,5 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-18,10:53,OXY,call,2026-08-28,60.0,ATM,3157,16.98,710,37,,spread,no,"§2.5 probe. 10.95 -> 16.98%. Bid depth 710 vs ask 37 - heavily one-sided."
 2026-08-18,11:04,XOM,call,2026-08-28,165.0,ATM,1650,7.55,38,21,,none-oi/spread pass,no,"§2.5 probe. 10.06 -> 7.55%, back through the gate as the underlying bounced."
 2026-08-18,11:04,OXY,call,2026-08-28,60.0,ATM,3157,9.09,211,24,,none-oi/spread pass,no,"§2.5 probe. 16.98 -> 9.09% - PASSES for the first time today. OI 3157."
+2026-08-18,11:18,XOM,call,2026-08-28,165.0,ATM,1650,7.45,45,24,9,none-oi/spread pass; depth 24 vs 18 required at qty 9,no,"§2.5 probe, priced ahead of a possible qualifier. Spread 7.45% PASSES. At mid 3.085 the size would be qty 9 (min(2969.61, 11878.45)/308.50), needing depth max(5, 18) = 18 a side: bid 45 OK, ask 24 OK. Contract is READY if the tape clears."
+2026-08-18,11:18,OXY,call,2026-08-28,60.0,ATM,3157,6.84,11,176,,none-oi/spread pass,no,"§2.5 probe. 9.09 -> 6.84%, best of the day. Bid depth only 11 though."
