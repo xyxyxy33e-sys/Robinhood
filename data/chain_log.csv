@@ -71,3 +71,5 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-18,10:32,XOM,call,2026-08-28,165.0,ATM,1650,6.61,65,23,,none-oi/spread pass,no,"§2.5 probe. Spread 7.46 -> 6.61%, best of the day. Chain immaculate; the tape is dead."
 2026-08-18,10:43,XOM,call,2026-08-28,165.0,ATM,1650,7.30,49,72,,none-oi/spread pass,no,"§2.5 probe. 6.61 -> 7.30%. Still passes comfortably."
 2026-08-18,10:43,OXY,call,2026-08-28,60.0,ATM,3157,10.95,127,72,,spread,no,"§2.5 probe. 15.96 -> 10.95% - narrowed sharply as the thrust died, now just 0.95pt over the gate. Consistent with makers widening on the push and re-tightening once it failed."
+2026-08-18,10:53,XOM,call,2026-08-28,165.0,ATM,1650,10.06,57,44,,spread,no,"§2.5 probe. 7.30 -> 10.06% - widened as the underlying broke to session lows. Mid fell 2.740 -> 2.485."
+2026-08-18,10:53,OXY,call,2026-08-28,60.0,ATM,3157,16.98,710,37,,spread,no,"§2.5 probe. 10.95 -> 16.98%. Bid depth 710 vs ask 37 - heavily one-sided."
