@@ -117,3 +117,6 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-19,10:15,LRCX,put,2026-08-28,305,ATM,184,15.78,41,37,n/a,OI+spread,no,"Fails."
 2026-08-19,10:15,LRCX,put,2026-08-28,300,1-OTM,181,17.95,40,89,n/a,OI+spread,no,"Fails."
 2026-08-19,10:15,LRCX,put,2026-08-28,295,2-OTM,287,18.78,49,99,n/a,OI+spread,no,"Fails. EIGHT strikes across two expiries, not one clears OI 500, while the $320P two steps ITM carries 972."
+2026-08-19,11:30,LRCX,put,2026-09-04,315,1-ITM,11,13.37,36,14,n/a,OI,no,"FINAL UNPRICED BAND MEMBER - and it is the worst of all. OI 11. Priced only because the 4.322x tape signal earned a full band check."
+2026-08-19,11:30,LRCX,put,2026-09-04,310,ATM,343,15.09,61,25,n/a,OI,no,"Re-confirmed unchanged from 10:15 - OI is static intraday exactly as the runbook says. Mark 15.575 = $1,558/contract; even had OI passed, the $2,954.43 cap allows only 1 contract."
+2026-08-19,11:30,LRCX,put,2026-08-28,315,1-ITM,155,7.84,16,78,n/a,OI,no,"Spread 7.84% PASSES - the only LRCX put strike all day to clear the spread gate - but OI 155 kills it. Static, so it stays dead."
