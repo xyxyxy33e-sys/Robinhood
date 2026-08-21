@@ -179,3 +179,8 @@ date,time_et,symbol,direction,expiry,strike,moneyness,oi,spread_pct,bid_size,ask
 2026-08-20,12:53,MARA,call,2026-09-04,11,ATM,1725,4.32,117,20,42,depth,no,"THE ATM STRIKE LOST ON DEPTH ALONE. Spread 4.32% and OI 1,725 both comfortable; ask_size collapsed 230 -> 20 in six minutes while qty 42 needs 84. This is the third time today the depth gate has redirected the 2.2 selection away from the strike nearest spot."
 2026-08-20,12:53,MARA,call,2026-09-04,11.5,1_OTM,861,5.83,173,163,57,depth,no,"qty 57 needs 114 vs ask_size 163 - passes depth this cycle actually, but 0.685 from spot so it loses 2.2 regardless."
 2026-08-20,12:53,MARA,call,2026-09-04,12,2_OTM,1098,8.22,200,171,80,,passes (not closest),"Fully eligible, 1.185 from spot."
+2026-08-21,10:49,RIOT,put,2026-09-04,20.50,ITM_1,54,12.39,165,96,26,"OI 54<500; spread 12.39%>10",FALSE,"§2.2 band on ATM anchor 20.00 with spot 19.9574"
+2026-08-21,10:49,RIOT,put,2026-09-04,20.00,ATM,367,16.84,19,426,26,"OI 367<500; spread 16.84%>10",FALSE,"highest OI in the band and still 133 short of the gate"
+2026-08-21,10:49,RIOT,put,2026-09-04,19.50,OTM_1,156,7.79,11,50,26,"OI 156<500; depth ask 50 < required 52",FALSE,"ONLY strike in the band whose spread passes (7.79%) — fails OI and depth instead"
+2026-08-21,10:49,RIOT,put,2026-09-04,19.00,OTM_2,327,17.02,65,253,26,"OI 327<500; spread 17.02%>10",FALSE,""
+2026-08-21,10:49,RIOT,put,2026-09-11,20.00,ATM,234,14.20,60,386,26,"OI 234<500; spread 14.20%>10",FALSE,"§2.1 advance to next-closest expiry after 9/4 failed §2.3; tie 8/28 vs 9/11 broke toward LONGER. Also fails. 8/28 not yet priced."
