@@ -649,3 +649,92 @@ gains, not catastrophic downside. (An earlier framing of this as "genuine capita
 overstated it.)
 
 This is what motivates the cadence design in `runbooks/monitor.md`.
+
+---
+
+## The week of 2026-08-17 — the first time the leg rule was actually measured
+
+Six weeks of journals had argued thresholds from anecdote. The reason was mechanical and
+sat in plain sight: `outcome_30m` and `outcome_eod` were populated on **4.1% and 4.9%** of
+267 `leg_log` rows. entry.md said the file existed so "no threshold here can be validated"
+without them — and then nobody filled them. Separately, `data/bars/` held **9 name-days
+from 7/23–8/14** while the strategy had evaluated **31 more live and added none**. The
+harness in `tools/backtest_legs.py` was already capable; it was starved.
+
+Fixing both (`tools/backfill_outcomes.py`, plus the corpus refresh now mandated in
+eod_report.md §4–5) took the corpus from 9 to 33 name-days, 1,640 decision points, and
+263 of 267 leg rows with measured outcomes. What that showed:
+
+**The volume leg is anti-predictive, and significantly so.**
+
+| `volume_ratio` | n | mean fwd 30 min | win rate |
+|---|---|---|---|
+| < 0.8 | 76 | **+0.19%** | 47% |
+| 0.8–1.0 | 40 | **+0.44%** | 65% |
+| 1.0–1.25 | 24 | **+0.30%** | 54% |
+| 1.25–1.5 | 17 | −0.26% | 35% |
+| 1.5–2.0 | 21 | −0.24% | 43% |
+| ≥ 2.0 | 13 | −0.12% | 31% |
+
+Below the gate: n=157, mean **+0.223%**, 52% win. Above it: n=34, mean **−0.191%**, 38%
+win. Difference −0.415%, standard error 0.155, **t = −2.68**. The streak leg inverts the
+same way — streaks 0–2 all positive, streak 3 −0.06%, streak 4 −0.32% on 22% wins.
+
+Modelled through the real exit cascade at 7.9× leverage, **every** volume threshold loses,
+and the live setting is the worst of them: 1.00 → −3.0% avg, 1.25 → −4.4%, **1.50 →
+−6.9% (4 wins in 23)**, 1.75 → −6.3%, 2.00 → −5.4%. Widening the stop does not rescue it
+(−20% → −7.3%, −30% → −5.7%, −50% → −6.2%): the problem is not exit geometry.
+
+The mechanism is consistent across every angle: a high-volume 5-minute bar in an
+already-extended name is more often the **climax** than the continuation. Average MFE at
+the gate is +1.24% against an average MAE of −1.85% — the adverse excursion is the larger
+one, which at 7.9× leverage is fatal regardless of where the stop sits.
+
+**Why the number was not simply retuned.** The evidence says the gate is *directionally*
+wrong, not mis-calibrated. Treating a sign error as a scale error is how you fit noise, so
+`late_entry_min_volume_ratio` stays at 1.5 with the finding recorded against it and an
+explicit decision rule: if the negative relationship survives to n>300 rows across more
+than one regime, demote the leg from a veto to advisory. Caveats that keep this short of
+proof: these are underlying moves, not option P&L; nine sessions dominated by a single
+crypto complex; every row is already a screened candidate, so this measures what §1.3 adds
+*on top of* candidate selection, not the strategy's total edge.
+
+**The one change made: the chase guard no longer switches off at 10:30.**
+
+`config.yaml: chase_guard_all_session_pct: 1.0`. §1.3's structure test (b) rewards a **new
+local extreme**, so it selects breakout bars by construction. Gate B rejects entries within
+1.5% of the session extreme — but only until `opening_window_end_et`. After 10:30 nothing
+restrained buying the top, and the conflict was invisible earlier precisely *because*
+Gate B was masking it. Requiring distance from the extreme flips modelled P&L from
+negative to positive at every volume threshold, monotonically:
+
+| min distance | vol ≥ 1.00 | vol ≥ 1.25 | vol ≥ 1.50 |
+|---|---|---|---|
+| off (today) | −4.0% | −3.7% | −6.7% |
+| 0.5% | −2.4% | −3.9% | −0.8% |
+| **1.0%** | **+0.9%** | **+12.4%** | **+12.4%** |
+| 1.5% | +7.9% | +20.9% | +20.9% |
+
+Three independent series, same monotone direction — that is what makes it credible. The
+**magnitudes are not** trustworthy: n collapses to 2–5 at the wider levels, so 1.0% was
+chosen as the point where the sign flips while retaining the most trades, explicitly not
+because +12.4% is an expectation. Live witness the same week: COIN on 8/21 filled 0.42%
+below a session high set on the qualifying bar itself, with Gate B already inactive, and
+stopped at −25%; its `leg_log` row records **MFE +0.14%** — it was never meaningfully green.
+
+**Corrections to claims made in the journals that week.** Both were asserted repeatedly
+before the data existed, and both are wrong:
+
+- *"Volume confirms the wrong direction — the confirmed bars close down."* No. Pearson
+  r(streak, volume_ratio) is **+0.201** for calls and **+0.194** for puts; volume is mildly
+  *positively* associated with the trade direction. The real problem is that high volume
+  predicts a worse *forward* return, which is a different claim entirely and was reached by
+  cherry-picking instances.
+- *"Open interest is the binding chain gate."* No. Across 177 priced strikes, **51.4% fail
+  the spread gate** and 32.4% fail OI. And spread is mostly a clock: median 13.29% at 09:00,
+  10.65% at 10:00, 7.38% at 11:00, 4.32% at 12:00. The gate at 10% sits almost exactly on
+  the median of the observed distribution, so it rejects roughly half of everything by
+  construction, and it rejects hardest at the hour the strategy trades most. Per-symbol it
+  is structural — RIOT median 14.20%, SMCI 13.83%, LRCX 12.59% never clear it; MARA 5.41%,
+  COIN 5.87%, NBIS 2.62% always do. "No tradable chain" was largely "priced too early, on
+  names whose chains are permanently wide."

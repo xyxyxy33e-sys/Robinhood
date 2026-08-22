@@ -47,16 +47,25 @@ def analyze(bars,i,prior_close,up=True):
 if __name__=='__main__':
     import os,sys
     D=os.path.join(os.path.dirname(__file__),'..','data','bars')
-    # (file, prior_close, is_call, outcome_label)
-    cases=[('2026-07-23_TSLA.csv',374.01,False,'WIN +$920 put'),
-           ('2026-07-23_GOOGL.csv',342.09,False,'WIN +$405 put'),
-           ('2026-07-31_AAPL.csv',333.43,False,'LOSS -$1568 put'),
-           ('2026-08-04_PLTR.csv',125.65,True ,'WIN +$725'),
-           ('2026-08-06_U.csv',35.47,True ,'LOSS -$1536'),
-           ('2026-08-12_NBIS.csv',193.23,True ,'uptrend +27.4%'),
-           ('2026-08-13_BIRK.csv',36.74,True ,'no-trade'),
-           ('2026-08-14_RDDT.csv',158.12,True ,'no-trade'),
-           ('2026-08-14_NU.csv',13.93,True ,'no-trade')]
+    # Cases are loaded from data/bars/manifest.csv (file,prior_close,is_call,direction),
+    # which is generated from the live leg_log so the backtest corpus tracks what the
+    # strategy actually evaluated. Legacy hand-listed cases are appended if still present.
+    MAN=os.path.join(D,'manifest.csv')
+    cases=[]
+    if os.path.exists(MAN):
+        import csv as _csv
+        for row in _csv.DictReader(open(MAN)):
+            cases.append((row['file'],float(row['prior_close']),row['is_call']=='1',row['direction']))
+    legacy=[('2026-07-23_TSLA.csv',374.01,False,'WIN +$920 put'),
+            ('2026-07-23_GOOGL.csv',342.09,False,'WIN +$405 put'),
+            ('2026-07-31_AAPL.csv',333.43,False,'LOSS -$1568 put'),
+            ('2026-08-04_PLTR.csv',125.65,True ,'WIN +$725'),
+            ('2026-08-06_U.csv',35.47,True ,'LOSS -$1536'),
+            ('2026-08-12_NBIS.csv',193.23,True ,'uptrend +27.4%'),
+            ('2026-08-13_BIRK.csv',36.74,True ,'no-trade'),
+            ('2026-08-14_NU.csv',13.93,True ,'no-trade')]
+    have={c[0] for c in cases}
+    cases += [c for c in legacy if c[0] not in have]
     rows=[]
     for f,pc,up,lab in cases:
         p=os.path.join(D,f)
@@ -76,6 +85,8 @@ if __name__=='__main__':
     # theta at 14 DTE, fixed round-trip spread friction. Ignores IV moves.
     if '--pnl' in sys.argv:
         LEV=float(os.environ.get('LEV','7.9')); THETA=-3.3; FRIC=-3.0
+        STOP=float(os.environ.get('STOP','-25')); ARM=float(os.environ.get('ARM','12'))
+        TRAIL=float(os.environ.get('TRAIL','20')); FLOOR=float(os.environ.get('FLOOR','10'))
         def sim(b,i,up):
             e=b[i]['c']; hwm=0.0; armed=False; n=0
             for y in b[i+1:]:
@@ -84,10 +95,10 @@ if __name__=='__main__':
                 hi =(((y['h']-e)/e*100) if up else ((e-y['l'])/e*100))*LEV
                 lo =(((y['l']-e)/e*100) if up else ((e-y['h'])/e*100))*LEV
                 hwm=max(hwm,hi)
-                if lo<=-25: return -25+adj
+                if lo<=STOP: return STOP+adj
                 if hi>=50:  return 50+adj
-                if hwm>=12: armed=True
-                if armed and pnl<=max(10,hwm-20): return max(10,hwm-20)+adj
+                if hwm>=ARM: armed=True
+                if armed and pnl<=max(FLOOR,hwm-TRAIL): return max(FLOOR,hwm-TRAIL)+adj
                 if not armed and hwm>=8 and pnl<=-3: return -3+adj
             return (((b[-1]['c']-e)/e*100) if up else ((e-b[-1]['c'])/e*100))*LEV+adj
         print(f"modelled P&L, one trade per name-day, {LEV}x leverage")

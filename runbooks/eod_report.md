@@ -40,3 +40,40 @@ user made in the app. Note the other strategy trades equities in this same accou
 ## 3. Record
 Append "EOD report sent HH:MM (message id …)" to today's journal, commit
 ("journal: YYYY-MM-DD EOD report sent"), push.
+
+**Marker check (§0) must match the whole line, not a substring.** Use `grep -cx` (or an
+exact-line comparison), never a bare `grep -c`. The phrase appears in ordinary prose
+whenever a journal *discusses* the guard, and that has produced a false positive twice:
+on 8/19 the phrase appeared while explaining the marker had been deliberately WITHHELD
+after a failed send — a naive count would have suppressed a report that never went out —
+and again on 8/21 when the guard's own audit note created a second match.
+
+## 4. Keep the corpus current (do this BEFORE §5)
+For every symbol evaluated today (the distinct `symbol` values in today's `data/leg_log.csv`
+rows), pull RTH 5-minute bars and write `data/bars/YYYY-MM-DD_SYM.csv` with header
+`t,o,h,l,c,v` where `t` is UTC `HHMM`:
+
+```
+get_equity_historicals(symbols=[…], interval='5minute',
+                       start_time='YYYY-MM-DDT13:30:00Z', end_time='YYYY-MM-DDT20:00:00Z')
+```
+
+Large responses persist to a file rather than returning inline — read that file with `jq`
+or python rather than pulling it into context. Then append today's rows to
+`data/bars/manifest.csv` (`file,prior_close,is_call,direction`); `prior_close` is the
+previous session's daily close (`interval='day'`).
+
+This step exists because through 8/21 the backtest corpus held 9 name-days from 7/23–8/14
+while the strategy had evaluated 31 more live and added none of them. The harness was
+starved of exactly the data the strategy was generating.
+
+## 5. Maintain the evidence base
+```
+python3 tools/backfill_outcomes.py      # fills outcome_30m / outcome_eod, idempotent
+python3 tools/backtest_legs.py          # leg-rule fires + forward returns
+python3 tools/backtest_legs.py --pnl    # modelled P&L through the real exit cascade
+```
+If `--pnl` is negative at the live `late_entry_min_volume_ratio`, say so in the report in
+one line with the number. As of 2026-08-22 it is: **−6.9% average per trade, 4 wins in 23,
+at the live setting of 1.5** — and every other threshold tested is also negative. That
+sentence belongs in the report until it stops being true.

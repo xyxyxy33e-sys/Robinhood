@@ -201,6 +201,26 @@ min_day_change_pct: 2            # underlying must move at least this % in the t
 late_entry_min_bars: 3           # consecutive 5-min closes in the trade direction.
                                  # 3 bars IS the 15 minutes the old rule asked for —
                                  # stated once now, not twice.
+# *** UNDER REVIEW — MEASURED ANTI-PREDICTIVE, 2026-08-22. DO NOT GO LIVE ON THIS RULE. ***
+# With outcome_30m backfilled across 191 leg_log rows (tools/backfill_outcomes.py), the
+# volume leg's relationship to the next 30 minutes is negative and statistically
+# significant -- it selects the bars that LOSE:
+#     ratio <0.8      n=76  mean fwd30 +0.19%  win 47%
+#     ratio 0.8-1.0   n=40  mean fwd30 +0.44%  win 65%
+#     ratio 1.0-1.25  n=24  mean fwd30 +0.30%  win 54%
+#     ratio 1.25-1.5  n=17  mean fwd30 -0.26%  win 35%
+#     ratio 1.5-2.0   n=21  mean fwd30 -0.24%  win 43%
+#     ratio >=2.0     n=13  mean fwd30 -0.12%  win 31%
+#     below gate n=157 mean +0.223% | above gate n=34 mean -0.191% | diff -0.415%, t=-2.68
+# The streak leg inverts the same way (streak 0-2 positive, streak 3 -0.06%, streak 4
+# -0.32% on 22% wins). Mechanism is consistent with climax/exhaustion: a high-volume
+# 5-min bar in an already-extended name is more often the top than the continuation.
+# The value below is NOT being tuned, because the evidence says the gate is directionally
+# wrong rather than mis-calibrated, and tuning a sign error as if it were a scale error
+# is how you fit noise. Caveats: underlying moves not option P&L; 9 sessions dominated by
+# one crypto complex; every row is already a screened candidate.
+# DECISION RULE for the next review: if the negative relationship still holds at n>300
+# rows spanning more than one regime, demote this leg from a veto to advisory-only.
 late_entry_min_volume_ratio: 1.5 # this bar's volume vs the trailing baseline below.
                                  # Separates the record cleanly: NBIS's real breakout
                                  # measured 2.5-2.9x, BIRK's push 4.3x, against RDDT
@@ -236,4 +256,27 @@ opening_bar_min_close_position: 0.50  # GATE A: first 5-min RTH bar must close i
                                  # close back above that bar's high.
 opening_window_chase_guard_pct: 1.5   # GATE B: before opening_window_end_et, reject an entry
                                  # within this % of the session high (session low for puts)
-opening_window_end_et: "10:30"   # Gate B inactive after this. Gate A has no time limit.
+opening_window_end_et: "10:30"   # Gate B's OPENING-WINDOW level ends here. Gate A has no
+                                 # time limit. After this the all-session level below applies.
+
+# GATE B, all-session extension (added 2026-08-22 from the 33-name-day corpus).
+# Gate B used to switch off entirely at 10:30, after which nothing restrained buying the
+# session extreme -- while §1.3 structure (b) rewards a NEW LOCAL EXTREME and therefore
+# selects breakout bars by construction. The two rules pulled against each other and the
+# conflict was invisible before 10:30 because Gate B was doing the restraining.
+# Backtest over data/bars (tools/backtest_legs.py + the chase sweep): requiring distance
+# from the session extreme flips modelled P&L from negative to positive at EVERY volume
+# threshold tested, monotonically --
+#     vol>=1.00  off -4.0%avg | 0.5% -2.4% | 1.0% +0.9% | 1.5% +7.9%
+#     vol>=1.25  off -3.7%avg | 0.5% -3.9% | 1.0% +12.4% | 1.5% +20.9%
+#     vol>=1.50  off -6.7%avg | 0.5% -0.8% | 1.0% +12.4% | 1.5% +20.9%
+# The DIRECTION is consistent across three independent series; the MAGNITUDES are not
+# trustworthy (n falls to 2-5 at the wider levels). 1.0 is chosen as the level where the
+# sign flips while retaining the most trades, NOT because +12.4% is a real expectation.
+# Live witness: 2026-08-21 COIN filled 0.42% below a session high set on the qualifying
+# bar itself, with Gate B already inactive, and stopped out at -25%. Its leg_log row
+# records mfe +0.14% -- the position was never meaningfully green.
+chase_guard_all_session_pct: 1.0 # reject an entry closer than this to the session high
+                                 # (session low for puts) at ANY time in the entry window.
+                                 # Blocking-only, like Gate B: veto, never promote; a name
+                                 # blocked now frequently qualifies after a pullback.

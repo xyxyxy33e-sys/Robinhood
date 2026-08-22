@@ -109,13 +109,32 @@ without either filling a position or arming the next one.
    - **Log every leg you evaluate** to `data/leg_log.csv` per §1.3b — declined *and*
      accepted. This is the only way the thresholds above ever become testable.
 
-   **§1.3b — leg log (mandatory, every evaluated leg, every cycle).**
+   **§1.3b — leg log (mandatory, every evaluated leg, every cycle; CONTROLLED VOCABULARY).**
    Append one row to `data/leg_log.csv` for each candidate whose tape you measured this
    cycle, whether or not it qualified. Columns are in the file header. Leave a field blank
-   rather than guessing it. Fill `outcome_30m` / `outcome_eod` on a later cycle or in the
-   exit/EOD phase, retro-editing the row you wrote earlier. Without both the declines and
-   the acceptances the sample stays survivorship-biased and no threshold here can be
-   validated — that is the entire point of the file.
+   rather than guessing it. Without both the declines and the acceptances the sample stays
+   survivorship-biased and no threshold here can be validated — that is the entire point
+   of the file.
+
+   **Do not hand-fill `outcome_30m` / `outcome_eod`.** Through 2026-08-21 they were
+   populated on 4.1% / 4.9% of 267 rows, so for six weeks no threshold in this strategy
+   was ever checked against what happened next, and every "finding" in the journals was
+   argued from anecdote. They are now generated mechanically:
+
+   ```
+   python3 tools/backfill_outcomes.py          # idempotent; fills blanks only
+   ```
+
+   It reads `data/bars/YYYY-MM-DD_SYM.csv` and writes direction-adjusted underlying moves
+   (positive = the trade direction was right), plus MFE/MAE. **The EOD phase must run it,
+   after refreshing `data/bars` for the day's evaluated names** — see `eod_report.md` §5.
+
+   **Use these exact values so the file stays machine-readable** (19 distinct `decision`
+   spellings and 6 spellings of `structure_intact` had accumulated by 8/21):
+   - `decision`: `declined` · `entered` · `qualified_not_taken` · `qualified_blocked_chain`
+     · `qualified_aborted_3.4` · `qualified_expired` · `dropped`
+   - `structure_intact`: `yes` · `no` · `partial`
+   - `gate_a` / `gate_b`: `pass` · `skip` · `n/a` (append `_<value>` if useful, e.g. `skip_0.417`)
 
 4. **Opening gap-fade guard** — skip entirely if `opening_fade_guard_enabled` is false.
    Blocking-only: can veto, never promote. Runs AFTER the §1.3 tape check.
@@ -131,7 +150,17 @@ without either filling a position or arming the next one.
    - **Gate B — chase guard.** While now < `opening_window_end_et`, reject if price is
      within `opening_window_chase_guard_pct`% of the session high (session low for puts).
      Re-check next cycle; a name blocked now frequently qualifies after a pullback.
-     Inactive after that time.
+   - **Gate B-all — the chase guard does NOT switch off at 10:30** (added 2026-08-22).
+     For the whole entry window, reject if price is within `chase_guard_all_session_pct`%
+     of the session high (session low for puts). Same semantics: blocking-only, re-check
+     next cycle. This runs even when §1.4's gap test does not apply, because it is not a
+     gap rule — it is a correction to §1.3 structure (b), which rewards a **new local
+     extreme** and therefore selects breakout bars by construction. Before 10:30 Gate B
+     masked that; after 10:30 nothing did.
+     Requiring distance from the extreme flips modelled P&L from negative to positive at
+     every volume threshold tested (see `config.yaml` for the table and its caveats).
+     Live witness: COIN on 8/21 filled 0.42% below a session high set on the qualifying
+     bar itself and stopped out at −25%, with a recorded MFE of +0.14%.
    - **Journal every veto with its measured numbers**, not just the verdict — both gates
      are under review and their live hit rate must stay auditable.
 
