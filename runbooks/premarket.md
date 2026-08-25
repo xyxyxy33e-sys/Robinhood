@@ -47,11 +47,17 @@ direction (call/put), catalyst (one line), prior close, pre-market price, ATM OI
 (from the pre-screen below), and a "disqualify if" condition for the entry check.
 Explicitly list names REJECTED for earnings-before-expiry or binary-event risk.
 
-**Options-chain pre-screen (added 2026-07-24):** for each ranked candidate, pull the
-likely trade contract's quote — `get_option_chains` → expiration per the entry rules
-([dte_min, dte_max], or nearest monthly to dte_max_no_weekly) → `get_option_instruments`
-at the strike nearest the pre-market price → `get_option_quotes` — and record open
-interest + spread in the candidate table. **OI is an end-of-day figure; it will not
+**Options-chain pre-screen (added 2026-07-24; corrected 2026-08-25).** For each ranked
+candidate, pull the expiration per the entry rules ([dte_min, dte_max], or nearest monthly
+to dte_max_no_weekly) and price the **WHOLE §2.2 BAND** — the ATM anchor plus
+`strike_search_steps_itm` steps in and `strike_search_steps_otm` steps out — then record
+open interest + spread for every strike in the candidate table.
+
+> **Do not screen only the strike nearest the pre-market price.** That is what this
+> section used to say, and on 2026-08-25 it retired SMCI as "chain dead" on an ATM OI of
+> 355 when the band's ITM strike carried **729** and cleared the gate outright. §2.2
+> selects from four strikes; screening one of them can throw away a tradable name. A
+> candidate is "chain dead" only when **every** strike in the band fails. **OI is an end-of-day figure; it will not
 change during the session**, so this pre-market reading is authoritative all day: a name
 whose ATM and first step-out strikes both sit far below `min_open_interest` cannot pass
 the entry liquidity gate today no matter what its tape does. Flag those names
