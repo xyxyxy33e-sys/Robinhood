@@ -37,3 +37,7 @@ file,prior_close,is_call,direction
 2026-08-24_RIOT.csv,19.83,1,call
 2026-08-25_SMCI.csv,35.17,1,call
 2026-08-25_INTC.csv,87.26,1,call
+2026-08-26_ANF.csv,108.9,1,call
+2026-08-26_DY.csv,351.8,0,put
+2026-08-26_PLAB.csv,29.32,1,call
+2026-08-26_KSS.csv,17.68,0,put
