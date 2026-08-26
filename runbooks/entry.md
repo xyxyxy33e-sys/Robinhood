@@ -23,6 +23,26 @@ All times US/Eastern. Account = `account_number`.
 **Why each rule exists: `docs/RATIONALE.md`.** Read thresholds from `config.yaml` by
 name, never from a number written in prose.
 
+## Bar pulls: MANDATORY session-start guard (added 2026-08-26)
+
+Every bar pull for leg evaluation **must** use `start_time = <date>T13:30:00Z` — the
+full regular session, never narrowed. VWAP, the session high and low, and the
+rolling-median baseline are all computed over the whole series; a pull that starts
+later silently produces wrong numbers rather than an error.
+
+I got this wrong three times: 8/25 12:55 (`16:00:00Z`), 8/26 11:12 (`14:20:00Z`),
+8/26 13:20 (`17:00:00Z`). The first two were written up in the journal and the error
+recurred anyway, so **the check is no longer a note — it is code**:
+
+```
+python3 tools/eval_entry.py <payload.json> <prev_closes.json> <directions.json>
+```
+
+`tools/eval_entry.py` refuses to evaluate (exit 2) unless the first bar of every
+symbol begins at `...T13:30:00Z`. Feed it the `get_equity_historicals` payload
+verbatim; do not hand-transcribe bars into an ad-hoc script, which was its own
+source of error. Do not evaluate legs by any other route.
+
 ## Cadence (revised 2026-08-14)
 **Re-check every 5 minutes**, not every minute.
 
