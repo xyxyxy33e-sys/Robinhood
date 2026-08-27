@@ -41,3 +41,7 @@ file,prior_close,is_call,direction
 2026-08-26_DY.csv,351.8,0,put
 2026-08-26_PLAB.csv,29.32,1,call
 2026-08-26_KSS.csv,17.68,0,put
+2026-08-27_NVDA.csv,209.66,1,call
+2026-08-27_DG.csv,122.78,1,call
+2026-08-27_BBY.csv,87.44,0,put
+2026-08-27_DLTR.csv,132.18,0,put
