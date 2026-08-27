@@ -25,8 +25,16 @@ name, never from a number written in prose.
 
 ## Bar pulls: MANDATORY session-start guard (added 2026-08-26)
 
-Every bar pull for leg evaluation **must** use `start_time = <date>T13:30:00Z` — the
-full regular session, never narrowed. VWAP, the session high and low, and the
+**Pull with `start_time = <date>T00:00:00Z` — midnight, not the session open.** The API
+returns `bounds=regular`, so it clamps to the 13:30:00Z open regardless; passing midnight
+gives a 13.5-hour margin so no plausible mistyped timestamp can land *after* the open.
+Verified 2026-08-27: midnight returns a series whose first bar is 13:30:00Z.
+
+This replaces the earlier instruction to pass `13:30:00Z` exactly, which failed five times
+in three sessions (8/25 16:00Z, 8/26 14:20Z, 8/26 17:00Z, 8/27 14:00Z, 8/27 15:35Z).
+Telling myself to "copy it verbatim" worked once and then failed again — the fix had to
+stop depending on care. Whatever value is passed, the pull must cover the
+full regular session, never a narrowed window. VWAP, the session high and low, and the
 rolling-median baseline are all computed over the whole series; a pull that starts
 later silently produces wrong numbers rather than an error.
 

@@ -3,12 +3,19 @@
 get_equity_historicals payload.
 
 PROCEDURAL GUARD (added 2026-08-26 after the THIRD truncated-pull error).
-On 8/25 12:55 I passed start_time 16:00:00Z, on 8/26 11:12 I passed
-14:20:00Z, and on 8/26 13:20 I passed 17:00:00Z, each time silently
-breaking VWAP, the session high/low and the baseline median. Twice I
-wrote it up and did it again anyway. A note is evidently not a control,
-so the check now lives in code: this script REFUSES to evaluate unless
-the first bar of every symbol is the session open. It also takes the
+Five occurrences in three sessions: 8/25 16:00:00Z, 8/26 14:20:00Z,
+8/26 17:00:00Z, 8/27 14:00:00Z, 8/27 15:35:00Z — each silently breaking
+VWAP, the session high/low and the baseline median. Notes did not stop
+it and neither did "copy the line verbatim". So there are now two
+independent controls, one upstream and one here:
+
+  UPSTREAM (runbooks/entry.md): pull with start_time <date>T00:00:00Z.
+  bounds=regular clamps the response to the 13:30Z open anyway, so
+  midnight gives a 13.5-hour margin and no plausible typo can land
+  after the open. Verified 2026-08-27.
+
+  HERE: this script REFUSES to evaluate unless the first bar of every
+  symbol is the session open. It also takes the
 pull payload verbatim, which removes the hand-transcription step that
 was its own error source.
 
