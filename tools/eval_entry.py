@@ -18,7 +18,15 @@ Usage:  python3 tools/eval_entry.py <payload.json> <prev_closes.json> <dirs.json
 import json, statistics, sys
 
 SESSION_OPEN = "13:30:00Z"          # 09:30 ET, regular session
-MIN_BARS = 3
+BASELINE_BARS = 6                   # late_entry_baseline_bars
+BASELINE_SKIP_OPEN = 3              # late_entry_baseline_skip_open_bars
+# §1.3's volume leg is median(previous BASELINE_BARS bars, skipping the session's
+# first BASELINE_SKIP_OPEN). That set is not complete until bar 10, so a ratio
+# computed before then is NOT the metric the rule defines. Found 2026-08-27 at
+# bar 4: the guard let the script run and emit a nan ratio that read like a real
+# evaluation. Emitting a confident-looking number from insufficient data is the
+# exact failure this file exists to prevent, so it is now refused explicitly.
+MIN_BARS = BASELINE_SKIP_OPEN + BASELINE_BARS + 1   # = 10
 
 def load(arg):
     return json.loads(arg) if arg.strip().startswith("{") else json.load(open(arg))
@@ -38,7 +46,13 @@ def guard(results):
                 f"(...T{SESSION_OPEN}). TRUNCATED PULL — re-pull with "
                 f"start_time=<date>T13:30:00Z before evaluating anything.")
         if len(bars) < MIN_BARS:
-            problems.append(f"{sym}: only {len(bars)} bars")
+            have = max(0, len(bars) - 1 - BASELINE_SKIP_OPEN)
+            problems.append(
+                f"{sym}: {len(bars)} bars — §1.3 needs {MIN_BARS} "
+                f"(baseline is {BASELINE_BARS} bars skipping the session's first "
+                f"{BASELINE_SKIP_OPEN}; only {have} of {BASELINE_BARS} available). "
+                f"NOT a data error — the legs are undefined this early. Log the "
+                f"refusal; do not compute a partial-baseline ratio.")
     if problems:
         print("REFUSING TO EVALUATE — pull failed the session-start guard:\n",
               file=sys.stderr)
