@@ -31,7 +31,7 @@ def main():
                 rows.append([b["begins_at"][:10], b["open_price"], b["high_price"],
                              b["low_price"], b["close_price"], b["volume"]])
             rows = [r for r in rows if r[0] >= "2025-07-01"]
-            if len(rows) < 200:
+            if len(rows) < 20:
                 empty.append(sym); continue
             rows.sort(key=lambda r: r[0])
             # de-dupe by date, last wins
