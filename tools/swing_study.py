@@ -10,11 +10,30 @@ The premise being retested is the same one, moved to daily bars:
   part of its own range, not fading the prior close.
 That is the intraday "base tape" with the day as the bar.
 
-THE CONFOUND THIS FILE EXISTS TO HANDLE: this universe is tech- and
-crypto-heavy over a rising two-year sample. Any long signal will look
-profitable simply because the names went up. Every signal return is
-therefore reported against the UNCONDITIONAL forward return of the same
-symbol over the same period. Only the EXCESS is evidence of a signal.
+THE CONFOUND THIS FILE ORIGINALLY HANDLED: this universe is tech- and
+crypto-heavy over a rising two-year sample, so every signal return is
+reported against an unconditional baseline. Only EXCESS is evidence.
+
+*** THAT BASELINE WAS STILL WRONG. CORRECTED 2026-08-28. ***
+Comparing a signal day's forward return to the average of ALL days does
+not isolate stock selection, because signal days CLUSTER on market-wide
+selloffs and the whole universe bounces the next day. The original
+reading measured "the market rises after it falls", not "these names
+beat other names". Two errors compounded:
+
+  (1) 2,127 signal legs sit in only 430 distinct trading days (~4.95 per
+      day). Pooling them as independent inflates t by roughly 2.2x.
+  (2) The counterfactual must be what OTHER STOCKS DID THE SAME DAY, not
+      the all-period average.
+
+Decomposition of the original claim (next-day close-to-close):
+
+  pooled legs vs all-day baseline .............. +0.289%  t=+5.01
+  one obs per day, same baseline ............... +0.101%  t=+1.69
+  one obs per day vs the SAME DAY's universe ... +0.037%  t=+0.34
+
+The effect does not survive. Anything reported from this file must use
+the day-clustered, same-day-benchmarked number as the headline.
 
 Data: data/daily/SYM.csv (d,o,h,l,c,v) from get_equity_historicals(interval='day').
 """

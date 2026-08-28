@@ -1,5 +1,29 @@
 # Runbook: One-day reversal — forward paper validation (week of 2026-08-31)
 
+> ## ⛔ PREMISE NOT SUPPORTED — DO NOT RUN THIS PROTOCOL (2026-08-28)
+> The effect this runbook was written to validate **does not survive correct
+> measurement.** It was found with two compounding errors: 2,127 signal legs were
+> pooled as independent when they sit in only 430 trading days (~4.95 per day), and
+> they were benchmarked against the all-period average rather than against what other
+> stocks did *the same day*. Signal days cluster on market-wide selloffs, so the
+> original number was measuring "the market rises after it falls", not stock selection.
+>
+> | measurement | excess | t |
+> |---|---|---|
+> | pooled legs vs all-day baseline (as first reported) | +0.289% | +5.01 |
+> | one observation per day, same baseline | +0.101% | +1.69 |
+> | one obs per day vs the **same day's** universe | **+0.037%** | **+0.34** |
+>
+> Open→close, day-clustered and same-day-benchmarked, the excess is **−0.050%
+> (t=−0.62)**. No weighting scheme rescues it — equal, drop-weighted, sqrt(drop),
+> inverse-volatility, dollar-volume and drop/vol were all tested and all sit inside
+> noise. Single-name idiosyncratic drops are *negative* (−0.438%, t=−1.65).
+>
+> **Do not trade this basket, on paper or otherwise, and do not tune the threshold to
+> find a version that works.** The protocol below is kept only as a record of what was
+> proposed. Next step is an owner decision — see `journal/2026-08-28.md`.
+
+
 Replaces the §1.3 momentum entry attempt for the entry phase. The momentum
 premise is falsified; see `journal/2026-08-28.md` and `tools/backtest_legs.py --audit`.
 This runbook does **not** place orders. `dry_run: true` remains a hard switch and
