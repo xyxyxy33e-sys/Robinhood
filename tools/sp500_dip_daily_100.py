@@ -101,7 +101,7 @@ def simulate(all_dates, px, ranked, start, end, target, stop, cost_rt):
             entry_day = lot['ed'] == d          # today IS this lot's entry day
             if not entry_day:
                 lot['days'] += 1
-            tgt = lot['ep'] * (1.0 + target)
+            tgt = lot['ep'] * (1.0 + target) if target else None
             stl = lot['ep'] * (1.0 - stop)
             reason, fill = None, None
             # A real bracket/stop order is live from the moment of entry, so
@@ -117,7 +117,7 @@ def simulate(all_dates, px, ranked, start, end, target, stop, cost_rt):
                 reason, fill = 'stop_gap', op
             elif lo <= stl:
                 reason, fill = 'stop', stl
-            elif not entry_day and c >= tgt:
+            elif not entry_day and tgt is not None and c >= tgt:
                 reason, fill = 'target', c
             if reason:
                 proceeds = lot['sh'] * fill * (1.0 - half)
@@ -175,6 +175,8 @@ def dca_spy(spy, dates, cost_rt):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--target', type=float, default=0.20)
+    ap.add_argument('--no-target', action='store_true',
+                    help='disable the take-profit leg entirely -- stop-loss only, let winners run')
     ap.add_argument('--stop', type=float, default=0.10)
     ap.add_argument('--no-pit', action='store_true')
     ap.add_argument('--max-drop', type=float, default=0.50)
@@ -189,22 +191,27 @@ def main():
 
     all_dates, ranked, artifacts = build_ranked(px, members, not a.no_pit, a.max_drop)
     start, end = all_dates[1], all_dates[-1]
+    target = None if a.no_target else a.target
 
     print('=' * 112)
     print(f'BUY $100 OF THE BIGGEST DAILY DROP, EVERY TRADING DAY, FOR TWO YEARS')
-    print(f'sell limit +{100*a.target:.0f}%, stop -{100*a.stop:.0f}% (gap-aware) — the owner\'s exact rule')
+    tgt_label = f'sell limit +{100*a.target:.0f}%, ' if target else 'NO TAKE-PROFIT -- '
+    print(f'{tgt_label}stop -{100*a.stop:.0f}% (gap-aware){"" if target else ", let winners run"}')
     print('=' * 112)
     print(f'window        : {start} .. {end}  ({len(all_dates)-1} trading days)')
     print(f'universe      : {len(members)} current S&P 500 members; bars loaded {len(px)}, missing {len(missing)}')
     print(f'PIT filter    : {"OFF" if a.no_pit else "ON (date_added <= signal day)"} — deletions still uncorrectable,')
     print(f'                more so for the earlier part of the window; every number below is an upper bound.')
     print(f'entry         : next trading day OPEN (executable, no lookahead)')
-    print(f'exit          : LIMIT sell at entry*1.{100*a.target:.0f} checked on the CLOSE;')
+    if target:
+        print(f'exit          : LIMIT sell at entry*1.{100*a.target:.0f} checked on the CLOSE;')
+    else:
+        print(f'exit          : NO TAKE-PROFIT -- a position is held until it stops out or the window ends.')
     print(f'                STOP at entry*0.{100*(1-a.stop):.0f}, gap-aware (fills at the OPEN if it gapped through)')
     print()
 
     for cost in costs:
-        r = simulate(all_dates, px, ranked, start, end, a.target, a.stop, cost)
+        r = simulate(all_dates, px, ranked, start, end, target, a.stop, cost)
         n_c, n_o = len(r['closed']), len(r['open'])
         wins = sum(1 for c in r['closed'] if c['reason'] == 'target')
         stops = sum(1 for c in r['closed'] if c['reason'] in ('stop', 'stop_gap'))
@@ -218,7 +225,7 @@ def main():
               f'(no-candidate days: {r["no_candidate_days"]})')
         print(f'  total contributed            : ${r["contributed"]:,.2f}')
         print(f'  positions closed / still open: {n_c} / {n_o}')
-        print(f'  closed: hit +{100*a.target:.0f}% target   : {wins}  ({100*wins/n_c:.1f}% of closed)' if n_c else '')
+        print(f'  closed: hit +{100*a.target:.0f}% target   : {wins}  ({100*wins/n_c:.1f}% of closed)' if (n_c and target) else '')
         print(f'  closed: hit -{100*a.stop:.0f}% stop      : {stops}  (of which gapped through: {gaps})' if n_c else '')
         print(f'  win rate (closed positions)  : {100*win_rate:.1f}%'
               if n_c else '  win rate: n/a')
@@ -254,7 +261,7 @@ def main():
     print('=' * 112)
     print('WORST OPEN POSITIONS AT WINDOW END (5bp cost run)')
     print('=' * 112)
-    r5 = simulate(all_dates, px, ranked, start, end, a.target, a.stop, 0.0005)
+    r5 = simulate(all_dates, px, ranked, start, end, target, a.stop, 0.0005)
     worst = sorted(r5['open'], key=lambda p: p['ret'])[:8]
     for p in worst:
         print(f"  {p['sym']:6s} bought {p['ed']} @ ${p['ep']:.2f} -> now ${p['mark']:.2f}  "
