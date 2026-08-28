@@ -29,6 +29,21 @@ is the headline of the report, above everything else. It also catches any manual
 user made in the app. Note the other strategy trades equities in this same account, so
 `get_equity_orders` will show its activity — that is expected and is not this strategy's.
 
+## 1b. Reversal study (from 2026-08-31)
+
+The entry phase now runs `runbooks/reversal_research.md`, not the momentum rule. Report:
+
+- today's basket (names, the drop that put each in it) and the equal-weighted
+  open→close return, from `python3 tools/reversal_screen.py score <today>`;
+- the running mean since 2026-08-31 against the in-sample expectation of **+0.303%**;
+- **the honest standard error.** Per-trade sd is 4.01%; a week is roughly five
+  observations, so the standard error on a week exceeds the effect being measured.
+  State that in the report every time. A good week is not confirmation and a bad week is
+  not refutation, and the report must not let either read as a verdict.
+
+A day with no qualifying names is expected at a ~1-in-7 base rate — report it as a
+no-signal day, never as a reason to loosen the screen.
+
 ## 2. Send the email
 - Via AgentMail: use the existing inbox (create one named for this strategy if none).
 - To: the account owner's email (from session context). Subject:

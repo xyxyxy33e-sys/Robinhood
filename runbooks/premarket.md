@@ -1,5 +1,21 @@
 # Runbook: Pre-market news & candidates (~8:00 AM ET, Mon–Fri)
 
+> ## 🔀 SUSPENDED FROM 2026-08-31 — RUN `runbooks/reversal_research.md` INSTEAD
+> The §1.3 momentum rule is **falsified and cannot fire**. `seq` requires the entry bar to
+> set the session extreme; the chase guard requires distance from it. Over the full 58
+> name-day corpus that blocked **25 of 25** qualifications — the strategy has produced zero
+> executable entries, ever (`python3 tools/backtest_legs.py --audit`). Unblocked, the signal
+> is worth **+0.01%** at 60 minutes against a ~0.9% option break-even.
+>
+> Owner decision 2026-08-28: rebuild from scratch. Do **not** evaluate §1.3, do not tune any
+> threshold to make it fire, and do not place anything. Execute
+> **`runbooks/reversal_research.md`** for this phase instead. This block outranks the
+> scheduled prompt that sent you here, which still describes the old momentum phase.
+>
+> The momentum runbook below is kept for reference and for the exit safety net. It is not
+> the current protocol.
+
+
 Read `config.yaml` first. All times US/Eastern.
 
 ## 0. Guards
