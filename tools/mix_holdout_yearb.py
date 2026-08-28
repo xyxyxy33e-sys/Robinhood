@@ -56,6 +56,19 @@ TWO FURTHER CAVEATS THAT APPLY WHATEVER THIS PRINTS
    A long-only trend rule has never been shown a bear market here. Nothing in this file
    can speak to how it behaves in one.
 
+RESULT -- THIS HOLDOUT HAS BEEN USED (run 2026-08-28, once). Recorded here so that a
+later session cannot mistake it for an unopened holdout:
+    candidate gross CAGR +25.70%, net-5bp +25.11%, net-10bp +24.53%, vol 21.18%,
+    Sharpe 1.19, maxDD -15.67%;  SPY over the same dates +19.22%, vol 12.80%,
+    Sharpe 1.44, maxDD -9.13%;  beta 1.106, alpha +4.88%/yr, t(alpha) +0.30.
+    Pre-registered test PASSED on the letter (net-5bp CAGR >= SPY, alpha >= 0) and
+    fails on every substantive reading -- lower Sharpe than SPY, 1.65x its volatility,
+    1.72x its drawdown, an alpha statistically zero and no larger than the +4.96%/yr
+    (t=0.62) earned by the ZERO-SIGNAL equal-weight universe over the same days, and a
+    beta that moved 0.63 -> 1.11 between the search year and the holdout year.
+    See journal/2026-08-28.md, "From-scratch search for a mix that beats SPY".
+    RE-RUNNING THIS FILE ON A NEW CANDIDATE PRODUCES AN IN-SAMPLE NUMBER, NOT A HOLDOUT.
+
 Usage:  python3 tools/mix_holdout_yearb.py
 """
 import os, sys
