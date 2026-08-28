@@ -71,9 +71,21 @@ starved of exactly the data the strategy was generating.
 ```
 python3 tools/backfill_outcomes.py      # fills outcome_30m / outcome_eod, idempotent
 python3 tools/backtest_legs.py          # leg-rule fires + forward returns
+python3 tools/backtest_legs.py --audit  # guard block accounting — run this FIRST
 python3 tools/backtest_legs.py --pnl    # modelled P&L through the real exit cascade
 ```
-If `--pnl` is negative at the live `late_entry_min_volume_ratio`, say so in the report in
-one line with the number. As of 2026-08-22 it is: **−6.9% average per trade, 4 wins in 23,
-at the live setting of 1.5** — and every other threshold tested is also negative. That
-sentence belongs in the report until it stops being true.
+`backtest_legs.py` now imports the rule from `tools/eval_entry.py` instead of carrying its
+own copy. It used to carry a copy, the two drifted, and for a week the reports quoted
+**−6.9% / 4-in-23** for a rule the strategy does not actually run. Never reimplement the
+rule in the harness; import it.
+
+Report, every day, until each stops being true:
+
+1. **`--audit` result.** As of 2026-08-28 the chase guard blocks **25 of 25** qualifying
+   bars across the 58 name-day corpus, i.e. the strategy has produced **zero executable
+   entries, ever**. The guard and the `seq` session-extreme condition are mutually
+   exclusive by construction. Report the live no-trade streak as *this*, not as a quiet
+   tape, for as long as `--audit` says 100%.
+2. **`--pnl` at the live `late_entry_min_volume_ratio`.** With the guard on there are no
+   trades to price. With the guard off it is **+0.01% forward-60 (6 wins in 14) and −4.7%
+   modelled after friction**. State that removing the guard would not release an edge.

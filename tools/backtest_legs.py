@@ -1,148 +1,228 @@
-import csv
-BARS_MIN=3; VOL_RATIO=1.5; CLOCK_MIN=15; BASE_N=6; SKIP_OPEN=3
+#!/usr/bin/env python3
+"""Backtest the §1.3 leg rule over data/bars/.
+
+WHY THIS FILE WAS REWRITTEN (2026-08-28)
+----------------------------------------
+It used to carry its OWN implementation of the leg rule, in a local analyze().
+That copy and the live rule in tools/eval_entry.py drifted apart, and nobody
+noticed for a week because both produced plausible numbers. The differences:
+
+  * the backtest's "new extreme" looked back 3 BARS; live looks back over the
+    WHOLE SESSION (h > max of every prior bar's high),
+  * the backtest never required the 3-bar streak at all — it checked only that
+    the current bar closed in the trade's direction,
+  * the backtest had no session-extreme (`seq`) condition,
+  * the backtest did not model the CHASE GUARD, which in live trading is the
+    single most active blocker: it stopped all seven §1.3 qualifications this
+    week, so every trade the old harness "took" was one live would have refused.
+
+The headline "-5.1% per trade at the live 1.5 threshold" quoted in every daily
+report since 2026-08-22 therefore described a rule the strategy does not run.
+
+The fix is structural, not a patch: eval_entry.evaluate_ohlcv() is now the only
+implementation of the rule, and this file imports it. The two cannot drift again
+because there is only one of them.
+
+STILL NOT BACKTESTABLE: open interest, bid/ask spread and depth. The API exposes
+no history for them, so §2.3 cannot be simulated. Spread enters only as the
+FRIC round-trip friction constant in --pnl, which is a flat assumption.
+
+Usage:
+  python3 tools/backtest_legs.py            # fires + forward returns
+  python3 tools/backtest_legs.py --pnl      # modelled P&L through the exit cascade
+  python3 tools/backtest_legs.py --sweep    # MFE/MAE sensitivity to the threshold
+Options: --no-guard  evaluate without the chase guard (to price what it costs)
+Env: LEV, STOP, ARM, TRAIL, FLOOR, FRIC
+"""
+import csv, os, sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from eval_entry import evaluate_ohlcv
+
+D = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'bars')
+
+# Entry window, UTC HHMM. 1345 = 09:45 ET (first bar after the open is complete);
+# 1700 = 13:00 ET, the live entry cutoff.
+T_START, T_END = '1345', '1700'
+
 
 def load(p):
-    return [{'t':r['t'],**{k:float(r[k]) for k in 'ohlcv'}} for r in csv.DictReader(open(p))]
+    return [{'t': r['t'], **{k: float(r[k]) for k in 'ohlcv'}}
+            for r in csv.DictReader(open(p))]
 
-def vwap(bars):
-    num=sum((b['h']+b['l']+b['c'])/3*b['v'] for b in bars); den=sum(b['v'] for b in bars)
-    return num/den if den else None
 
-def leg_run(bars,i,up=True):
-    s=i
-    while s>0 and ((bars[s]['c']>bars[s-1]['c']) if up else (bars[s]['c']<bars[s-1]['c'])): s-=1
-    return s
+def cfg(threshold):
+    return dict(min_day_change_pct=2.0,
+                late_entry_min_volume_ratio=threshold,
+                late_entry_min_bars=3,
+                chase_guard_all_session_pct=1.0)
 
-def med(v):
-    v=sorted(v); n=len(v)
-    return v[n//2] if n%2 else (v[n//2-1]+v[n//2])/2
 
-def analyze(bars,i,prior_close,up=True):
-    d={}; o=bars[0]['o']; px=bars[i]['c']; vw=vwap(bars[:i+1])
-    d['px']=px; d['vwap']=vw
-    d['day_chg']=(px/prior_close-1)*100*(1 if up else -1)
-    d['tape_basic']= ((px>o and px>vw) if up else (px<o and px<vw)) and d['day_chg']>=2
-    s=leg_run(bars,i,up); d['leg_min']=(i-s+1)*5
-    # BASELINE: trailing median of the BASE_N bars preceding this bar, skipping the
-    # opening SKIP_OPEN bars. Independent of where the leg is judged to start.
-    lo=max(SKIP_OPEN, i-BASE_N); base=[b['v'] for b in bars[lo:i]]
-    bl=med(base) if base else 0
-    d['vol_ratio']= bars[i]['v']/bl if bl else 0
-    leg_low=min(b['l'] for b in bars[s:i+1]) if up else max(b['h'] for b in bars[s:i+1])
-    w=bars[max(0,i-BARS_MIN+1):i+1]
-    new_ext = bars[i]['h']>=max(b['h'] for b in w) if up else bars[i]['l']<=min(b['l'] for b in w)
-    hl = (min(b['l'] for b in bars[i-1:i+1]) > min(b['l'] for b in bars[i-3:i-1])) if (up and i>=3) \
-         else ((max(b['h'] for b in bars[i-1:i+1]) < max(b['h'] for b in bars[i-3:i-1])) if i>=3 else False)
-    directional = bars[i]['c']>bars[i]['o'] if up else bars[i]['c']<bars[i]['o']
-    d['structure']= ((px>leg_low) if up else (px<leg_low)) and (new_ext or hl) and directional
-    d['OLD']= d['tape_basic'] and d['vol_ratio']>=VOL_RATIO and d['leg_min']>=CLOCK_MIN
-    d['NEW']= d['tape_basic'] and d['vol_ratio']>=VOL_RATIO and d['structure']
-    return d
+def judge(bars, i, prior_close, direction, threshold):
+    """Evaluate bar i exactly as the live strategy would, given the session so
+    far. Returns the eval_entry dict, or None when the bar is too early for the
+    rule to be defined (eval_entry refuses below 10 bars for the same reason)."""
+    if i + 1 < 10:
+        return None
+    b = [(x['o'], x['h'], x['l'], x['c'], x['v']) for x in bars[:i + 1]]
+    return evaluate_ohlcv(b, prior_close, direction, cfg(threshold))
 
-# ---------------------------------------------------------------------------
-# Harness. Bars in ../data/bars/YYYY-MM-DD_SYM.csv (t,o,h,l,c,v; t = UTC HHMM,
-# 5-minute, RTH). Fetch with get_equity_historicals(interval='5minute').
-# Historical OI / spread / bid_size / ask_size do NOT exist in the API, so the
-# liquidity gates are NOT backtestable here — only the leg rule is.
-if __name__=='__main__':
-    import os,sys
-    D=os.path.join(os.path.dirname(__file__),'..','data','bars')
-    # Cases are loaded from data/bars/manifest.csv (file,prior_close,is_call,direction),
-    # which is generated from the live leg_log so the backtest corpus tracks what the
-    # strategy actually evaluated. Legacy hand-listed cases are appended if still present.
-    MAN=os.path.join(D,'manifest.csv')
-    cases=[]
-    if os.path.exists(MAN):
-        import csv as _csv
-        for row in _csv.DictReader(open(MAN)):
-            cases.append((row['file'],float(row['prior_close']),row['is_call']=='1',row['direction']))
-    legacy=[('2026-07-23_TSLA.csv',374.01,False,'WIN +$920 put'),
-            ('2026-07-23_GOOGL.csv',342.09,False,'WIN +$405 put'),
-            ('2026-07-31_AAPL.csv',333.43,False,'LOSS -$1568 put'),
-            ('2026-08-04_PLTR.csv',125.65,True ,'WIN +$725'),
-            ('2026-08-06_U.csv',35.47,True ,'LOSS -$1536'),
-            ('2026-08-12_NBIS.csv',193.23,True ,'uptrend +27.4%'),
-            ('2026-08-13_BIRK.csv',36.74,True ,'no-trade'),
-            ('2026-08-14_NU.csv',13.93,True ,'no-trade')]
-    have={c[0] for c in cases}
-    cases += [c for c in legacy if c[0] not in have]
-    rows=[]
-    for f,pc,up,lab in cases:
-        p=os.path.join(D,f)
-        if not os.path.exists(p): continue
-        b=load(p)
-        for i,x in enumerate(b):
-            if x['t']<'1345' or x['t']>'1700': continue
-            d=analyze(b,i,pc,up)
-            raw=(b[min(i+12,len(b)-1)]['c']/x['c']-1)*100
-            d['fwd60']= raw if up else -raw   # direction-adjusted: gain for the trade
-            d['lab']=lab; d['up']=up
-            rows.append((f[:-4],x['t'],d))
-    # --- modelled P&L: the sweep below it measures MFE/MAE, which is NOT P&L.
-    # Only the FIRST qualifying signal per name-day becomes a trade, and a signal
-    # with good MFE still loses if it trips the -25% stop first. This applies the
-    # real exit cascade to an option position. Assumptions: LEV x delta leverage,
-    # theta at 14 DTE, fixed round-trip spread friction. Ignores IV moves.
+
+def cases():
+    out = []
+    man = os.path.join(D, 'manifest.csv')
+    if os.path.exists(man):
+        for row in csv.DictReader(open(man)):
+            out.append((row['file'], float(row['prior_close']), row['direction']))
+    legacy = [('2026-07-23_TSLA.csv', 374.01, 'put'),
+              ('2026-07-23_GOOGL.csv', 342.09, 'put'),
+              ('2026-07-31_AAPL.csv', 333.43, 'put'),
+              ('2026-08-04_PLTR.csv', 125.65, 'call'),
+              ('2026-08-06_U.csv', 35.47, 'call'),
+              ('2026-08-12_NBIS.csv', 193.23, 'call'),
+              ('2026-08-13_BIRK.csv', 36.74, 'call'),
+              ('2026-08-14_NU.csv', 13.93, 'call')]
+    have = {c[0] for c in out}
+    out += [c for c in legacy if c[0] not in have]
+    return [c for c in out if os.path.exists(os.path.join(D, c[0]))]
+
+
+def signals(threshold, use_guard=True):
+    """First qualifying bar per name-day, as the live rule would see it."""
+    for f, pc, direction in cases():
+        bars = load(os.path.join(D, f))
+        for i, x in enumerate(bars):
+            if x['t'] < T_START or x['t'] > T_END:
+                continue
+            d = judge(bars, i, pc, direction, threshold)
+            if not d or not d['qualified']:
+                continue
+            if use_guard and d['guard_blocks']:
+                continue
+            if i >= len(bars) - 1:
+                continue
+            yield f[:-4], bars, i, direction, d
+            break
+
+
+def fwd(bars, i, direction, n=12):
+    e = bars[i]['c']
+    j = min(i + n, len(bars) - 1)
+    raw = (bars[j]['c'] / e - 1) * 100
+    return raw if direction == 'call' else -raw
+
+
+LEV = float(os.environ.get('LEV', '7.9'))
+THETA = -3.3
+FRIC = float(os.environ.get('FRIC', '-3.0'))
+STOP = float(os.environ.get('STOP', '-25'))
+ARM = float(os.environ.get('ARM', '12'))
+TRAIL = float(os.environ.get('TRAIL', '20'))
+FLOOR = float(os.environ.get('FLOOR', '10'))
+TP = float(os.environ.get('TP', '50'))
+
+
+def sim(bars, i, direction):
+    """Apply the real exit cascade to a modelled option position."""
+    up = direction == 'call'
+    e = bars[i]['c']; hwm = 0.0; armed = False; n = 0; adj = FRIC
+    for y in bars[i + 1:]:
+        n += 1
+        adj = THETA * (n * 5 / 390.0) + FRIC
+        pnl = (((y['c'] - e) / e * 100) if up else ((e - y['c']) / e * 100)) * LEV
+        hi = (((y['h'] - e) / e * 100) if up else ((e - y['l']) / e * 100)) * LEV
+        lo = (((y['l'] - e) / e * 100) if up else ((e - y['h']) / e * 100)) * LEV
+        hwm = max(hwm, hi)
+        if lo <= STOP:
+            return STOP + adj
+        if hi >= TP:
+            return TP + adj
+        if hwm >= ARM:
+            armed = True
+        if armed and pnl <= max(FLOOR, hwm - TRAIL):
+            return max(FLOOR, hwm - TRAIL) + adj
+        if not armed and hwm >= 8 and pnl <= -3:
+            return -3 + adj
+    close = (((bars[-1]['c'] - e) / e * 100) if up else ((e - bars[-1]['c']) / e * 100))
+    return close * LEV + adj
+
+
+THRESHOLDS = (1.0, 1.2, 1.25, 1.3, 1.5, 1.75, 2.0)
+
+if __name__ == '__main__':
+    guard_on = '--no-guard' not in sys.argv
+
     if '--pnl' in sys.argv:
-        LEV=float(os.environ.get('LEV','7.9')); THETA=-3.3; FRIC=-3.0
-        STOP=float(os.environ.get('STOP','-25')); ARM=float(os.environ.get('ARM','12'))
-        TRAIL=float(os.environ.get('TRAIL','20')); FLOOR=float(os.environ.get('FLOOR','10'))
-        def sim(b,i,up):
-            e=b[i]['c']; hwm=0.0; armed=False; n=0
-            for y in b[i+1:]:
-                n+=1; adj=THETA*(n*5/390.0)+FRIC
-                pnl=(((y['c']-e)/e*100) if up else ((e-y['c'])/e*100))*LEV
-                hi =(((y['h']-e)/e*100) if up else ((e-y['l'])/e*100))*LEV
-                lo =(((y['l']-e)/e*100) if up else ((e-y['h'])/e*100))*LEV
-                hwm=max(hwm,hi)
-                if lo<=STOP: return STOP+adj
-                if hi>=50:  return 50+adj
-                if hwm>=ARM: armed=True
-                if armed and pnl<=max(FLOOR,hwm-TRAIL): return max(FLOOR,hwm-TRAIL)+adj
-                if not armed and hwm>=8 and pnl<=-3: return -3+adj
-            return (((b[-1]['c']-e)/e*100) if up else ((e-b[-1]['c'])/e*100))*LEV+adj
-        print(f"modelled P&L, one trade per name-day, {LEV}x leverage")
+        print(f"modelled P&L, one trade per name-day, {LEV}x leverage, "
+              f"friction {FRIC:+.1f}%, chase guard {'ON' if guard_on else 'OFF'}")
         print(f"{'thresh':>7}{'trades':>8}{'avg':>9}{'total':>9}{'wins':>7}")
-        for th in (1.0,1.2,1.25,1.3,1.5,1.75,2.0):
-            globals()['VOL_RATIO']=th; tr=[]
-            for f,pc,up,lab in cases:
-                fp=os.path.join(D,f)
-                if not os.path.exists(fp): continue
-                b=load(fp)
-                for i,x in enumerate(b):
-                    if x['t']<'1345' or x['t']>'1700': continue
-                    if analyze(b,i,pc,up)['NEW'] and i<len(b)-1: tr.append(sim(b,i,up)); break
-            if tr: print(f"{th:>7.2f}{len(tr):>8}{sum(tr)/len(tr):>+8.1f}%{sum(tr):>+8.0f}%"
-                         f"{sum(1 for t in tr if t>0):>4}/{len(tr)}")
+        for th in THRESHOLDS:
+            tr = [sim(b, i, d) for _, b, i, d, _ in signals(th, guard_on)]
+            if tr:
+                print(f"{th:>7.2f}{len(tr):>8}{sum(tr) / len(tr):>+8.1f}%"
+                      f"{sum(tr):>+8.0f}%{sum(1 for t in tr if t > 0):>4}/{len(tr)}")
+            else:
+                print(f"{th:>7.2f}{0:>8}{'—':>9}{'—':>9}{'—':>7}")
         raise SystemExit
 
-    # --- volume-threshold sensitivity -------------------------------------
-    if '--sweep' in sys.argv:
-        print(f"{'thresh':>7}{'fires':>7}{'avgMFE':>9}{'avgMAE':>9}{'winners':>9}{'losers':>8}")
-        wins={'2026-07-23_TSLA','2026-07-23_GOOGL','2026-08-04_PLTR','2026-08-12_NBIS'}
-        for th in (1.0,1.1,1.2,1.25,1.3,1.4,1.5,1.75,2.0):
-            globals()['VOL_RATIO']=th; fired=[]; w=set(); l=set()
-            for f,pc,up,lab in cases:
-                fp=os.path.join(D,f)
-                if not os.path.exists(fp): continue
-                b=load(fp)
-                for i,x in enumerate(b):
-                    if x['t']<'1345' or x['t']>'1700': continue
-                    if not analyze(b,i,pc,up)['NEW']: continue
-                    e=x['c']; fut=b[i+1:]
-                    if not fut: continue
-                    fired.append((max((y['h']-e)/e*100 if up else (e-y['l'])/e*100 for y in fut),
-                                  min((y['l']-e)/e*100 if up else (e-y['h'])/e*100 for y in fut)))
-                    (w if f[:-4] in wins else l).add(f)
-            if fired:
-                print(f"{th:>7.2f}{len(fired):>7}{sum(r[0] for r in fired)/len(fired):>+8.2f}%"
-                      f"{sum(r[1] for r in fired)/len(fired):>+8.2f}%{len(w):>8}/4{len(l):>7}/5")
+    if '--audit' in sys.argv:
+        # Block accounting: of the bars that satisfy §1.3, how many does the
+        # chase guard stop, and is guard_pct just the bar's own giveback?
+        n_qual = n_blocked = n_tauto = 0; worst = 0.0
+        for f, pc, direction in cases():
+            bars = load(os.path.join(D, f))
+            for i, x in enumerate(bars):
+                if x['t'] < T_START or x['t'] > T_END or i >= len(bars) - 1:
+                    continue
+                d = judge(bars, i, pc, direction, 1.5)
+                if not d or not d['qualified']:
+                    continue
+                n_qual += 1
+                if d['guard_blocks']:
+                    n_blocked += 1
+                    worst = max(worst, d['guard_pct'])
+                bar = bars[i]
+                own = ((bar['h'] - bar['c']) / bar['h'] * 100 if direction == 'call'
+                       else (bar['c'] - bar['l']) / bar['l'] * 100)
+                if abs(own - d['guard_pct']) < 1e-6:
+                    n_tauto += 1
+        print(f"corpus name-days ................ {len(cases())}")
+        print(f"§1.3 qualifying bars ............ {n_qual}")
+        print(f"blocked by the chase guard ...... {n_blocked}  "
+              f"({100.0 * n_blocked / n_qual:.0f}% of qualifications)" if n_qual else "")
+        print(f"guard_pct == bar's own giveback .. {n_tauto}/{n_qual}")
+        print(f"largest guard_pct observed ...... {worst:.3f}%  "
+              f"(threshold is 1.000%)")
+        if n_qual and n_blocked == n_qual:
+            print("\nThe guard blocks EVERY qualification in the corpus. `seq` "
+                  "requires the bar to set\nthe session extreme; the guard "
+                  "requires distance from it. They are mutually exclusive\nby "
+                  "construction, at any threshold. One of them has to go — an "
+                  "owner decision.")
         raise SystemExit
-    for tag in ('OLD','NEW'):
-        s=[r for r in rows if r[2][tag]]
-        if s: print(f"{tag:4} fires={len(s):3} avg_fwd60={sum(r[2]['fwd60'] for r in s)/len(s):+.2f}% "
-                    f"wins={sum(1 for r in s if r[2]['fwd60']>0)}/{len(s)}")
-    print(f"decision points: {len(rows)}")
-    print("disagreements:")
-    for n,t,d in rows:
-        if d['OLD']!=d['NEW']: print(f"  {n} {t} OLD={d['OLD']} NEW={d['NEW']} fwd60={d['fwd60']:+.2f}%")
+
+    if '--sweep' in sys.argv:
+        print(f"{'thresh':>7}{'fires':>7}{'avgMFE':>9}{'avgMAE':>9}")
+        for th in THRESHOLDS:
+            f_ = []
+            for _, b, i, d, _ in signals(th, guard_on):
+                up = d == 'call'; e = b[i]['c']; fut = b[i + 1:]
+                if not fut:
+                    continue
+                f_.append((max((y['h'] - e) / e * 100 if up else (e - y['l']) / e * 100 for y in fut),
+                           min((y['l'] - e) / e * 100 if up else (e - y['h']) / e * 100 for y in fut)))
+            if f_:
+                print(f"{th:>7.2f}{len(f_):>7}"
+                      f"{sum(r[0] for r in f_) / len(f_):>+8.2f}%"
+                      f"{sum(r[1] for r in f_) / len(f_):>+8.2f}%")
+        raise SystemExit
+
+    for label, g in (('guard ON ', True), ('guard OFF', False)):
+        s = list(signals(1.5, g))
+        if s:
+            r = [fwd(b, i, d) for _, b, i, d, _ in s]
+            print(f"{label} fires={len(r):3} avg_fwd60={sum(r) / len(r):+.2f}% "
+                  f"wins={sum(1 for x in r if x > 0)}/{len(r)}")
+        else:
+            print(f"{label} fires=  0")
+    print(f"\nname-days in corpus: {len(cases())}")

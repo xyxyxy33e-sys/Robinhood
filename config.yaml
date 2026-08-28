@@ -280,3 +280,29 @@ chase_guard_all_session_pct: 1.0 # reject an entry closer than this to the sessi
                                  # (session low for puts) at ANY time in the entry window.
                                  # Blocking-only, like Gate B: veto, never promote; a name
                                  # blocked now frequently qualifies after a pullback.
+#
+# UNRESOLVED CONTRADICTION -- read before touching this number (2026-08-28).
+# This guard and late_entry_require_structure's session-extreme condition (`seq`)
+# cannot both be satisfied. `seq` requires the entry bar to SET the session
+# extreme; this guard requires distance FROM the session extreme. When seq holds,
+# the extreme is the bar's own, so the guard degenerates into "did this bar close
+# >1% below its own high" -- which gate (a) (close beyond open) all but forbids.
+#
+# Measured over the full 58 name-day corpus (`python3 tools/backtest_legs.py --audit`):
+#   25 qualifying bars, 25 blocked by the guard (100%),
+#   guard_pct equal to the bar's own high-to-close giveback in 25 of 25,
+#   largest guard_pct ever observed 0.637% against this 1.000% threshold.
+# Re-referencing the guard to the PRIOR bars' extreme does not fix it -- still 25/25,
+# because a bar setting a new extreme is by construction at or beyond the old one.
+#
+# So the strategy has produced ZERO executable entries in the entire corpus, and the
+# five consecutive live no-trade days are this, not a quiet tape.
+#
+# DO NOT loosen this number to start trading. The same corpus says the underlying
+# signal has no edge to release: entering on the breakout bar returns +0.01% at 60
+# minutes (6 wins in 14) and -4.7% modelled after friction; waiting for a pullback is
+# worse at every delay tested. Right now this guard is the only thing standing between
+# the strategy and a negative-expectancy rule. Removing it without replacing the entry
+# logic would convert a no-trade strategy into a losing one.
+# Resolving this -- drop `seq`, drop the guard, or redesign the entry -- is an owner
+# decision. See journal/2026-08-28.md.
