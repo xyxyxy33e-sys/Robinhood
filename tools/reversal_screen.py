@@ -43,18 +43,29 @@ def fired(bars, i):
 
 
 def basket(date):
-    """Names to buy at `date`'s open, because their PRIOR session fired."""
+    """Names to buy at `date`'s open, because their PRIOR session fired.
+
+    `date` need NOT be present in the data. Pre-market on the morning of the
+    trade there is no bar for that day yet, so the signal day is simply the
+    last completed session on file. When `date` IS present (scoring a past
+    day) the signal day is the bar immediately before it. Getting this wrong
+    is how a pre-market screen silently returns an empty basket every day."""
     out = []
     for p in sorted(glob.glob(os.path.join(D, '*.csv'))):
         sym = os.path.basename(p)[:-4]
         bars = load(p)
         idx = {b['d']: k for k, b in enumerate(bars)}
-        if date not in idx:
+        if date in idx:
+            i = idx[date]              # scoring: signal day is i-1, trade bar is i
+            sig, trade = i - 1, bars[i]
+        elif date > bars[-1]['d']:
+            sig, trade = len(bars) - 1, None   # screening ahead of the session
+        else:
+            continue                   # a gap in the series, not a future date
+        if sig < 1 or not fired(bars, sig):
             continue
-        i = idx[date]
-        if fired(bars, i - 1):
-            drop = (bars[i - 1]['c'] / bars[i - 2]['c'] - 1) * 100 if i >= 2 else float('nan')
-            out.append((sym, bars[i - 1]['d'], drop, bars[i]))
+        drop = (bars[sig]['c'] / bars[sig - 1]['c'] - 1) * 100
+        out.append((sym, bars[sig]['d'], drop, trade))
     return out
 
 
@@ -74,6 +85,9 @@ if __name__ == '__main__':
             print(f"{sym:6}{sd:>12}{drop:>8.2f}%")
         print(f"\n{len(b)} names, {100.0 / len(b):.1f}% of the day's allocation each.")
     elif mode == 'score':
+        if any(bar is None for *_, bar in b):
+            print(f"{date} has not traded yet — nothing to score.")
+            raise SystemExit(1)
         rs = [(sym, (bar['c'] / bar['o'] - 1) * 100) for sym, _, _, bar in b]
         for sym, r in sorted(rs, key=lambda x: -x[1]):
             print(f"  {sym:6}{r:+7.2f}%")
