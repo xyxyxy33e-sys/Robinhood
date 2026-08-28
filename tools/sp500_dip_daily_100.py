@@ -150,6 +150,26 @@ def simulate(all_dates, px, ranked, start, end, target, stop, cost_rt):
                open_value=open_value, balance=balance)
 
 
+def lump_spy(spy, dates, total, cost_rt):
+    """Alternative benchmark: the FULL contributed amount bought on day 1's
+    open, held to the window's last available close. Not a like-for-like cash
+    flow (the dip strategy never HAS $total on day 1 -- it accrues $100/day),
+    but it is the natural 'what if you just went all-in on the index' upper
+    reference, and it's what a lump sum beats/loses to DCA on is famous for
+    depending on."""
+    half = cost_rt / 2.0
+    entry_date = dates[0]
+    entry_price = spy[entry_date][0] * (1.0 + half)
+    shares = total / entry_price
+    last_close = None
+    for d in reversed(dates):
+        if d in spy:
+            last_close = spy[d][3]; break
+    return dict(contributed=total, balance=shares * last_close,
+               entry_date=entry_date, entry_price=spy[entry_date][0],
+               mark_date=[d for d in reversed(dates) if d in spy][0])
+
+
 def dca_spy(spy, dates, cost_rt):
     """Same cash flow discipline: $100 into SPY at every trading day's open,
     never sold, marked at the window's last close. The fair 'just buy the
@@ -250,6 +270,19 @@ def main():
         print(f'  {cost*10000:>4.0f}bp   contributed ${d["contributed"]:,.2f}  ->  '
               f'balance ${d["balance"]:,.2f}  '
               f'({100*(d["balance"]/d["contributed"]-1):+.2f}% on contributed capital)')
+
+    print()
+    print('=' * 112)
+    print('ALTERNATIVE: THE SAME TOTAL DOLLARS, ALL AT ONCE, INTO SPY ON DAY 1 (not a like-for-like')
+    print('cash flow vs. the $100/day strategy -- it assumes the capital exists upfront)')
+    print('=' * 112)
+    r0 = simulate(all_dates, px, ranked, start, end, target, a.stop, 0.0005)
+    win_dates = [dd for dd in all_dates if start <= dd <= end]
+    for cost in costs:
+        l = lump_spy(spy, win_dates, r0['contributed'], cost)
+        print(f'  {cost*10000:>4.0f}bp   ${l["contributed"]:,.2f} on {l["entry_date"]} @ open '
+              f'${l["entry_price"]:.2f}  ->  ${l["balance"]:,.2f} marked {l["mark_date"]}  '
+              f'({100*(l["balance"]/l["contributed"]-1):+.2f}%)')
 
     print()
     print('Reading this: "balance" mixes REALIZED cash from closed trades with the paper')
