@@ -146,7 +146,7 @@ class Panel:
                     continue
                 if b[0] > 0 and b[3] > 0:
                     o[i], h[i], c[i], v[i] = b[0], b[1], b[3], b[4]
-            self.o[s], self.c[s], self.h[s], self.v[s] = o, h, c, v
+            self.o[s], self.c[s], self.h[s], self.v[s] = o, c, h, v
         self.syms = sorted(self.px)
         self.spy_c = [self.spy[d][3] if d in self.spy else None for d in self.dates]
         self.spy_o = [self.spy[d][0] if d in self.spy else None for d in self.dates]
