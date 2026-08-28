@@ -225,22 +225,42 @@ def main():
     # must not be a lone spike. Its structure must have at least 2 NEIGHBOURS (same signals,
     # different K or rebalance period) that also clear the beta and cost gates.
     pool = passing or gated or [r for r, _ in mixes]
+
     def family(nm):
-        return nm.split(' ', 1)[1].split(' K=')[0].split(' P=')[0].strip()
+        # strip the variant index, then the K=/P= suffix, then all spaces, so that
+        # "29 mom21 + trend50", "33 mom21+trend50 K=25" and "35 mom21+trend50 P=5"
+        # are recognised as the SAME structure at different parameterizations.
+        return nm.split(' ', 1)[1].split(' K=')[0].split(' P=')[0].replace(' ', '')
     gated_names = [family(r['name']) for r in gated]
-    def neighbours(r):
-        f = family(r['name'])
-        return sum(1 for g2 in gated_names if g2 == f) - 1
+    fams = {}
+    for r in gated:
+        fams.setdefault(family(r['name']), []).append(r)
     ranked = sorted(pool, key=lambda r: -r['alpha_t'])
-    print('\nNEIGHBOURHOOD CHECK (a locked candidate needs >= 2 same-structure neighbours '
-          'also clearing the gates)')
-    for r in ranked[:6]:
-        print(f'   {r["name"]:<34} t={r["alpha_t"]:+.2f}  neighbours clearing gates = {neighbours(r)}')
-    robust = [r for r in ranked if neighbours(r) >= 2]
-    best = robust[0] if robust else ranked[0]
-    if not robust:
-        print('   NO structure has >= 2 clearing neighbours: the top cell is a lone spike, '
-              'and is carried forward only as the pre-registered single best.')
+    print('\nNEIGHBOURHOOD CHECK -- how many gate-clearing members each STRUCTURE has across '
+          'its K / rebalance parameterizations. A structure that clears only at one (K, P) is '
+          'a lone spike and is not lockable.')
+    for f, members in sorted(fams.items(), key=lambda kv: -len(kv[1])):
+        print(f'   {f:<34} clearing members = {len(members):<2}  '
+              f'[{", ".join(m["name"].split(" ",1)[0] for m in members)}]')
+    robust_fams = {f: m for f, m in fams.items() if len(m) >= 3}
+    if robust_fams:
+        f = max(robust_fams, key=lambda k: sum(x['alpha_t'] for x in robust_fams[k]) / len(robust_fams[k]))
+        members = robust_fams[f]
+        # DELIBERATELY NOT THE ARGMAX CELL. Within the chosen structure the locked candidate is
+        # the BASE parameterization (K=50, P=21) -- the one whose K and P were fixed a priori in
+        # the grid header, not tuned. Picking the highest-t cell of a family is precisely the
+        # overfit that the neighbourhood check exists to detect, and it would raise the Year-A
+        # number while lowering the chance the holdout confirms it. This is a change from the
+        # literal "highest alpha t" wording at the top of this file, made in the CONSERVATIVE
+        # direction (it locks a LOWER-t candidate) and disclosed here rather than silently.
+        base = [m for m in members if ' K=' not in m['name'] and ' P=' not in m['name']]
+        best = base[0] if base else min(members, key=lambda m: -m['alpha_t'])
+        print(f'\nMost robust structure: {f} ({len(members)} clearing parameterizations). '
+              f'Locking its BASE parameterization, not its best cell.')
+    else:
+        best = ranked[0]
+        print('\n   NO structure clears the gates at >= 3 parameterizations: every clearing cell '
+              'is a lone spike, and the pre-registered single best is carried forward as-is.')
     print(f'\nLOCKED CANDIDATE FOR THE HOLDOUT: {best["name"]}')
     print(f'  Year-A alpha t = {best["alpha_t"]:.2f}  '
           f'({"CLEARS" if best["alpha_t"] > 2.5 else "BELOW"} the pre-registered t>2.5 bar)')
@@ -252,6 +272,42 @@ def main():
           f'cash periods {d["cash_periods"]}, carried (missing) bars {d["carried_bars"]}')
     print(f'  daily-return lag-1 autocorrelation {best["ac1"]:+.3f} '
           f'(non-overlapping by construction; this is a sanity check, not a correction)')
+    # FRAGILITY: does the Year-A result live in a handful of days? Same check the loser
+    # studies used, where deleting 5 of 250 days moved CAGR by 55 points.
+    from mix_engine import curve_metrics as _cm
+    rr = best['rets'][0.0]
+    srt = sorted(range(len(rr)), key=lambda k: -abs(rr[k]))
+    for drop in (1, 3, 5):
+        keep = [rr[k] for k in range(len(rr)) if k not in set(srt[:drop])]
+        print(f'  gross CAGR after deleting the {drop} largest-|return| day(s): '
+              f'{100*_cm(keep)["cagr"]:+.2f}%  (full sample {100*best["gross"]["cagr"]:+.2f}%)')
+    spy_dd = spym['mdd']
+    print(f'  Year-A SPY for reference: CAGR {100*spym["cagr"]:+.2f}%, vol {100*spym["vol"]:.2f}%, '
+          f'Sharpe {spym["sharpe"]:.2f}, maxDD {100*spy_dd:.2f}%')
+    # IS IT REALLY A MIX, OR THE SAME SIGNAL TWICE? mom21 and trend50 are both trend
+    # measures. If their cross-sectional ranks are ~1:1 the "combination" is cosmetic.
+    # Spearman rank correlation on each rebalance date, plus how much the blend's picks
+    # actually differ from each single factor's picks.
+    from mix_signals import eligible as _elig
+    from mix_engine import rank_map as _rm, sig_momentum as _mom, sig_sma_dist as _sma
+    reb_idx = [i for k, i in enumerate(idx) if k % REBAL == 0]
+    sp, ov1, ov2 = [], [], []
+    for i in reb_idx:
+        j = i - 1
+        el = _elig(P, i, 63)
+        a = _rm([(x, _mom(P, x, j, 21)) for x in el], False)
+        b = _rm([(x, _sma(P, x, j, 50)) for x in el], False)
+        n = len(el)
+        dsq = sum((a[x] - b[x]) ** 2 for x in el)
+        sp.append(1 - 6 * dsq / (n * (n * n - 1)))
+        blendpicks = set(sorted(el, key=lambda x: a[x] + b[x])[:K_NAMES])
+        ov1.append(len(blendpicks & set(sorted(el, key=lambda x: a[x])[:K_NAMES])) / K_NAMES)
+        ov2.append(len(blendpicks & set(sorted(el, key=lambda x: b[x])[:K_NAMES])) / K_NAMES)
+    print(f'  signal redundancy: mean Spearman rank corr(mom21, trend50) across the '
+          f'{len(reb_idx)} rebalance dates = {sum(sp)/len(sp):+.2f}; the blend\'s book overlaps '
+          f'mom21-alone {100*sum(ov1)/len(ov1):.0f}% and trend50-alone {100*sum(ov2)/len(ov2):.0f}% '
+          f'of the time. A high correlation means this is a two-horizon trend rule, not two '
+          f'independent ideas -- stated plainly rather than sold as diversification.')
     print('\nExactly ONE candidate goes to tools/mix_holdout_yearb.py, unmodified, once.')
 
 
