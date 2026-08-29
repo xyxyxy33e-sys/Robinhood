@@ -822,3 +822,48 @@ of **0.02**, and it beats QQQ on all four axes.
 Full Sharpe across 0% / 1% / 2% buffers: **0.79 / 0.87 / 0.79**, spread 0.08 — unchanged
 from the four-state model. Richer state definition does not rescue the parameter
 sensitivity, and the 1% peak remains the single weakest point in this whole family.
+
+## Appendix: sweeping state B, and what the buffer is actually doing
+
+Base config A=2.0, C=0.5, D=1.0, E=1.0, F=0.5; only B (the reclaim state) varies.
+
+### B = 3.0 is marginally worse
+
+| B | full Sharpe | CAGR | maxDD | months uw | search | holdout |
+|---|---|---|---|---|---|---|
+| 1.0 | 0.88 | +24.78% | −35.3% | 19.0 | 0.91 | 0.86 |
+| **2.0** | **0.88** | +25.45% | −35.3% | 18.9 | 0.89 | 0.87 |
+| 2.5 | 0.87 | +25.65% | −35.3% | 18.5 | 0.87 | 0.87 |
+| **3.0** | **0.86** | +25.81% | −35.3% | 18.5 | 0.85 | 0.87 |
+
+Monotone and unexciting: raising B buys **+0.36pp of CAGR** (24.78 → 25.81) and costs
+**0.02 of Sharpe** (0.88 → 0.86). No free lunch, and B's 5.3% footprint means the whole
+sweep moves nothing much. Max drawdown is pinned at −35.3% throughout — B never sets the
+worst moment. B=3.0 also makes the buffer *more* fragile: spread 0.09 versus 0.07 at B=2.0.
+
+**Verdict: keep B at 2.0.** The reclaim state's better forward return (+5.15% vs A's
++2.71%) is real but too small a slice to pay for the extra risk.
+
+### THE IMPORTANT RESULT: the edge is the buffer, not the state machine
+
+Running the identical configs on RAW price-vs-MA inequalities — labels meaning exactly
+what they say, no hysteresis:
+
+| | full Sharpe | CAGR | maxDD | months uw | trades/yr | beats QQQ 4 ways |
+|---|---|---|---|---|---|---|
+| **raw inequalities** | **0.79–0.81** | +22.1 to +23.1% | −35.3 to −39.6% | 19.5–28.8 | **17.5** | **none** |
+| **buffered 1%** | **0.86–0.88** | +24.8 to +25.8% | −35.3% | 18.5–19.0 | **8.4** | all |
+
+**Without the hysteresis band the strategy fails outright** — Sharpe ~0.80 against QQQ's
+0.85, and not one variant beats QQQ on all four axes. The buffer halves turnover (17.5 →
+8.4 trades/yr) and that is where the entire advantage comes from.
+
+This reframes everything above. It is not "a six-state model that happens to use a buffer";
+it is **a turnover-reduction device whose benefit peaks sharply at one parameter value**
+(0.80 / 0.88 / 0.81 at 0% / 1% / 2%). The state machine is close to decoration — B, C and E
+assignments barely move the result, while the buffer moves it by 0.08 of Sharpe.
+
+Combined with the earlier finding that averaging over buffers destroys the edge, the honest
+reading is that **this family has no demonstrated edge independent of one fitted smoothing
+parameter.** The durable results remain the two structural ones: reduce leverage rather than
+exit, and expect returns to be highest in the weakest states.
