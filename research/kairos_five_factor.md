@@ -590,3 +590,62 @@ favourable window by hindsight selection; the risk claims are not attainable at 
 
 Reproduce with `python3 tools/kairos/factors.py && python3 tools/kairos/backtest.py`
 (~20s, standard library only).
+
+---
+
+## Appendix: auditing Raincheck's 2025 claim against real prices (2026-08-29)
+
+Raincheck published its four 2025 uptrend windows, including the losing ones. That makes
+the year auditable rather than a filtered sample. Verified against `data/kairos/etf/`:
+
+| leg | QQQ claimed | QQQ actual | TQQQ claimed | TQQQ actual |
+|---|---|---|---|---|
+| Jan 2 → Jan 8 | +0.79% | +0.99% | +1.96% | +2.61% |
+| Jan 17 → Feb 28 | −2.60% | −2.60% | −9.89% | −9.89% |
+| May 1 → Nov 18 | +23.80% | +23.80% | +73.26% | +73.26% |
+| Nov 26 → Dec 31 | +0.01% | +0.01% | −1.22% | −1.22% |
+
+Three of four legs match to the basis point; leg 1 differs by an entry-timing convention.
+Compounding the four legs gives **+58.25%** against their claimed **+57.24%**.
+
+**The claim verifies.** TQQQ buy-and-hold returned +34.10% in 2025, so the filter genuinely
+beat it by roughly 23pp.
+
+**This corrects an earlier statement in this session.** The line "2025 measured +7.58%
+against their claimed +57.24% — badly wrong" conflated two different things: +7.58% was
+*our* five-factor system's 2025 result, which says nothing about whether *their* number is
+accurate. Theirs is accurate. Ours was worse.
+
+### Where the edge came from — one crash
+
+| period | TQQQ | position |
+|---|---|---|
+| Feb 28 → May 1 (tariff drawdown) | **−24.23%** | in cash — avoided |
+| Jan 8 → Jan 17 | +3.05% | in cash — missed |
+| Nov 18 → Nov 26 | +8.52% | in cash — missed |
+
+The whole year's outperformance is one avoided drawdown, partly offset by ~11.6pp of
+opportunity cost in the two flat gaps, plus two losing trades (+2.61%, −9.89%).
+
+### But 2025 does not demonstrate a proprietary signal
+
+Standard textbook trend rules over the same calendar year, compounded across their own
+in-market runs, no costs:
+
+| rule | runs | 2025 compounded |
+|---|---|---|
+| **Raincheck (published)** | 4 | **+57.24%** (verified +58.25%) |
+| **20dma > 50dma crossover** | 3 | **+57.76%** |
+| QQQ > 200dma | 2 | +46.06% |
+| QQQ > 50dma | 8 | +93.80% |
+| QQQ > 20dma | 16 | +186.20% (unusable turnover) |
+| TQQQ buy-and-hold | — | +34.10% |
+
+A 20/50 moving-average crossover — two lines of code, free, public since the 1970s —
+returned **+57.76%** against Raincheck's +57.24%, and picked structurally similar windows
+(Jan 2–Mar 5, May 13–Dec 8, Dec 17–31). QQQ > 50dma beat them outright.
+
+So 2025 is a year in which *every* trend filter beat buy-and-hold, because it contained one
+clean crash and one clean recovery — precisely the crash-contingent regime the 16-year study
+above identifies as where this family wins. The 2025 result is real, and it is evidence
+about the year rather than about the signal.
