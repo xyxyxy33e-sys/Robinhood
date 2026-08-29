@@ -20,6 +20,12 @@ import csv
 
 DUMP_DIR = "/root/.claude/projects/-home-user-Robinhood/95ab5d51-ca02-5343-b90e-149d7fffd134/tool-results"
 OUT_DIR = "/home/user/Robinhood/data/kairos/universe"
+ETF_DIR = "/home/user/Robinhood/data/kairos/etf"
+
+# Instruments the backtest actually trades / benchmarks against. For these we keep
+# OPEN as well as CLOSE, because the primary (lookahead-free) execution assumption is
+# "decide on day t's close, fill at day t+1's OPEN", which needs the open price.
+ETFS = {"TQQQ", "QQQ", "SPY", "XLU", "BIL"}
 
 
 def load_existing(path):
@@ -33,8 +39,10 @@ def load_existing(path):
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
+    os.makedirs(ETF_DIR, exist_ok=True)
     dumps = sorted(glob.glob(os.path.join(DUMP_DIR, "mcp-robinhood-get_equity_historicals-*.txt")))
     per_symbol = {}
+    etf_ohlc = {}
     n_interp = 0
     not_found = set()
 
@@ -53,12 +61,15 @@ def main():
             if not sym or res.get("interval") != "day":
                 continue
             acc = per_symbol.setdefault(sym, {})
+            eacc = etf_ohlc.setdefault(sym, {}) if sym in ETFS else None
             for b in res.get("bars", []) or []:
                 if b.get("interpolated"):
                     n_interp += 1
                     continue
                 day = b["begins_at"][:10]
                 acc[day] = b["close_price"]
+                if eacc is not None:
+                    eacc[day] = (b["open_price"], b["close_price"])
 
     for sym, series in sorted(per_symbol.items()):
         path = os.path.join(OUT_DIR, f"{sym}.csv")
@@ -69,6 +80,22 @@ def main():
             w.writerow(["d", "c"])
             for day in sorted(merged):
                 w.writerow([day, merged[day]])
+
+    for sym, series in sorted(etf_ohlc.items()):
+        path = os.path.join(ETF_DIR, f"{sym}.csv")
+        merged = {}
+        if os.path.exists(path):
+            with open(path) as f:
+                r = csv.reader(f)
+                next(r, None)
+                merged = {row[0]: (row[1], row[2]) for row in r if len(row) >= 3}
+        merged.update(series)
+        with open(path, "w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["d", "o", "c"])
+            for day in sorted(merged):
+                w.writerow([day, merged[day][0], merged[day][1]])
+        print(f"  etf {sym}: {len(merged)} bars {min(merged)} .. {max(merged)}")
 
     print(f"dumps scanned      : {len(dumps)}")
     print(f"symbols written    : {len(per_symbol)}")
