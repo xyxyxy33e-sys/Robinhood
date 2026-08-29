@@ -759,3 +759,66 @@ This tempers the previous appendix. What survives:
 Seven studies, and the honest score remains: the mechanism is real and worth using if one
 is going to time at all; no specific configuration has demonstrated an edge that survives
 its own parameter uncertainty.
+
+## Appendix: SIX states — adding the 50-vs-200 cross as a third dimension
+
+Price-vs-50, price-vs-200 and 50-vs-200 give six reachable states (two of the eight
+combinations are arithmetically impossible). Time in each:
+
+| state | definition | share |
+|---|---|---|
+| **A** | P>50, P>200, 50>200 — established uptrend | 62.2% |
+| **B** | P>50, P>200, 50<200 — **reclaim**, price above both but MAs not yet crossed | 5.3% |
+| **C** | P>50, P<200, 50<200 — bounce inside a downtrend | 3.7% |
+| **D** | P<50, P>200, 50>200 — pullback inside an uptrend | 15.7% |
+| **E** | P<50, P<200, 50>200 — **breakdown**, lost both averages, MAs still crossed | 6.0% |
+| **F** | P<50, P<200, 50<200 — established downtrend | 7.1% |
+
+### Forward returns are INVERTED against trend strength
+
+Forward TQQQ return, 21 trading days ahead:
+
+| state | n | mean | median |
+|---|---|---|---|
+| A established uptrend | 2570 | **+2.71%** | +3.76% |
+| B reclaim | 222 | +5.15% | +4.60% |
+| C bounce in downtrend | 154 | **−1.97%** | +3.08% |
+| D pullback in uptrend | 649 | +6.83% | +8.99% |
+| E breakdown | 249 | +8.66% | +5.95% |
+| F established downtrend | 295 | **+10.73%** | **+14.32%** |
+
+**The strongest state has the worst forward returns and the weakest state has the best** —
+F (+10.73%) is nearly 4x A (+2.71%). This is the same inversion found four other ways today,
+now visible directly in the state machine. It is the equity risk premium: expected returns
+are highest after prices have fallen.
+
+**This explains why going to cash is wrong.** The weak states are not low-return states —
+they are the highest-return states. Leverage is reduced there for *risk control*, not
+because the forward return is poor. Confirmed in the grid: forcing E and F to zero gives
+Sharpe 0.81 / CAGR +21.72% / 30.9 months underwater, materially worse than holding 0.5x
+through them, and raising E to 1.0x improves things further (Sharpe 0.88, CAGR +25.45%).
+
+**C is the only genuinely bad state** — the one with a negative mean (−1.97%). Price above
+the 50dma while both the 200dma and the cross are still negative is the dead-cat bounce, and
+it independently confirms the earlier finding that this state should be treated as weak.
+
+**B is real but small.** The reclaim state does have better forward returns than A (+5.15%
+vs +2.71%), vindicating its separation — but at 5.3% of the time, setting B above, equal to
+or below A moves full Sharpe only between 0.86 and 0.87.
+
+### Best configurations
+
+| A/B/C/D/E/F | full Sharpe | CAGR | maxDD | months uw | search | holdout |
+|---|---|---|---|---|---|---|
+| 2.0/2.0/0.5/1.0/**1.0**/0.5 | **0.88** | +25.45% | −35.3% | 18.9 | 0.89 | 0.87 |
+| 2.0/2.0/0.5/1.0/0.5/0.5 | 0.87 | +24.16% | −32.2% | 19.0 | 0.84 | 0.89 |
+| 2.0/2.0/0.5/1.0/**0.0/0.0** | 0.81 | +21.72% | −33.9% | 30.9 | 0.72 | 0.91 |
+
+The top row is the most balanced result found: search 0.89 / holdout 0.87, a regime spread
+of **0.02**, and it beats QQQ on all four axes.
+
+### The buffer fragility is NOT fixed
+
+Full Sharpe across 0% / 1% / 2% buffers: **0.79 / 0.87 / 0.79**, spread 0.08 — unchanged
+from the four-state model. Richer state definition does not rescue the parameter
+sensitivity, and the 1% peak remains the single weakest point in this whole family.
