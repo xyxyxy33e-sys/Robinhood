@@ -1319,3 +1319,55 @@ different route. Lowering D would under-weight it relative to its own risk contr
 
 E is the exception that proves the method: its inverse-vol weight would be 10.6%, but its
 6.14× drawdown concentration and −0.182% daily mean justify going below that, to zero.
+
+## Appendix: SQQQ in the weak states — tested and rejected
+
+### A lookahead bug caught by a baseline check
+
+The first version of this test set each day's weight from that day's own state rather
+than the prior day's. The baseline came back at 27.4% CAGR / 0.94 Sharpe when the same
+configuration had measured 35.0% / 1.15 — the mismatch is what exposed it. The buggy run
+made SQQQ look outstanding: **30% SQQQ in F showed 2022 at +18.4% and Sharpe 1.23.** All
+of that was reading the state at the end of the period it was trading. Corrected numbers
+below; the baseline now reproduces to the decimal.
+
+### What SQQQ actually did, entered on the prior day's signal
+
+| state | days | QQQ over those days | SQQQ | naive −3× | decay cost |
+|---|---|---|---|---|---|
+| C | 115 | **+4.7%** | −24.3% | −12.8% | −11.5pp |
+| E | 114 | **+22.1%** | −73.3% | −45.1% | −28.2pp |
+| F | 391 | **+2.5%** | **−53.4%** | −7.2% | **−46.3pp** |
+
+**QQQ rose in all three "bad" states.** By the time the hysteresis band and the
+prior-day signal have confirmed a downtrend, the decline has largely happened — which is
+the same thing the forward-return table said (F +1.63% at 21 days). Shorting these states
+is shorting a positive drift, and then paying 46pp of decay on top of it in F alone. Over
+391 days in F, cash at T-bill rates would have beaten SQQQ by roughly 57 points.
+
+### Results
+
+| variant | CAGR | Max DD | Sharpe | worst 12m | months uw | recent 5y | 2022 |
+|---|---|---|---|---|---|---|---|
+| **baseline — no SQQQ** | **27.4%** | −40.7% | 0.94 | −22.0% | 19.6 | 0.82 | −18.9% |
+| SQQQ 10% in F | 27.2% | −40.7% | 0.94 | −18.1% | 19.5 | 0.83 | −15.9% |
+| SQQQ 20% in F | 26.8% | −40.7% | 0.94 | −18.0% | 18.7 | 0.83 | −13.5% |
+| SQQQ 20% in E | 25.5% | **−36.9%** | 0.93 | −22.4% | 18.7 | 0.86 | −15.6% |
+| SQQQ 10% in E and F | 26.3% | −37.9% | **0.95** | **−16.4%** | 18.7 | **0.87** | −14.1% |
+
+### Verdict: no
+
+**The Sharpe gain is nil** — 0.94 to 0.95 against a standard error near 0.30. What SQQQ
+buys is tail behaviour: worst 12 months −22.0% → −16.4%, 2022 −18.9% → −14.1%, max
+drawdown −40.7% → −37.9%. What it costs is 1.1pp of CAGR, every year, forever.
+
+That is a real hedge with a real premium, and the case against it is that **the entire
+benefit rides on another 2022 arriving.** F is the only state where a sustained decline
+coincided with the signal, and it is 14% of days. In the other 86% the position bleeds
+against a market that, measured from the signal, was going up. Max drawdown is unchanged
+in every F variant because the worst drawdown (2020) is an E and D event, not an F one.
+
+Raincheck's own case study reached the same conclusion from one episode — SQQQ lost 4.43%
+while QQQ fell 5.21%, and cash beat it. This generalises that over 391 days: **cash beats
+the short by roughly 57 points.** Their policy caps SQQQ at 30% "given the risky nature of
+short positions"; the evidence says the cap should be zero, and F should stay at 100% core.
