@@ -696,3 +696,66 @@ found, but its four-way win over QQQ rests on a 1% buffer that fails at 0% and 2
 execution costs under ~15bp. Treat the mechanism as the finding and the exact
 configuration as provisional. The obvious next step is averaging across buffers (an
 ensemble over the fragile parameter), which halved buffer sensitivity elsewhere.
+
+## Appendix: all FOUR states of (50, 200), and the buffer ensemble
+
+The previous ladder collapsed "above 50, below 200" into the same bucket as "below both".
+Split properly there are four states. Time spent in each: **S1 above both 67.5%, S2 above
+200 only 15.7%, S3 below 200 but above 50 just 3.7%, S4 below both 13.1%.**
+
+### S3 does NOT deserve more leverage — my own hypothesis, falsified
+
+The streak-age result (best returns in the first ~20 days of a fresh regime) suggested S3,
+the early-recovery state, should get MORE exposure than S2. It does not:
+
+| S1/S2/S3/S4 | full Sharpe | CAGR | maxDD | months uw | beats QQQ 4 ways |
+|---|---|---|---|---|---|
+| 2.0/1.0/**0.5**/0.5 (S3 treated as weak) | 0.87 | +24.16% | **−32.2%** | 19.0 | **yes** |
+| 2.0/1.0/1.0/0.5 (S3 = S2) | 0.86 | +24.29% | −34.6% | 18.9 | yes |
+| 2.0/1.0/**1.5**/0.5 (S3 > S2) | 0.86 | +24.54% | −39.5% | 18.7 | **no** |
+
+Giving S3 more leverage deepens max drawdown by 7pp and loses the four-way win. "Above the
+50dma while still below the 200dma" is mostly a dead-cat bounce, not an early recovery —
+the streak-age effect does not transfer to this state definition. **Treat S3 as weak.**
+
+### The 50/200 crossover (golden/death cross) is worse
+
+| config | full Sharpe | CAGR | maxDD | tr/yr | search | holdout |
+|---|---|---|---|---|---|---|
+| cross 2.0/1.0 | 0.86 | +30.54% | −51.7% | **1.3** | 0.95 | 0.79 |
+| cross 3.0/1.5 | 0.87 | +40.32% | −69.9% | 1.3 | 0.96 | 0.78 |
+
+Attractively low turnover (1.3 trades/yr), but max drawdown is ~20pp deeper and none
+achieves the four-way win. Note the shape: high search Sharpe (0.95–0.96), low holdout
+(0.78–0.80) — looks good in-sample, fails out. Price-vs-MA beats MA-vs-MA here.
+
+### The buffer ensemble does not rescue the result — it confirms the fragility
+
+Averaging the 0% / 1% / 2% buffer variants was the obvious fix for the knife-edge
+sensitivity. It does not work:
+
+| | full Sharpe | CAGR | maxDD | months uw | beats QQQ 4 ways |
+|---|---|---|---|---|---|
+| single, buffer 0% | 0.80 | +22.14% | −36.2% | 26.9 | no |
+| single, buffer 1% | **0.86** | +24.30% | −34.6% | 18.9 | **yes** |
+| single, buffer 2% | 0.79 | +21.64% | −34.2% | 19.3 | no |
+| **ensemble over buffers** | **0.82** | +22.72% | −34.9% | 18.9 | **no** |
+
+The ensemble lands near the average (0.82), not the peak, and **fails to beat QQQ's 0.85 on
+Sharpe.** Averaging over the fragile parameter removes the edge along with the fragility,
+which is the correct diagnosis: **the 1% buffer's advantage was specific to that buffer,
+not a property of the strategy.**
+
+### Revised verdict
+
+This tempers the previous appendix. What survives:
+
+- **The mechanism — reduce leverage rather than exit — is robust.** It improves every
+  configuration it touches, at every leverage level, independent of selection. Time
+  underwater falls from ~27–30 months to ~19 in essentially every variant.
+- **The specific four-way win over QQQ does not survive buffer-averaging** and should be
+  treated as a fitted result, not a finding.
+
+Seven studies, and the honest score remains: the mechanism is real and worth using if one
+is going to time at all; no specific configuration has demonstrated an edge that survives
+its own parameter uncertainty.
