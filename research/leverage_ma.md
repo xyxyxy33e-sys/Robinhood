@@ -925,3 +925,57 @@ data does not support.
 One oddity worth recording: 0.25% is *worse* than 0% (0.78 vs 0.80). A very narrow band
 appears to add lag without meaningfully suppressing whipsaw — worse than either no band or
 an adequate one.
+
+## Appendix: optimising for RETURN instead of Sharpe
+
+Everything above optimises risk-adjusted return. If the objective is terminal wealth and
+the investor will accept deeper drawdowns, the ranking changes.
+
+### Scaling the ladder up leaves Sharpe untouched
+
+| A/B/C/D/E/F | CAGR | final × | maxDD | worst 12m | months uw | Sharpe |
+|---|---|---|---|---|---|---|
+| 2/2/0.5/1/1/0.5 | +25.45% | 42.2 | −35.3% | −29.3% | 18.9 | 0.88 |
+| 2.5/2.5/0.62/1.25/1.25/0.62 | +30.86% | 84.7 | −42.5% | −35.7% | 19.0 | 0.88 |
+| 3/3/0.75/1.5/1.5/0.75 | **+35.54%** | 151.2 | −48.8% | −42.0% | 19.0 | **0.89** |
+| 3/3/1/2/1.5/1 | **+37.24%** | 185.7 | −53.3% | −47.0% | 19.0 | 0.89 |
+
+**Sharpe is flat at 0.88–0.89 across the whole range while CAGR rises 25% → 37%.** This is
+the "leverage is inert" result again: scaling exposure buys return without degrading
+risk-adjusted quality. Months underwater stays pinned at ~19 throughout — the ladder
+controls duration regardless of how much leverage rides on top of it.
+
+### But buy-and-hold TQQQ still wins on raw CAGR
+
+| | CAGR | final × | maxDD | worst 12m | months uw | search CAGR | holdout CAGR |
+|---|---|---|---|---|---|---|---|
+| QQQ B&H | +18.52% | 16.5 | −35.6% | −35.2% | 24.7 | | |
+| QLD B&H | +32.86% | 108.8 | −63.8% | −63.2% | 30.0 | | |
+| **TQQQ B&H** | **+42.33%** | **338.9** | **−81.8%** | −81.1% | 36.5 | +48.61% | +32.48% |
+| 3/3/1/2/1.5/1 | +37.24% | 185.7 | **−53.3%** | −47.0% | **19.0** | +33.00% | **+42.71%** |
+
+The trade is explicit: **give up 5pp of CAGR and 45% of terminal wealth (338.9× → 185.7×)
+to cut max drawdown from −82% to −53% and halve time underwater from 36.5 to 19.0 months.**
+
+### The holdout inverts, and that matters for this objective
+
+TQQQ buy-and-hold: search **+48.61%** → holdout **+32.48%**.
+The timed 3x ladder: search +33.00% → holdout **+42.71%**.
+
+In 2020+, which contains the actual crashes, **the timed version beat buy-and-hold on raw
+CAGR**, not merely on risk. In the 2010-2019 bull market it lost by 15pp. Same
+crash-contingency as everywhere else in this file, now expressed in return rather than
+Sharpe.
+
+### Two warnings specific to the return objective
+
+**Recovery arithmetic.** A −81.8% drawdown requires **+449%** to get back to even. TQQQ's
+42.33% CAGR is only realised by an investor who does not sell at the bottom; the −53%
+version needs +113%. The gap between those two recoveries is the real product being sold,
+not the 5pp of CAGR.
+
+**The sample is a bull market.** 2010-2026 is an exceptional stretch for the Nasdaq, and
+CAGR is still rising at 3x (QQQ +18.52% → QLD +32.86% → TQQQ +42.33%, decelerating but not
+peaked). Growth-optimal leverage estimated from this window will be biased high — the
+decelerating increments (+14.3pp then +9.5pp) show volatility drag already biting, and a
+sample containing a 2000- or 2008-style decade would put the peak materially lower.
