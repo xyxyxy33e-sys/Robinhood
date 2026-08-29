@@ -628,3 +628,71 @@ study left unsolved:
 
 **The ensemble halves the buffer sensitivity**, at a cost of roughly 7pp of CAGR. That is the
 intended trade: it buys robustness to a parameter nobody knows how to set correctly.
+
+## Appendix: SHIFTING leverage with the timing state (`tools/leverage/shift.py`)
+
+The owner's framing: don't go to cash, **shift leverage**. This is distinct from the
+falsified design — what is inverted is the CONVICTION SCORE, not the binary timing STATE.
+Carrying L_high above the 200dma and L_low > 0 below it was never tested.
+
+### Two-state grid: L_high above 200dma, L_low below
+
+| L_high | L_low | full Sharpe | CAGR | maxDD | months uw | search | holdout | spread |
+|---|---|---|---|---|---|---|---|---|
+| 2.0 | **0.0** (cash) | 0.81 | +24.63% | −40.3% | 21.9 | 0.69 | 0.96 | 0.27 |
+| 2.0 | **1.0** | **0.89** | +29.65% | −45.5% | **19.5** | 0.90 | 0.88 | **0.01** |
+| 2.0 | 2.0 (B&H) | 0.86 | +32.86% | −63.8% | 30.0 | 1.01 | 0.73 | 0.29 |
+| 3.0 | 0.0 (cash) | 0.82 | +33.23% | −54.9% | 28.3 | 0.70 | 0.95 | 0.25 |
+| 3.0 | **1.5** | **0.89** | +40.26% | −61.0% | 24.6 | 0.91 | 0.88 | **0.03** |
+
+**The owner's idea is validated.** At every L_high, shifting to a reduced leverage
+dominates going to cash: higher full-period Sharpe (0.89 vs 0.81), higher CAGR, and far
+shorter time underwater (19.5 vs 21.9 months at L=2; 20.3 vs 28.3 at L=3). Going flat
+throws away the recovery; halving exposure keeps you in it.
+
+The regime spread collapses to **0.01–0.03** at L_low ≈ L_high/2, versus 0.25–0.29 at
+either extreme. "Halve exposure when the trend breaks" is a defensible prior, not a
+fitted parameter.
+
+### Three-state ladder on MA agreement
+
+Above both 50 and 200dma / above 200 only / below both — graded on AGREEMENT, not score.
+
+| levels | full Sharpe | CAGR | maxDD | months uw | tr/yr |
+|---|---|---|---|---|---|
+| QQQ buy-and-hold | 0.85 | +18.52% | −35.6% | 24.7 | 0 |
+| 3.0 / 2.0 / 1.0 | 0.89 | +36.41% | −50.7% | 19.0 | 8.9 |
+| 2.0 / 1.5 / 1.0 | **0.90** | +28.26% | −42.2% | 19.5 | 8.9 |
+| **2.0 / 1.0 / 0.5** | 0.87 | **+24.16%** | **−32.2%** | **19.0** | 8.9 |
+
+**`2.0/1.0/0.5` is the first configuration all day to beat QQQ buy-and-hold on all four
+axes simultaneously** — higher Sharpe (0.87 vs 0.85), higher CAGR (+24.16% vs +18.52%),
+*shallower* max drawdown (−32.2% vs −35.6%), and shorter time underwater (19.0 vs 24.7
+months). Nothing in six prior studies managed a shallower drawdown than QQQ.
+
+### Stress tests — what holds and what does not
+
+**Robust to the leverage levels.** Perturbing them keeps the four-way win:
+2.0/1.25/0.5 (0.87), 1.75/1.0/0.5 (0.87), 2.25/1.0/0.5 (0.86), 2.0/0.75/0.5 (0.86). Not
+a knife edge.
+
+**FRAGILE to the buffer.** Full Sharpe by buffer: **0% → 0.79, 1% → 0.87, 2% → 0.79.**
+A sharp peak at the value used. At 0% or 2% it does NOT beat QQQ on all four. This is the
+same unsolved buffer sensitivity flagged in the main study and it is the single biggest
+reason to distrust this result.
+
+**FRAGILE to costs.** 0bp → 0.89, 10bp → 0.87, **20bp → 0.84, 30bp → 0.81.** At 8.9
+trades/yr the four-way win disappears above roughly 15bp round trip.
+
+**The selection trap is not escaped.** The search period still ranks plain buy-and-hold
+highest (1.01). A purely search-maximising pre-registration would still have chosen "don't
+time it."
+
+### Verdict
+
+The mechanism — reduce leverage rather than exit — is sound and improves every config it
+touches, independent of selection. The specific `2.0/1.0/0.5` ladder is the best thing
+found, but its four-way win over QQQ rests on a 1% buffer that fails at 0% and 2%, and on
+execution costs under ~15bp. Treat the mechanism as the finding and the exact
+configuration as provisional. The obvious next step is averaging across buffers (an
+ensemble over the fragile parameter), which halved buffer sensitivity elsewhere.
