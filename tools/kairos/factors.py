@@ -227,6 +227,7 @@ def main():
     spy = read_etf(os.path.join(ETF, "SPY.csv"))
     xlu = read_etf(os.path.join(ETF, "XLU.csv"))
     tqqq = read_etf(os.path.join(ETF, "TQQQ.csv"))
+    qld = read_etf(os.path.join(ETF, "QLD.csv"))
     bil = read_etf(os.path.join(ETF, "BIL.csv"))
 
     # Master trading calendar = QQQ's own trading days (full 2009-2026 coverage).
@@ -299,8 +300,8 @@ def main():
     # ---- assemble rows
     rows = []
     for i, d in enumerate(calendar):
-        if d not in tqqq:
-            continue          # before TQQQ inception, or non-TQQQ trading day
+        if d not in tqqq or d not in qld:
+            continue          # before TQQQ inception, or non-trading day for a leg
         if None in (credit_lagged[i], credit_med[i], vix[i], breadth[i],
                     qqq_ma[i], util_rel[i], rf[i]):
             continue
@@ -325,6 +326,9 @@ def main():
             "dgs3mo": f"{rf[i]:.4f}",
             "tqqq_open": f"{tqqq[d][0]:.6f}",
             "tqqq_close": f"{tqqq[d][1]:.6f}",
+            "qld_open": f"{qld[d][0]:.6f}",
+            "qld_close": f"{qld[d][1]:.6f}",
+            "qqq_open": f"{qqq[d][0]:.6f}",
             "spy_close": f"{sc[i]:.6f}",
             "bil_close": f"{bil[d][1]:.6f}" if d in bil else "",
             "credit_ok": int(credit_ok),

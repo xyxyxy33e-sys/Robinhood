@@ -83,31 +83,78 @@ TRADING_DAYS = 252
 
 
 # --------------------------------------------------------------- allocation maps
+# Mappings now emit a TARGET EFFECTIVE LEVERAGE L in [0, 3] rather than a TQQQ
+# weight, because L can be reached by two different routes (see routes below).
+MAXL = 3.0
+CAP_L = 2.10        # 70% of 3x -- the realistic cap a real product uses
+
+
 def make_mappings():
-    """score (0..5) -> target TQQQ weight. Every mapping is a fixed function of the
-    score; none is fitted to returns."""
+    """score (0..5) -> target effective leverage L in [0,3].
+    Every mapping is a fixed function of the score; none is fitted to returns."""
     m = {}
     for T in range(0, 6):
-        m[f"binary_T{T}"] = tuple(1.0 if s >= T else 0.0 for s in range(6))
-    m["linear"] = tuple(s / 5.0 for s in range(6))
-    m["convex_sq"] = tuple((s / 5.0) ** 2 for s in range(6))
-    m["convex_step"] = (0.0, 0.0, 0.0, 1 / 3, 2 / 3, 1.0)
-    # Capped at 70%: Raincheck discloses deploying only ~67-75% to TQQQ even at
-    # maximum conviction, with the remainder in T-bills / covered-call ETF.
-    m["cap70_linear"] = tuple(0.70 * s / 5.0 for s in range(6))
-    m["cap70_binary_T4"] = tuple(0.70 if s >= 4 else 0.0 for s in range(6))
-    m["cap70_convex_step"] = tuple(0.70 * x for x in (0.0, 0.0, 0.0, 1 / 3, 2 / 3, 1.0))
+        m[f"binary_T{T}"] = tuple(MAXL if s >= T else 0.0 for s in range(6))
+    m["linear"] = tuple(MAXL * s / 5.0 for s in range(6))
+    m["convex_sq"] = tuple(MAXL * (s / 5.0) ** 2 for s in range(6))
+    m["convex_step"] = tuple(MAXL * x for x in (0.0, 0.0, 0.0, 1 / 3, 2 / 3, 1.0))
+    # Capped at L=2.1: Raincheck discloses deploying only ~67-75% to TQQQ even at
+    # maximum conviction, with the remainder in T-bills / a covered-call ETF.
+    m["cap70_linear"] = tuple(CAP_L * s / 5.0 for s in range(6))
+    m["cap70_binary_T4"] = tuple(CAP_L if s >= 4 else 0.0 for s in range(6))
+    m["cap70_convex_step"] = tuple(CAP_L * x for x in (0.0, 0.0, 0.0, 1 / 3, 2 / 3, 1.0))
     return m
 
 
 def make_mappings2():
     """Raincheck-style ablation: Trend + Breadth ONLY, score2 in 0..2."""
     return {
-        "TB_binary_T1": (0.0, 1.0, 1.0),
-        "TB_binary_T2": (0.0, 0.0, 1.0),
-        "TB_linear": (0.0, 0.5, 1.0),
-        "TB_cap70_T2": (0.0, 0.0, 0.70),
+        "TB_binary_T1": (0.0, MAXL, MAXL),
+        "TB_binary_T2": (0.0, 0.0, MAXL),
+        "TB_linear": (0.0, MAXL / 2, MAXL),
+        "TB_cap70_T2": (0.0, 0.0, CAP_L),
     }
+
+
+# ------------------------------------------------------------------------ routes
+# A target leverage L can be reached two ways. Which one you pick matters ONLY
+# because a regime strategy holds its position between signal flips rather than
+# rebalancing daily:
+#
+#   * With DAILY rebalancing the two routes are equivalent -- 1/3 TQQQ + 2/3 cash
+#     rebalanced daily reproduces 1x QQQ almost exactly (18.54% vs 18.52% CAGR
+#     over this window). Leveraged-ETF "decay" is a consequence of NOT rebalancing;
+#     daily rebalancing cancels it.
+#   * With BUY-AND-HOLD BETWEEN FLIPS, which is what this strategy actually does,
+#     the LOWER-MULTIPLE route wins, because the 3x fund's path dependency works
+#     against a static position. Measured unconditionally over this data, the
+#     ladder is worth ~0.8-0.9% per 126-day hold, shrinking toward zero at 21-day
+#     holds. It is NOT uniformly better: at 21-day horizons the worst-case
+#     ordering inverts (100% QQQ's worst window -25.03% vs -21.93% for
+#     33.3% TQQQ + cash), because a cash buffer caps the loss in a sharp crash.
+#
+# ASSET_MULT is the fund's stated daily leverage multiple.
+ASSET_MULT = {"QQQ": 1.0, "QLD": 2.0, "TQQQ": 3.0}
+
+
+def route_ladder(L):
+    """Reach L with the LOWEST-multiple combination available; hold cash only for
+    the portion below 1x. Returns {asset: weight-of-equity}."""
+    if L <= 0:
+        return {}
+    if L <= 1.0:
+        return {"QQQ": L}                       # remainder is cash
+    if L <= 2.0:
+        return {"QQQ": 2.0 - L, "QLD": L - 1.0}  # fully invested
+    return {"QLD": 3.0 - L, "TQQQ": L - 2.0}     # fully invested
+
+
+def route_pure_tqqq(L):
+    """The naive route: scale a single 3x fund against cash."""
+    return {"TQQQ": L / 3.0} if L > 0 else {}
+
+
+ROUTES = {"ladder": route_ladder, "pure_tqqq": route_pure_tqqq}
 
 
 # ------------------------------------------------------------------------ engine

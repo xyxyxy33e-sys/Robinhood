@@ -25,7 +25,7 @@ ETF_DIR = "/home/user/Robinhood/data/kairos/etf"
 # Instruments the backtest actually trades / benchmarks against. For these we keep
 # OPEN as well as CLOSE, because the primary (lookahead-free) execution assumption is
 # "decide on day t's close, fill at day t+1's OPEN", which needs the open price.
-ETFS = {"TQQQ", "QQQ", "SPY", "XLU", "BIL"}
+ETFS = {"TQQQ", "QQQ", "SPY", "XLU", "BIL", "QLD"}
 
 
 def load_existing(path):
