@@ -1142,3 +1142,64 @@ Sharpe advantage of the 35% variant comes from the first five years.
 Sharpe, terminal wealth and — the one that decides whether a strategy gets held — four
 fewer months underwater. 25% buys a 2.9pp shallower maximum drawdown and 1pp better worst
 12 months, and gives up 2.7pp of annual return for it.
+
+## Appendix: state E should be zero, not 15%
+
+E = price under both averages while the 50dma is still above the 200dma.
+
+### E is where the fast crashes live
+
+E is **4.2% of all days**, but its share of the three deepest drawdowns:
+
+| drawdown | depth | share of days in E |
+|---|---|---|
+| 2020-02-18 → 2020-03-20 | −41.0% | **37.5%** |
+| 2025-02-18 → 2025-04-07 | −28.3% | **60.0%** |
+| 2021-11-18 → 2022-09-23 | −30.8% | 12.7% (F carries it at 46.5%) |
+
+The mechanism is clean: losing both moving averages *before* the 50 has crossed the 200
+is what a fast decline looks like — the averages have not had time to cross yet. A slow
+grinding bear (2022) spends its time in F instead. **E is the fast-crash state.**
+
+### Sweeping E, everything else fixed
+
+| E | CAGR | Max DD | Sharpe | worst 12m | 2022 | 2020 |
+|---|---|---|---|---|---|---|
+| **0%** | 26.9% | **−39.6%** | **0.93** | **−21.8%** | **−17.4%** | +54.1% |
+| 15% (previous) | 27.2% | −41.0% | 0.91 | −23.5% | −19.1% | +57.1% |
+| 35% | 27.4% | −43.1% | 0.88 | −25.8% | −21.6% | +59.5% |
+
+Monotone: more leverage in E buys a little CAGR and costs drawdown, Sharpe and worst-12m
+faster. Note E's high mean forward return (+8.66%, second only to F) does **not** make it
+a good state to lever — high mean, high variance, and the variance shows up as the worst
+moments of the whole record.
+
+### D moves the other way
+
+| D | CAGR | Max DD | Sharpe |
+|---|---|---|---|
+| 0% | 25.7% | −38.0% | 0.90 |
+| 15% (previous) | 27.2% | −41.0% | 0.91 |
+| **20%** | 27.4% | −40.7% | **0.94** |
+| 35% | 29.1% | −45.0% | 0.93 |
+
+D (an ordinary pullback with the 200 and the cross intact) rewards more exposure; E
+rewards less. They were both at 15% — that was the error.
+
+### Revised weights, and how much to trust them
+
+`A/B 35% · C 0% · D 20% · E 0% · F 0%`
+
+| | CAGR | Max DD | Sharpe | worst 12m | months uw | early 5y | recent 5y | 2022 |
+|---|---|---|---|---|---|---|---|---|
+| previous (D15/E15) | 27.2% | −41.0% | 0.91 | −23.5% | 19.7 | 1.02 | 0.77 | −19.1% |
+| **revised (D20/E0)** | **27.4%** | **−40.7%** | **0.94** | **−22.0%** | **19.6** | 1.02 | **0.81** | **−17.9%** |
+
+Better on every axis simultaneously, including the recent half — which is the part that
+matters, since it is the closest thing here to out-of-sample.
+
+**Trust the E change more than the D change.** Zeroing E has an independent mechanistic
+justification (the drawdown concentration above), improves both halves of the sample, and
+survives at any D. Raising D from 15 to 20 is a smaller tuning call made on the full
+sample with no separate story behind it; D = 0.15 remains defensible at a cost of roughly
+0.5pp of CAGR.

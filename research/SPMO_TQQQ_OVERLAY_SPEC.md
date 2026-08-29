@@ -58,12 +58,24 @@ Six reachable states (the other two combinations are arithmetically impossible):
 ## 4. Allocation rule
 
 ```
-satellite_weight = {A: 0.35, B: 0.35, C: 0.00, D: 0.15, E: 0.15, F: 0.00}
+satellite_weight = {A: 0.35, B: 0.35, C: 0.00, D: 0.20, E: 0.00, F: 0.00}
 core_weight      = 1 - satellite_weight
 ```
 
-Effective market exposure = `1 + 2 x satellite_weight`, i.e. 1.70x in A/B, 1.30x in
-D/E, 1.00x in C/F.
+Effective market exposure = `1 + 2 x satellite_weight`, i.e. 1.70x in A/B, 1.40x in D,
+1.00x in C/E/F.
+
+**Revised 2026-08-29: E dropped from 0.15 to 0.00, D raised from 0.15 to 0.20.**
+E is the fast-crash state. It occupies only 4.2% of all days but **37.5% of the 2020
+crash and 60.0% of the 2025 tariff drawdown** — because losing both averages before the
+50 has crossed the 200 is exactly what a fast decline looks like. (The slow 2022 bear is
+dominated by F instead, at 46.5%.) Zeroing E improved every measure at once: Sharpe
+0.91 → 0.94, max drawdown −41.0% → −40.7%, worst 12 months −23.5% → −22.0%, 2022 −19.1%
+→ −17.9%, and the recent-half Sharpe 0.77 → 0.81, while CAGR *rose* 27.2% → 27.4%.
+Of the two changes, zeroing E is the well-supported one — it has an independent
+mechanistic reason and improves both halves of the sample. Raising D 15→20 is a smaller
+tuning call made on the full sample; D = 0.15 is a defensible alternative costing about
+0.5pp of CAGR.
 
 **The portfolio never de-risks below 1x.** In the weak states the satellite goes to
 zero and the book is 100% SPMO — still fully invested. This is deliberate: measured
