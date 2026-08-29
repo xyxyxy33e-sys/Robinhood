@@ -867,3 +867,61 @@ Combined with the earlier finding that averaging over buffers destroys the edge,
 reading is that **this family has no demonstrated edge independent of one fitted smoothing
 parameter.** The durable results remain the two structural ones: reduce leverage rather than
 exit, and expect returns to be highest in the weakest states.
+
+## Appendix: fine buffer sweep — the "knife edge" was an artifact of a coarse grid
+
+Earlier appendices tested buffers at 0% / 1% / 2% only, saw 0.79 / 0.87 / 0.79, and
+concluded the result rested on a fitted knife-edge parameter. **That conclusion was wrong.**
+An 11-point sweep of the same config (A=2.0, B=2.0, C=0.5, D=1.0, E=1.0, F=0.5):
+
+| buffer | full Sharpe | CAGR | months uw | trades/yr | **search** | holdout | beats QQQ 4 ways |
+|---|---|---|---|---|---|---|---|
+| 0.00% | 0.80 | +22.75% | 27.9 | 17.0 | 0.79 | 0.83 | |
+| 0.25% | 0.78 | +22.10% | 28.7 | 14.2 | 0.75 | 0.82 | |
+| 0.50% | 0.84 | +24.14% | 26.6 | 10.6 | 0.82 | 0.87 | |
+| **0.75%** | **0.88** | +25.53% | 18.7 | 8.8 | 0.88 | 0.88 | **yes** |
+| **1.00%** | **0.88** | +25.45% | 18.9 | 7.8 | **0.89** | 0.87 | **yes** |
+| **1.25%** | **0.87** | +24.98% | 19.0 | 7.1 | 0.87 | 0.87 | **yes** |
+| 1.50% | 0.85 | +24.50% | 18.9 | 6.4 | 0.85 | 0.86 | |
+| 2.00% | 0.81 | +22.93% | 21.1 | 5.8 | 0.75 | 0.87 | |
+| 3.00% | 0.76 | +21.26% | 26.7 | 4.7 | 0.66 | 0.86 | |
+
+**It is a smooth hill with a plateau at 0.75–1.25%, not a spike.** The coarse grid happened
+to sample the peak and both shoulders, which made a broad optimum look like a knife edge.
+
+**And the peak is selectable in advance.** The SEARCH period alone (2010-2019) peaks at
+1.00% with Sharpe 0.89, independently of the holdout. Freezing that choice delivers 0.87 on
+the holdout, against the holdout's own best of 0.88. The buffer was not fitted to the
+holdout.
+
+### Ensembling over the plateau preserves the result
+
+The earlier finding that "averaging over buffers destroys the edge" was an artifact of the
+range averaged:
+
+| ensemble range | full Sharpe | CAGR | maxDD | months uw | search | holdout | beats QQQ 4 ways |
+|---|---|---|---|---|---|---|---|
+| 0% / 1% / 2% (tested earlier) | 0.83 | +23.74% | −35.3% | 19.0 | 0.82 | 0.86 | no |
+| **0.75% / 1.0% / 1.25%** | **0.87** | +25.33% | −35.3% | 18.9 | 0.88 | 0.88 | **yes** |
+| **0.5% … 1.5%** | **0.87** | +24.94% | −35.3% | 18.9 | 0.87 | 0.87 | **yes** |
+| all 11, 0%…3% | 0.83 | +23.64% | −35.9% | 19.3 | 0.81 | 0.86 | no |
+
+Averaging across any plausible band width (0.5–1.5%) keeps the four-way win over QQQ. Only
+ensembles that include 0% — effectively "no buffer at all" — or buffers wide enough to
+suppress the signal destroy it.
+
+### Revised standing
+
+The buffer is a genuine parameter with a broad optimum, selectable from search data, and
+robust to averaging within its sensible range. The two earlier characterisations — "knife
+edge" and "averaging destroys the edge" — are **withdrawn**; both were artifacts of a
+three-point grid.
+
+What does NOT change: this family still loses to plain buy-and-hold on the search period
+(0.89 vs 1.01 at L=2.0). Conditional on choosing to run a state machine at all, the buffer
+is well behaved. The prior decision — to time rather than hold — remains the one the search
+data does not support.
+
+One oddity worth recording: 0.25% is *worse* than 0% (0.78 vs 0.80). A very narrow band
+appears to add lag without meaningfully suppressing whipsaw — worse than either no band or
+an adequate one.
