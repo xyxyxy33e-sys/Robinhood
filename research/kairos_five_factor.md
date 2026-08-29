@@ -649,3 +649,47 @@ So 2025 is a year in which *every* trend filter beat buy-and-hold, because it co
 clean crash and one clean recovery — precisely the crash-contingent regime the 16-year study
 above identifies as where this family wins. The 2025 result is real, and it is evidence
 about the year rather than about the signal.
+
+## Appendix B: the SQQQ downtrend case study refutes the short side
+
+Raincheck's own published downtrend, Feb 28 → May 1 2025 (43 days). Verified exactly
+against real prices — all three of their figures match to the basis point:
+
+| | claimed | actual |
+|---|---|---|
+| QQQ over the downtrend | −5.21% | **−5.21%** |
+| SQQQ over the downtrend | −4.43% | **−4.43%** |
+| SQQQ peak (Apr 8) | +68.69% | **+68.69%** |
+
+**The market fell 5.21% and the 3x inverse instrument designed to profit from that fall
+lost 4.43%.** A naive 3x-inverse of −5.21% would be +15.64%; SQQQ delivered −4.43%.
+
+**Volatility decay cost 20.07 percentage points in 43 days.**
+
+The peak-to-exit round trip is worse: +68.69% on Apr 8 down to −4.43% at exit is a
+**−43.35% collapse from the high** inside a single position.
+
+What each choice returned over that identical window:
+
+| | return |
+|---|---|
+| cash / T-bills at ~4.3% | **+0.51%** |
+| short via SQQQ (their case study) | −4.43% |
+| long TQQQ, no filter | −24.23% |
+
+**Cash beat the short by ~5pp.** The signal made a correct market call — QQQ did fall — and
+the instrument chosen to express it still lost money.
+
+Two framing notes:
+
+1. "Somewhat counterintuitively, holding SQQQ returned a smaller loss than did QQQ"
+   presents a loss as a feature. The purpose of a short is to profit when the market
+   falls, not to lose slightly less than the thing it is shorting.
+2. "Any SQQQ profit-taking during the downtrend would widen the gap" is the same
+   discretionary escape hatch as the TQQQ case study: the +68.69% requires having sold on
+   exactly Apr 8. The systematic result is −4.43%.
+
+This corroborates the central finding of the main study from the vendor's own data: **the
+entire edge of a regime filter is being in CASH during downtrends, not being short.**
+Raincheck's own policy already concedes this by capping SQQQ at 30% "given the risky nature
+of short positions" — the case study shows the cap should be zero.
