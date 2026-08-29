@@ -116,7 +116,12 @@ Variants if a different risk level is wanted: 25% max satellite → 24.5% CAGR /
    a typical day's move to filter anything.
 3. **Price-only returns.** SPMO holds ~2%-yielding names, TQQQ yields nothing, so the
    core's contribution is understated by roughly 1.5%/yr and the satellite's is not.
-   With dividends the 25%/35%/50% variants compress and may reorder.
+   **Tested 2026-08-29: this does NOT reorder the variants.** Adding 0/1/1.5/2% a year to
+   the SPMO sleeve alone gives 25%-satellite Sharpe 0.89/0.93/0.94/0.96 against
+   35%-satellite 0.91/0.94/0.95/0.97 — the 35% variant leads at every level. The lighter
+   variant gains marginally more from dividends (+2.1pp of CAGR at 2% versus +2.0pp) but
+   nowhere near enough to close a 2.7pp CAGR gap. An earlier version of this spec said the
+   ordering might reverse; it does not.
 4. **Small effective sample.** ~3 independent drawdown events in the window. Sixteen
    years sounds like a lot; for a strategy whose value is crash behaviour, it is not.
 5. **On the pure-index version, the 2010-2019 search period still ranked plain

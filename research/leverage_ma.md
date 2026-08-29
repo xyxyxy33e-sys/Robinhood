@@ -1083,3 +1083,62 @@ Returns are price-only. SPMO holds ~2%-yielding names while TQQQ yields nothing,
 are not.** Adding dividends would compress the gap between the 25% and 50% satellite rows
 and could reverse their order. The 35% row is the more defensible pick on that basis, and it
 is also the one whose drawdown (−41.0%) stays closest to the components'.
+
+## Appendix: 25% versus 35% satellite
+
+Full period 2015-10 → 2026-08 (10.9 years), price-only, 10bp costs.
+
+| | CAGR | Max DD | Vol | Sharpe | worst 12m | months uw | final × |
+|---|---|---|---|---|---|---|---|
+| 25% satellite | 24.5% | **−38.1%** | 25.8% | 0.89 | **−22.5%** | 23.8 | 10.9 |
+| **35% satellite** | **27.2%** | −41.0% | 28.4% | **0.91** | −23.5% | **19.7** | **13.7** |
+
+### The dividend caveat was wrong — tested and withdrawn
+
+The spec previously warned that price-only returns might reorder these, since the 25%
+variant holds more SPMO (75% vs 65%) and SPMO yields ~1.5–2% while TQQQ yields nothing.
+Adding a dividend to the SPMO sleeve alone:
+
+| SPMO dividend/yr | 25% CAGR | 25% Sharpe | 35% CAGR | 35% Sharpe | leader |
+|---|---|---|---|---|---|
+| 0.0% | 24.5% | 0.89 | 27.2% | **0.91** | 35% |
+| 1.0% | 25.6% | 0.93 | 28.2% | **0.94** | 35% |
+| 1.5% | 26.1% | 0.94 | 28.7% | **0.95** | 35% |
+| 2.0% | 26.6% | 0.96 | 29.2% | **0.97** | 35% |
+
+**35% leads at every level.** The lighter variant does gain marginally more (+2.1pp of CAGR
+at a 2% yield versus +2.0pp) but nowhere near enough to close a 2.7pp gap. The caveat is
+withdrawn.
+
+### Year by year — 35% wins 9 of 12, and loses only in down years
+
+| year | 25% | 35% | diff | QQQ |
+|---|---|---|---|---|
+| 2017 | +44.2% | +51.4% | **+7.2** | +30.3% |
+| 2018 | −2.6% | −2.8% | −0.2 | −2.7% |
+| 2020 | +47.8% | +57.1% | **+9.3** | +45.1% |
+| 2022 | **−17.0%** | −19.1% | **−2.2** | −33.7% |
+| 2023 | +36.5% | +44.8% | +8.3 | +54.8% |
+| 2024 | +49.5% | +50.7% | +1.2 | +27.0% |
+
+The only years 35% loses are 2018 and 2022 — the two down years — by 0.2pp and 2.2pp.
+Both variants beat QQQ enormously in 2022 (−17/−19% against −33.7%) and both badly lagged
+it in 2023 (+36.5/+44.8% against +54.8%), which is the SPMO core missing the early AI
+rotation, not the overlay.
+
+### They are indistinguishable in the recent half
+
+| | early 5y Sharpe | recent 5y Sharpe | spread |
+|---|---|---|---|
+| 25% | 0.98 | **0.77** | 0.21 |
+| 35% | 1.02 | **0.77** | 0.25 |
+
+Identical recent Sharpe, with 35% delivering more return (24.0% vs 22.6% CAGR). The entire
+Sharpe advantage of the 35% variant comes from the first five years.
+
+### Verdict
+
+**35% unless the depth of the worst moment is the binding constraint.** It leads on CAGR,
+Sharpe, terminal wealth and — the one that decides whether a strategy gets held — four
+fewer months underwater. 25% buys a 2.9pp shallower maximum drawdown and 1pp better worst
+12 months, and gives up 2.7pp of annual return for it.
