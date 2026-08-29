@@ -693,3 +693,46 @@ This corroborates the central finding of the main study from the vendor's own da
 entire edge of a regime filter is being in CASH during downtrends, not being short.**
 Raincheck's own policy already concedes this by capping SQQQ at 30% "given the risky nature
 of short positions" — the case study shows the cap should be zero.
+
+## Appendix C: 2024 — the calm-year test, and the two-year verdict
+
+Raincheck published its three 2024 uptrends. 2024 had no sustained crash, which is exactly
+the regime the main study predicts a trend filter should lose in.
+
+| leg | QQQ claimed | QQQ actual | TQQQ claimed | TQQQ actual |
+|---|---|---|---|---|
+| Jan 2 → Apr 15 | +5.26% | +7.07% | +10.00% | +15.87% |
+| May 6 → Jul 25 | +4.09% | +4.09% | +8.04% | **+8.04%** |
+| Aug 15 → Dec 31 | +7.76% | +7.76% | +15.59% | **+15.59%** |
+
+Legs 2 and 3 match exactly; leg 1 differs because their footnote marks 2024 as beginning
+mid-uptrend, so their start point is not Jan 2.
+
+**They were invested 224 of 252 trading days — 89% of the year.** The filter barely acted,
+and what it did was harmful:
+
+| gap (in cash) | TQQQ |
+|---|---|
+| Apr 15 → May 6 | **+5.00%** |
+| Jul 25 → Aug 15 | **+8.20%** |
+
+**Both gaps were positive.** They exited near local lows and re-entered higher — textbook
+whipsaw, selling the dip and buying it back. In 2024 the filter avoided no crash; it
+skipped two rallies.
+
+### The verdict, using their own published annual numbers
+
+| year | Raincheck (published) | TQQQ buy-and-hold | edge |
+|---|---|---|---|
+| 2024 | +37.37% | **+64.41%** | **−27.04pp** |
+| 2025 | +57.24% | +34.10% | **+23.14pp** |
+| **2024+2025 compounded** | **+116.00%** | **+120.47%** | **−4.47pp** |
+
+Across both years they have published, **the strategy underperforms simply holding TQQQ**,
+using their own numbers and the correct 3x benchmark. Their published comparison is against
+QQQ (+52.59% over the two years), a 1x instrument, which makes a −4.47pp deficit look like a
++63pp triumph. The entire apparent edge is the leverage, not the signal.
+
+This is the main study's central finding reproduced exactly on out-of-sample vendor data:
+**crash-contingent.** Large gain in the crash year, larger loss in the calm year, net
+negative. Which year is which cannot be known in advance.
