@@ -1256,3 +1256,66 @@ taste.**
 B is 3.9% of days. Raising it to 50% (above A) gives Sharpe 0.94 and +0.5pp of CAGR;
 cutting it to 20% gives 0.93. Setting **B = A** is simpler and costs nothing measurable —
 the reclaim state's better forward return is real but has no room to express itself.
+
+## Appendix: should D be lower? No — it is already at its inverse-volatility weight
+
+The Sharpe grid said D should go to 40%. The mechanism says otherwise, and the mechanism
+is the one to trust after that grid turned out to be monotone to its own boundary.
+
+### Per-state risk profile (QQQ daily returns while in each state)
+
+| state | % days | mean/day | ann vol | worst day | fwd 21d |
+|---|---|---|---|---|---|
+| A | 60.4% | +0.141% | **15.6%** | −5.07% | +1.34% |
+| B | 3.5% | +0.224% | 20.6% | −2.82% | +4.62% |
+| C | 4.2% | +0.231% | 25.6% | −4.10% | **−1.84%** |
+| D | 13.5% | **−0.058%** | 25.7% | −5.01% | +2.64% |
+| E | 4.2% | **−0.182%** | **51.3%** | **−11.98%** | +3.36% |
+| F | 14.2% | −0.046% | 26.8% | −5.48% | +1.63% |
+
+E's volatility is **3.3× A's**, with a worst day of −12%. That, not its mean, is why it
+gets nothing.
+
+### Drawdown concentration — the test that decided E
+
+Pooled across the four deepest drawdowns (329 sessions):
+
+| state | % of drawdown days | % of all days | over-representation |
+|---|---|---|---|
+| A | 11.2% | 60.4% | 0.19× |
+| B | 0.0% | 3.5% | 0.00× |
+| C | 13.7% | 4.2% | **3.26×** |
+| **D** | 14.0% | 13.5% | **1.04×** |
+| E | 25.5% | 4.2% | **6.14×** |
+| F | 35.6% | 14.2% | **2.50×** |
+
+**D sits at 1.04× — almost exactly proportional.** It is the only weak-ish state that is
+*not* over-represented in drawdowns. C, E and F are 3.3×, 6.1× and 2.5×; that is the
+signature that earned them zero. D does not have it.
+
+### D = 20% is what inverse-volatility scaling gives
+
+Scaling each state's weight by A's volatility over its own, anchored at A = 35%:
+
+| state | ann vol | inverse-vol weight |
+|---|---|---|
+| A | 15.6% | 35.0% |
+| B | 20.6% | 26.5% |
+| **D** | **25.7%** | **21.3%** |
+| E | 51.3% | 10.6% |
+
+**D's equal-risk weight is 21.3%; it is set at 20%.** That is not a fitted number — it is
+where a risk-parity argument independently lands, and it was arrived at by a completely
+different route. Lowering D would under-weight it relative to its own risk contribution.
+
+### So the answer is no, and the reasoning cuts both ways
+
+- **Do not lower D.** It is not over-represented in drawdowns, its forward 21-day return
+  (+2.64%) is nearly double A's, and 20% is already its risk-parity weight.
+- **Do not raise D either**, despite the Sharpe grid pointing to 40%. D's *contemporaneous*
+  mean is negative (−0.058%/day) at 1.65× A's volatility — you are paid to hold it forward,
+  not to hold it through. The grid's recommendation to raise D is the same bull-market
+  artifact that made the whole surface monotone.
+
+E is the exception that proves the method: its inverse-vol weight would be 10.6%, but its
+6.14× drawdown concentration and −0.182% daily mean justify going below that, to zero.
