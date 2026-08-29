@@ -736,3 +736,65 @@ QQQ (+52.59% over the two years), a 1x instrument, which makes a −4.47pp defic
 This is the main study's central finding reproduced exactly on out-of-sample vendor data:
 **crash-contingent.** Large gain in the crash year, larger loss in the calm year, net
 negative. Which year is which cannot be known in advance.
+
+## Appendix D: reverse-engineering the Market Signal from 140 published values
+
+Raincheck's 2025 case study prints its Market Signal for all 140 days of the May 1 → Nov 18
+uptrend. That is enough to test what the signal actually is.
+
+Observed range 1 to 8 plus a single −2 at the exit (never ±9), and extremely sticky —
+**64 of 140 days sit at exactly 7**. One non-integer value (6.5) appears, which argues
+against a pure sum of nine binary sub-indicators.
+
+### It is largely QQQ's distance above its own 200-day moving average
+
+Correlation of the published signal against standard indicators (n=140):
+
+| indicator | r |
+|---|---|
+| **QQQ vs its 200dma** | **+0.736** |
+| QQQ 60-day return | +0.610 |
+| % of NDX-100 above 200dma | +0.401 |
+| QQQ RSI(14) | +0.029 |
+| 20dma vs 50dma | −0.013 |
+| % of NDX-100 above 50dma | −0.226 |
+| QQQ 20-day return | −0.351 |
+
+Mean QQQ-vs-200dma by signal value is close to monotone: signal 2 → +1.70%, 3 → +6.39%,
+4 → +7.46%, 5 → +10.43%, 6 → +12.70%, 8 → +14.79%.
+
+**r² = 0.54 against a single free indicator**, with essentially zero short-horizon content
+(RSI r=0.03, 20/50 crossover r=−0.01). Whatever else is in it, the dominant term is the
+most standard trend measure in existence.
+
+### The granularity is not merely decorative — it is inverted
+
+Forward TQQQ return by signal level, across the same 140 days (all of them "uptrend" days,
+so this isolates the score's *level*, not its sign):
+
+| signal level | n | fwd 1 week | fwd 1 month |
+|---|---|---|---|
+| **low (1–3)** | 35 | **+4.37%** | **+14.10%** |
+| mid (4–6) | 28 | +1.30% | +8.73% |
+| **high (7–8)** | 77 | +1.39% | **+4.65%** |
+
+**Monotonically decreasing.** The highest-conviction readings precede the *worst* forward
+returns, by a factor of three at the one-month horizon.
+
+The mechanism is not mysterious: a high score means QQQ is far above its 200dma, i.e.
+extended; a low score means it has just crossed back above, i.e. early in a recovery with
+the most room to run. This reproduces, on vendor data, both the main study's finding that
+the five-factor score is inverted at short horizons, and the streak-age result that the best
+returns come in the first ~20 days of a fresh regime.
+
+**Consequences.** Raincheck's stated policy — "Leverage is reduced as the Market Signal
+declines" — is backwards on its own published data. So is any graded allocation that scales
+exposure with the score, including the linear and convex mappings tested in the main study
+(which is consistent: graded lost to binary there, at 4–7x the turnover).
+
+**Only the sign carries information, and what it carries is crash-contingent.**
+
+Caveat, stated plainly: these 140 days are one uptrend in one year, heavily autocorrelated,
+and every observation has a positive signal — so this measures within-uptrend variation
+only, and the quoted t-statistics are inflated by the overlap. The direction of the effect
+matches three independent earlier tests; the magnitude should not be taken literally.
