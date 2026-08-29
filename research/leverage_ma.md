@@ -979,3 +979,52 @@ CAGR is still rising at 3x (QQQ +18.52% → QLD +32.86% → TQQQ +42.33%, decele
 peaked). Growth-optimal leverage estimated from this window will be biased high — the
 decelerating increments (+14.3pp then +9.5pp) show volatility drag already biting, and a
 sample containing a 2000- or 2008-style decade would put the peak materially lower.
+
+## Appendix: stacking the ladder on the SPMO momentum book — it does not work
+
+The SPMO Mirror Study reaches this file's conclusion from an independent direction
+("earns its keep through a shallower drawdown rather than a higher return"), which
+suggested the two might be complementary layers: momentum selection at 1x, plus
+regime-scaled leverage. Tested over 2015-10-01 → 2026-08-27 (10.9 years, price-only).
+
+**Modelling note.** There is no leveraged SPMO ETF, so leverage must come from MARGIN.
+That removes daily-reset decay but adds an explicit borrowing cost on the levered
+portion, at rf + spread. Retail margin (Robinhood Gold ~5–6% gross) is far worse than
+the financing embedded in TQQQ, so the spread is swept.
+
+| | CAGR | Max DD | Vol | Sharpe | months uw |
+|---|---|---|---|---|---|
+| SPMO buy-and-hold (1x) | 17.7 | −31.3 | 20.6 | **0.78** | 25.2 |
+| QQQ buy-and-hold (1x) | 19.7 | −35.6 | 22.2 | 0.82 | 24.7 |
+| SPMO ladder, own MAs @3% | 19.6 | −37.3 | 28.5 | **0.69** | 26.4 |
+| SPMO ladder, QQQ MAs @3% | 23.2 | −35.9 | 28.9 | **0.79** | 25.6 |
+| **QQQ ladder, QQQ MAs @3%** | 27.2 | −35.3 | 30.1 | **0.87** | **18.2** |
+| SPMO constant 2x @3% | 25.9 | −56.5 | 41.1 | 0.71 | 26.5 |
+| QQQ constant 2x @3% | 29.2 | −64.8 | 44.4 | 0.75 | 30.6 |
+
+### Three findings
+
+**1. The combination fails.** Laddered SPMO reaches Sharpe 0.79 at best, against 0.78 for
+simply holding SPMO unlevered. All that leverage, financing cost and turnover buys
+**+0.01 of Sharpe.** SPMO is best held unlevered.
+
+**2. The ladder's duration benefit does not transfer.** On QQQ it cuts time underwater
+from 24.7 to 18.2 months. On SPMO: 25.2 → 26.4 (own MAs) or 25.6 (QQQ MAs) — no
+improvement at all. The most plausible reading is that momentum rotation is *already*
+doing drawdown management, so stacking a second drawdown-management layer pays twice for
+the same protection. Two strategies that both "earn their keep through drawdown" are
+redundant with each other, not additive.
+
+**3. The regime signal is a market signal, not an asset signal.** Trading SPMO off QQQ's
+moving averages (0.79) beats trading it off its own (0.69) by a wide margin. The state
+machine is reading broad-market conditions, so applying it to a different asset does not
+mean rebuilding it on that asset.
+
+### Caveats
+
+Price-only returns understate SPMO by roughly 1.5–2%/yr (it holds ~2%-yielding S&P names;
+QQQ/TQQQ yield near zero). Adding dividends would lift SPMO buy-and-hold to roughly 19.4%
+CAGR and ~0.86 Sharpe — enough to beat QQQ buy-and-hold — but it lifts every SPMO variant
+equally, so the ordering above, and the conclusion that the ladder adds nothing, is
+unchanged. This window also has SPMO trailing QQQ, which the Mirror Study's own decade
+table does not (it starts a year later and includes the 2016–17 cohorts).
