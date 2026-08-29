@@ -567,3 +567,64 @@ manufactures a result.**
 | `L3.0_slow_out_b2` | 27.42% | 0.77 | -55.57% | 0.49 | 3.1 | 43.91% | 0.89 | -56.04% | 0.78 | 8.9 |
 *(S = search 2010-02-11→2019-12-31; H = holdout 2020-01-02→2026-08-27. The three `bh` rows
 at each leverage are identical by construction — no MA is consulted, so the buffer is inert.)*
+
+---
+
+## Appendix: does a MIX help? (`tools/leverage/mix.py`)
+
+Two distinct meanings of "mix", both tested. Neither is the falsified graded allocation:
+exposure here is never scaled by the inverted conviction score.
+
+### Mix A — fixed blend of an untimed sleeve and a 200dma-timed sleeve
+
+Monthly-rebalanced, w in untimed buy-and-hold, (1−w) in the timed version.
+
+| config | full-period Sharpe | CAGR | maxDD | worst 12m | months underwater | search Sh | holdout Sh | **spread** |
+|---|---|---|---|---|---|---|---|---|
+| QQQ buy-and-hold | 0.85 | +18.52% | −35.6% | −35.2% | 24.7 | 0.98 | 0.74 | 0.24 |
+| L2.0 pure timed | 0.82 | +25.04% | −43.2% | −40.4% | 25.8 | 0.71 | 0.94 | 0.23 |
+| **L2.0 50/50 blend** | **0.89** | +29.57% | −46.7% | −43.4% | **19.5** | 0.91 | 0.86 | **0.05** |
+| L2.0 pure untimed | 0.86 | +32.83% | −63.8% | −63.2% | 30.0 | 1.01 | 0.73 | 0.29 |
+
+The 50/50 blend has the **best full-period Sharpe at every leverage level** — 0.87 / 0.89 /
+0.88 at L=1/2/3, beating BOTH of its own components. That is real diversification: the
+sleeves are imperfectly correlated because the timed sleeve's returns are buy-and-hold minus
+the out-periods.
+
+**It does not escape the selection trap.** On the search period the ranking is monotone in w
+and still picks w=1.00 (no timing) at every L: 0.98 / 1.01 / 1.02. The holdout ranking then
+inverts perfectly. A backtest-selected blend is the same failure as everything else.
+
+**But w=0.50 does not have to be selected from the backtest.** Equal-weighting two strategies
+under genuine uncertainty about which regime is coming is the 1/N prior, not a fitted
+parameter — and it is the only parameter choice in this entire investigation that can be
+justified a priori. On that basis it delivers two things that are mechanical rather than
+fitted:
+
+- **Regime dispersion collapses.** |search Sharpe − holdout Sharpe| is **0.02–0.06** for the
+  blend versus 0.23–0.31 for either pure strategy. Five- to ten-fold more stable across the
+  two regimes.
+- **Time underwater falls sharply.** At L=2.0, **19.5 months versus 30.0** for pure
+  buy-and-hold and 25.8 for pure timing. At L=3.0, 24.7 versus 36.5 and 40.4.
+
+**What it does NOT fix: maximum drawdown.** −46.7% at L=2.0 is deeper than QQQ's −35.6%. The
+blend shortens and stabilises the pain; it does not make the worst moment shallower.
+
+**Statistical honesty.** The full-period Sharpe edge over QQQ (0.89 vs 0.85) is ~0.04 against
+a standard error of roughly 0.25 over 16 years. **That difference is not significant and
+should not be relied on.** The dispersion and duration results are structural consequences
+of blending imperfectly correlated sleeves and do not depend on the Sharpe gap being real.
+
+### Mix B — ensemble of the 50/100/200dma sleeves
+
+Equal-weight the three rules. Holdout Sharpe 0.83–0.85 versus 0.94 for ma200 alone, so the
+ensemble is **worse than the best single rule**. But it addresses the sensitivity the main
+study left unsolved:
+
+| across buffers 0% / 1% / 2% | holdout CAGR spread | holdout Sharpe spread |
+|---|---|---|
+| ma200 alone | 33.53 → 35.12 → 29.67 = **5.45pp** | 0.90 / 0.94 / 0.82 = 0.12 |
+| ensemble | 25.48 → 27.75 → 28.24 = **2.76pp** | 0.78 / 0.83 / 0.85 = 0.07 |
+
+**The ensemble halves the buffer sensitivity**, at a cost of roughly 7pp of CAGR. That is the
+intended trade: it buys robustness to a parameter nobody knows how to set correctly.
