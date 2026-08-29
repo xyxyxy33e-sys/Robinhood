@@ -1028,3 +1028,58 @@ CAGR and ~0.86 Sharpe — enough to beat QQQ buy-and-hold — but it lifts every
 equally, so the ordering above, and the conclusion that the ladder adds nothing, is
 unchanged. This window also has SPMO trailing QQQ, which the Mirror Study's own decade
 table does not (it starts a year later and includes the 2016–17 cohorts).
+
+## Appendix: leveraging a stock book WITHOUT margining it — this CORRECTS the previous appendix
+
+The previous appendix concluded the layers do not stack. That conclusion was an artifact of
+**how** the leverage was applied. Margining fifteen individual positions is operationally
+awkward and, at retail rates (rf + 3–5%), expensive enough to eat the entire benefit.
+
+Finding 3 of that test points at the fix: the regime signal is a MARKET signal, not an
+asset signal. If the signal is about the market, the leverage can be too. So hold the stock
+book unlevered as the CORE and express all leverage through a single INDEX SATELLITE whose
+size the ladder sets:
+
+    weight_TQQQ = f(state);  weight_SPMO = 1 − weight_TQQQ
+    effective exposure = 1 + 2·w
+
+No margin, no borrowing spread, no per-name financing — one satellite position resized
+about eight times a year, with TQQQ's embedded (institutional) financing replacing retail
+margin.
+
+| | CAGR | Max DD | Vol | Sharpe | months uw |
+|---|---|---|---|---|---|
+| SPMO buy-and-hold (1x) | 17.7 | −31.3 | 20.6 | 0.78 | 25.2 |
+| QQQ buy-and-hold (1x) | 19.7 | −35.6 | 22.2 | 0.82 | 24.7 |
+| SPMO + **margin** ladder @3% (previous test) | 23.2 | −35.9 | 28.9 | **0.79** | 25.6 |
+| QQQ ladder alone (no stock book) | 27.7 | −35.3 | 30.6 | 0.88 | **18.2** |
+| **SPMO + TQQQ satellite, 25% max (1.5x)** | 24.5 | −38.1 | 25.8 | **0.89** | 23.8 |
+| **SPMO + TQQQ satellite, 35% max (1.7x)** | 27.2 | −41.0 | 28.4 | **0.91** | 19.7 |
+| **SPMO + TQQQ satellite, 50% max (2.0x)** | 31.4 | −45.9 | 33.0 | **0.93** | 19.5 |
+| satellite flat 35%, no timing | 28.9 | −47.9 | 34.8 | 0.84 | 26.2 |
+
+### The combination does work — through the satellite, not through margin
+
+**0.93 versus 0.78 (SPMO alone) and 0.88 (ladder alone).** Genuinely additive, and the best
+risk-adjusted result anywhere in this investigation. The margin route reached only 0.79
+because retail borrowing at rf+3% costs far more than the financing embedded in a leveraged
+ETF.
+
+**The ladder sizing is doing real work, not just the leverage.** A flat 35% satellite gives
+0.84 with −47.9% drawdown and 26.2 months underwater; state-sized to the same 35% maximum
+gives **0.91, −41.0%, 19.7 months.** Timing the satellite is worth +0.07 Sharpe, 7pp of
+drawdown and 6½ months underwater.
+
+**Note what this design does NOT do: it never de-risks below 1x.** In the weak states the
+satellite goes to zero and the portfolio is 100% SPMO — still fully invested. That is
+consistent with the earlier state-machine finding that weak states carry the HIGHEST forward
+returns (F +10.73% vs A +2.71%): the right response to a weak tape is to stop adding
+leverage, not to sell equity.
+
+### Caveat that matters for choosing between these
+
+Returns are price-only. SPMO holds ~2%-yielding names while TQQQ yields nothing, so the
+**SPMO-heavier configurations are understated by roughly 1.5%/yr and the TQQQ-heavier ones
+are not.** Adding dividends would compress the gap between the 25% and 50% satellite rows
+and could reverse their order. The 35% row is the more defensible pick on that basis, and it
+is also the one whose drawdown (−41.0%) stays closest to the components'.
