@@ -1203,3 +1203,56 @@ justification (the drawdown concentration above), improves both halves of the sa
 survives at any D. Raising D from 15 to 20 is a smaller tuning call made on the full
 sample with no separate story behind it; D = 0.15 remains defensible at a cost of roughly
 0.5pp of CAGR.
+
+## Appendix: the full weight surface — there is no optimum to find
+
+Sweeping A=B across and D down, with C=E=F=0. Cell is full-period Sharpe.
+
+| D \ A,B | 20% | 25% | 30% | 35% | 40% | 45% | 50% |
+|---|---|---|---|---|---|---|---|
+| **0%** | 0.88 | 0.90 | 0.91 | 0.91 | 0.92 | 0.92 | 0.93 |
+| **10%** | 0.89 | 0.91 | 0.92 | 0.93 | 0.93 | 0.94 | 0.94 |
+| **20%** | 0.90 | 0.92 | 0.93 | **0.94** | 0.94 | 0.95 | 0.95 |
+| **30%** | 0.90 | 0.92 | 0.93 | 0.94 | 0.95 | 0.95 | 0.96 |
+| **40%** | 0.90 | 0.92 | 0.93 | 0.94 | 0.95 | 0.95 | **0.96** |
+
+**The surface is monotone increasing in both directions and peaks at the corner of the
+grid.** That is not a discovery — an optimum sitting on the boundary means the search
+found the edge of the box, not a maximum. Extending the grid would just move the "best"
+cell outward until leverage constraints or margin limits bind.
+
+What the surface actually says: **over 2015–2026, more leverage was better.** That is a
+statement about the decade — a historic bull market in which every drawdown was recovered
+quickly — not about the strategy. It is exactly the shape that produces ruin when the
+next decade does not cooperate.
+
+**And the spread is noise.** Sharpe runs 0.88 to 0.96 across the entire 35-cell grid, and
+0.93–0.96 across most of it. The standard error on a Sharpe ratio over 10.9 years is
+roughly 0.30. Nothing in this table is distinguishable from anything else in it.
+
+**Conclusion: A/B and D are a risk-appetite decision, not an optimisation result.** Pick
+the drawdown you can hold and read the CAGR off the table. The corner cell (A/B 50%,
+D 40%) gives 32.3% CAGR at −46.6%; the current 35/20 gives 27.4% at −40.7%. Choose on the
+drawdown column, not the Sharpe column.
+
+### But the structural zeros ARE real
+
+The same sweep confirms the three states that should carry nothing, each tested
+independently against the 35/20 baseline (Sharpe 0.94, recent-half 0.81):
+
+| change | Sharpe | recent 5y | verdict |
+|---|---|---|---|
+| C raised to 10% | 0.93 | 0.80 | worse — keep C at 0 |
+| E raised to 10% | 0.93 | 0.79 | worse — keep E at 0 |
+| F raised to 10% | 0.92 | **0.78** | worse — keep F at 0 |
+| C and F both at 10% | 0.92 | **0.77** | worst tested |
+
+Every one degrades, and each degrades the *recent* half more than the full period. Unlike
+the A/B and D dimensions, these have a sign: **the zeros are load-bearing, the levels are
+taste.**
+
+### B barely matters
+
+B is 3.9% of days. Raising it to 50% (above A) gives Sharpe 0.94 and +0.5pp of CAGR;
+cutting it to 20% gives 0.93. Setting **B = A** is simpler and costs nothing measurable —
+the reclaim state's better forward return is real but has no room to express itself.
