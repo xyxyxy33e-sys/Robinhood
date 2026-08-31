@@ -1371,3 +1371,59 @@ Raincheck's own case study reached the same conclusion from one episode — SQQQ
 while QQQ fell 5.21%, and cash beat it. This generalises that over 391 days: **cash beats
 the short by roughly 57 points.** Their policy caps SQQQ at 30% "given the risky nature of
 short positions"; the evidence says the cap should be zero, and F should stay at 100% core.
+
+## Appendix: partial cash in the weak states — beats the zero-cash baseline
+
+The owner proposed adding cash (BOXX) to states D, E, F rather than holding the full
+weight in the SPMO core:
+
+| state | core | satellite | cash | implied exposure |
+|---|---|---|---|---|
+| A | 65% | 35% | 0% | 1.70× |
+| B | 25% | 75% | 0% | 2.50× |
+| C | 100% | 0% | 0% | 1.00× |
+| D | 55% | 20% | 25% | **1.15×** (not the stated 0.95×) |
+| E | 50% | 0% | 50% | 0.50× |
+| F | 30% | 0% | 70% | 0.30× |
+
+D's own numbers do not reconcile — 55/20/25 computes to 1.15×, not the 0.95× listed. The
+self-consistent split for 0.95× at 20% satellite is core 35% / satellite 20% / cash 45%.
+Both tested; cash modelled as the T-bill accrual (`rf` in `DGS3MO`) already used
+throughout this file, since BOXX approximates pre-tax T-bill returns and no BOXX price
+series has been pulled.
+
+| config | CAGR | Max DD | Sharpe | worst 12m | recent 5y | 2022 | 2018 | mean exposure |
+|---|---|---|---|---|---|---|---|---|
+| current baseline (0 cash anywhere) | 28.4% | −40.7% | 0.95 | −22.1% | 0.80 | −19.0% | −7.7% | 1.53× |
+| **as-given (D 1.15×)** | 26.5% | **−32.4%** | **0.99** | **−17.0%** | 0.80 | **−16.3%** | **−3.6%** | 1.38× |
+| **corrected (D 0.95×)** | 25.7% | **−30.5%** | **0.99** | **−16.6%** | 0.78 | −15.4% | −2.0% | 1.35× |
+
+### This reverses the earlier conclusion — with a caveat on why
+
+The main study found going to FULL cash in weak states was worse on every axis (Sharpe
+0.81 vs 0.88). PARTIAL cash in E and F, alongside a reduced but nonzero core, is better:
+**Sharpe 0.99 vs 0.95, max drawdown 8pp shallower, worst 12 months 5-6pp better, and both
+crash years meaningfully improved** — for 3pp less CAGR.
+
+The reconciliation is not a contradiction of the earlier finding, it is a different lever.
+The earlier result said: don't SELL THE CORE, because forward returns are highest in weak
+states. This proposal does not sell the core in E and F — it holds it at reduced (not
+zero) weight (50% and 30%) while ALSO cutting mean exposure from 1.53x to ~1.35-1.38x
+across the whole strategy. The gain here is close to what the return-vs-risk appendix
+already showed: at fixed Sharpe, less total leverage buys less drawdown. This table shows
+that trade can be made selectively, in the states that carry the deepest drawdowns (E, F),
+rather than uniformly — and it prices better than scaling everything down together.
+
+### Recommendation on the D discrepancy
+
+Both variants land close together (Sharpe 0.99 either way); the "as-given" split has
+slightly better CAGR and 2022 for materially the same risk profile, so there is no strong
+case for the "corrected" 0.95x reading over the as-given 1.15x one. **Use the as-given
+weights (D 55/20/25) — the stated 0.95x label was the error, not the weights.**
+
+### What this changes going forward
+
+This is now the best full-portfolio result in the investigation on every axis except CAGR
+and needs to replace the zero-cash baseline as the reference configuration, pending a
+buffer-robustness check (not yet run on this design) before being written into the
+handoff spec.
