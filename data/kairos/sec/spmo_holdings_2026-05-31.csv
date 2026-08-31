@@ -1,0 +1,103 @@
+rank,ticker,name,pct_of_net_assets,value_usd,shares_or_par,asset_category
+1,MU,"Micron Technology, Inc.",10.7297,2134655139.00,NS,EC
+2,NVDA,NVIDIA Corp.,8.4610,1683304148.70,NS,EC
+3,AVGO,Broadcom Inc.,7.5812,1508266479.95,NS,EC
+4,GOOGL,Alphabet Inc.,4.8107,957081110.22,NS,EC
+5,AMD,"Advanced Micro Devices, Inc.",4.1420,824044999.70,NS,EC
+6,JNJ,Johnson & Johnson,3.8530,766551028.32,NS,EC
+7,GOOG,Alphabet Inc.,3.8151,759016136.22,NS,EC
+8,LRCX,Lam Research Corp.,3.5380,703885750.50,NS,EC
+9,INTC,Intel Corp.,2.9544,587772500.36,NS,EC
+10,XOM,Exxon Mobil Corp.,2.7798,553035324.60,NS,EC
+11,CAT,Caterpillar Inc.,2.6031,517880910.12,NS,EC
+12,SNDK,Sandisk Corp.,2.4599,489389880.42,NS,EC
+13,CSCO,"Cisco Systems, Inc.",2.0197,401815168.02,NS,EC
+14,STX,Seagate Technology Holdings PLC,1.8823,374487749.80,NS,EC
+15,AMAT,"Applied Materials, Inc.",1.7735,352830387.78,NS,EC
+16,WDC,Western Digital Corp.,1.7682,351778417.41,NS,EC
+17,GE,General Electric Co.,1.6356,325392721.68,NS,EC
+18,GS,"Goldman Sachs Group, Inc. (The)",1.4266,283815525.52,NS,EC
+19,RTX,RTX Corp.,1.3965,277828020.60,NS,EC
+20,KLAC,KLA Corp.,1.3896,276457200.60,NS,EC
+21,,Palantir Technologies Inc.,1.3893,276404713.02,NS,EC
+22,,GE Vernova Inc.,1.3292,264438508.80,NS,EC
+23,,Amphenol Corp.,1.2993,258494152.84,NS,EC
+24,,Philip Morris International Inc.,1.2944,257525960.16,NS,EC
+25,,Coca-Cola Co. (The),1.2109,240897697.52,NS,EC
+26,,Newmont Corp.,1.0956,217976803.16,NS,EC
+27,,Citigroup Inc.,0.9731,193590009.10,NS,EC
+28,,Morgan Stanley,0.9641,191809904.00,NS,EC
+29,,Corning Inc.,0.9512,189239917.16,NS,EC
+30,,"Gilead Sciences, Inc.",0.8261,164354521.29,NS,EC
+31,,"Analog Devices, Inc.",0.8156,162268101.90,NS,EC
+32,,Welltower Inc.,0.7615,151504177.81,NS,EC
+33,,Ciena Corp.,0.6302,125373197.25,NS,EC
+34,,Charles Schwab Corp. (The),0.5513,109673078.65,NS,EC
+35,,Howmet Aerospace Inc.,0.5504,109504198.00,NS,EC
+36,,Cummins Inc.,0.5073,100918250.84,NS,EC
+37,,Bank of New York Mellon Corp. (The),0.5017,99817379.28,NS,EC
+38,,Lockheed Martin Corp.,0.4953,98540635.60,NS,EC
+39,,"Quanta Services, Inc.",0.4824,95982484.34,NS,EC
+40,,"Altria Group, Inc.",0.4741,94317359.92,NS,EC
+41,,"Comfort Systems USA, Inc.",0.4732,94149158.58,NS,EC
+42,,McKesson Corp.,0.4568,90876140.88,NS,EC
+43,,General Dynamics Corp.,0.4537,90269962.78,NS,EC
+44,,Monster Beverage Corp.,0.4457,88679296.32,NS,EC
+45,,"L3Harris Technologies, Inc.",0.4177,83103825.78,NS,EC
+46,,Johnson Controls International PLC,0.4167,82898280.02,NS,EC
+47,,Freeport-McMoRan Inc.,0.4101,81592172.71,NS,EC
+48,,General Motors Co.,0.4074,81047458.40,NS,EC
+49,,CME Group Inc.,0.4058,80740254.72,NS,EC
+50,,Parker-Hannifin Corp.,0.3927,78134187.41,NS,EC
+51,,Northrop Grumman Corp.,0.3476,69156208.16,NS,EC
+52,,"Cardinal Health, Inc.",0.3254,64736966.40,NS,EC
+53,,"Monolithic Power Systems, Inc.",0.3224,64145696.76,NS,EC
+54,,"Williams Cos., Inc. (The)",0.3097,61623776.61,NS,EC
+55,,TE Connectivity PLC,0.3084,61349612.93,NS,EC
+56,,"Teradyne, Inc.",0.3039,60452936.55,NS,EC
+57,,"HCA Healthcare, Inc.",0.3017,60016002.84,NS,EC
+58,,Ford Motor Co.,0.3003,59745411.36,NS,EC
+59,,"Robinhood Markets, Inc.",0.2974,59166460.40,NS,EC
+60,,"American Electric Power Co., Inc.",0.2960,58895723.18,NS,EC
+61,,"Cencora, Inc.",0.2808,55859068.72,NS,EC
+62,,"Rockwell Automation, Inc.",0.2406,47868742.50,NS,EC
+63,,"IDEXX Laboratories, Inc.",0.1883,37469673.23,NS,EC
+64,,"Ventas, Inc.",0.1812,36048184.20,NS,EC
+65,,Entergy Corp.,0.1792,35661094.80,NS,EC
+66,,eBay Inc.,0.1772,35258915.79,NS,EC
+67,,Dollar General Corp.,0.1689,33608406.06,NS,EC
+68,,"EMCOR Group, Inc.",0.1674,33310924.16,NS,EC
+69,,State Street Corp.,0.1667,33168440.40,NS,EC
+70,,Invesco Private Prime Fund,0.1599,31817064.14,NS,STIV
+71,,Archer-Daniels-Midland Co.,0.1542,30682590.20,NS,EC
+72,,"Cboe Global Markets, Inc.",0.1538,30602462.20,NS,EC
+73,,"Tapestry, Inc.",0.1480,29453031.72,NS,EC
+74,,Jabil Inc.,0.1469,29225681.52,NS,EC
+75,,"C.H. Robinson Worldwide, Inc.",0.1450,28856798.55,NS,EC
+76,,"CenterPoint Energy, Inc.",0.1265,25172126.74,NS,EC
+77,,WEC Energy Group Inc.,0.1256,24990803.05,NS,EC
+78,,Northern Trust Corp.,0.1239,24648244.65,NS,EC
+79,,Hershey Co. (The),0.1171,23306495.54,NS,EC
+80,,Atmos Energy Corp.,0.1090,21689907.72,NS,EC
+81,,Albemarle Corp.,0.1027,20423790.56,NS,EC
+82,,"Ulta Beauty, Inc.",0.1023,20348402.65,NS,EC
+83,,"NRG Energy, Inc.",0.0983,19555568.00,NS,EC
+84,,FirstEnergy Corp.,0.0963,19150719.80,NS,EC
+85,,"Expeditors International of Washington, Inc.",0.0950,18905715.36,NS,EC
+86,,"Huntington Ingalls Industries, Inc.",0.0937,18642127.81,NS,EC
+87,,"Dollar Tree, Inc.",0.0931,18518850.48,NS,EC
+88,,"Evergy, Inc.",0.0855,17008122.60,NS,EC
+89,,NiSource Inc.,0.0841,16722765.76,NS,EC
+90,,Bunge Global S.A.,0.0812,16157971.80,NS,EC
+91,,Loews Corp.,0.0710,14134678.55,NS,EC
+92,,"Leidos Holdings, Inc.",0.0690,13721630.40,NS,EC
+93,,Invesco Private Government Fund,0.0617,12270671.19,NS,STIV
+94,,"Rollins, Inc.",0.0598,11894811.60,NS,EC
+95,,Fox Corp.,0.0579,11513462.16,NS,EC
+96,,"Hasbro, Inc.",0.0565,11245443.51,NS,EC
+97,,Ralph Lauren Corp.,0.0520,10347132.60,NS,EC
+98,,Invesco Ltd.,0.0497,9895001.26,NS,EC
+99,,"TKO Group Holdings, Inc.",0.0468,9311478.76,NS,EC
+100,,Invesco Government & Agency Portfolio,0.0445,8849141.89,NS,STIV
+101,,Fox Corp.,0.0328,6532244.58,NS,EC
+102,,Southwest Airlines Co.,0.0212,4214211.05,NS,EC

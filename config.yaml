@@ -1,0 +1,308 @@
+# Daily Momentum Calls — user-owned parameters.
+# Every runbook reads this file first. Edit + push to change behavior; the next
+# scheduled run picks it up automatically.
+#
+# WHY each value is what it is: docs/RATIONALE.md. Read it before changing anything —
+# most of these are scar tissue from a specific incident, and the reason is rarely
+# obvious from the number. Do not "tidy" a threshold without checking there.
+
+# --- Account ------------------------------------------------------------------
+account_number: "576391551"                          # "Agentic" cash account (only agentic_allowed one)
+scan_id: "5399dce3-8430-476c-ba65-89ac920af0bf"      # saved scanner "Daily Momentum Calls" (>+2%)
+scan_id_puts: "1849aba7-1d06-4269-b58f-b4e42d9bfb02" # saved scanner "Daily Momentum Puts" (<-2%, RSI 20-45)
+enable_puts: true                # also trade puts on confirmed bearish momentum
+
+# --- Execution authorization --------------------------------------------------
+# PAPER-ONLY STRATEGY (2026-08-16, user directive: "this strategy will only do test run,
+# not with real money"). This is no longer a one-week trial — it is the standing mode, and
+# there is no scheduled review that flips it back.
+#
+# HARD SWITCH: while dry_run is true, NO order-placing tool may be called for any reason —
+# not place_option_order, not a resting stop, not a close. Every phase runs in full against
+# live market data and journals what it WOULD have done, with paper fills marked to market
+# through the real exit cascade.
+#
+# Turning it off is a deliberate edit, and would also require a capital split agreed with
+# the other strategy first — see "Shared account" below.
+dry_run: true
+#
+# Both flags below are IGNORED while dry_run is true. They are the live-mode settings,
+# preserved so flipping dry_run back to false restores the prior behavior exactly.
+entry_auto_execute: true         # true = standing authorization to buy without asking
+exit_auto_execute: true          # true = closes execute without asking
+
+# --- Shared account (added 2026-08-16) ----------------------------------------
+# A SECOND STRATEGY now trades this same account and holds the real buying power.
+# Observed 2026-08-16 23:24 ET: ten queued agentic market buys for Monday's open
+# (MU, NVDA, GOOGL, AVGO, JNJ, AMD, LRCX, XOM, INTC, CAT) totalling $11,798 against
+# an $11,858.54 balance — leaving $60.54 spendable. Once they fill, this account holds
+# roughly $11.8k of equity and ~$60 of cash.
+shared_account: true
+
+# --- Paper account (2026-08-16) -----------------------------------------------
+# The paper book runs on a FIXED snapshot of the account balance taken the night before
+# it started, NOT on a live read of get_portfolio.
+#
+# Why a snapshot and not total_value: total_value now includes the other strategy's
+# equity. Reading it live would let that strategy's gains and losses move this one's
+# position sizing — an NVDA rally would silently inflate paper option sizes here, and the
+# two books' results would be impossible to separate. A frozen number keeps this
+# strategy's equity curve entirely its own.
+paper_account_starting_balance: 11858.54   # get_portfolio total_value, 2026-08-16 23:31 ET
+paper_account_start_date: "2026-08-17"
+#
+# Paper equity = paper_account_starting_balance + cumulative realized paper P&L from
+# data/paper_ledger.csv. It COMPOUNDS, which is the faithful analogue of the live system
+# (max_premium_per_trade was always a % of the then-current account value). Every sizing
+# and buying-power decision under dry_run reads paper equity and nothing else.
+#
+# get_portfolio is still called each day, but for the RECORD ONLY — to log what the real
+# account is doing and to confirm no real order was placed. It must not feed sizing.
+#
+# LIVE MODE IS UNCHANGED AND MUST STAY THAT WAY. If dry_run is ever false, sizing reads
+# the broker's real buying power — never the snapshot, never paper equity. Those numbers
+# describe a simulation, not money.
+
+# --- Position sizing ----------------------------------------------------------
+min_buying_power_to_trade: 10    # USD; below this the entry run skips the day
+max_premium_per_trade_pct_of_daily_start: 25
+                                 # Cap per position = this % of the START-of-day balance
+                                 # (captured in premarket, journaled as
+                                 # `max_premium_per_trade`; entry.md reads that figure).
+                                 # Start-of-day balance = PAPER EQUITY from the last row of
+                                 # data/paper_ledger.csv — NOT get_portfolio total_value.
+                                 # Sizing budget = min(that figure, available funds);
+                                 # take the smaller position rather than skipping.
+                                 # "Available" = PAPER EQUITY under dry_run (the standing
+                                 # mode); real broker buying power only if it were ever off.
+                                 # Because it is a % of paper equity, and paper equity
+                                 # compounds with realized paper P&L, position size grows
+                                 # after paper wins and shrinks after paper losses — the
+                                 # same behaviour the live account had.
+max_open_positions: 6            # combined across calls AND puts, no fixed split.
+                                 # Re-entering the same underlying is allowed; a symbol
+                                 # may not hold a call AND a put simultaneously.
+max_new_positions_per_day: 30
+
+# --- Contract selection -------------------------------------------------------
+dte_min: 7
+dte_target: 14                   # pick the expiry in [dte_min, dte_max] CLOSEST to this,
+                                 # NOT the nearest. Ties break toward the longer expiry.
+dte_max: 21
+dte_max_no_weekly: 45            # when no expiry exists in [dte_min, dte_max] (monthly-only
+                                 # chains), the nearest monthly up to this DTE is allowed
+min_open_interest: 500           # static intraday — a strike that fails stays failed all day.
+                                 # Weakest of the three gates (NBIS $250C: OI 5,872 with 1
+                                 # contract displayed a side; U $40C: OI 1,393 and swept 26%
+                                 # through its stop). It measures accumulated stock, not
+                                 # current flow. Held at 500 pending chain_log.csv data.
+max_spread_pct_of_mid: 10        # spread CAN improve intraday; re-check each cycle.
+                                 # Best-behaved gate — % of mid correctly normalizes
+                                 # crossing cost as a fraction of the position. Do not
+                                 # "wait for it to tighten": SE oscillated 12-59% across six
+                                 # cycles with no trend. Leave at 10.
+# Depth gate: displayed size must cover the ORDER, not a fixed constant. Revised
+# 2026-08-14 — the old flat `min_quote_size_for_entry: 10` demanded 3.3x coverage on a
+# 3-lot and 1x on a 10-lot, i.e. it was most restrictive exactly when the order was
+# smallest. It blocked NBIS 8/12 (needed 3 contracts, ask_size 8) six minutes before the
+# same strike showed 32/93. Required on BOTH bid_size and ask_size:
+#   required = max(min_quote_size_floor, ceil(quantity x quote_size_coverage_multiple))
+min_quote_size_floor: 5          # absolute floor, matches min_quote_size_for_stop_update
+quote_size_coverage_multiple: 2  # ... and 2x the contracts actually being bought. This
+                                 # TIGHTENS large orders (a 16-lot now needs 32 a side —
+                                 # the U $40C size) and loosens only small ones.
+thin_liquidity_oi_threshold: 2500  # below this, flag the position "LIQUIDITY: THIN" for life
+                                 # and use the tightened THIN exit values below
+
+# Single-gate liquidity exception: RETIRED 2026-08-14 after its paper window
+# (8/10-8/14) produced exactly one shadow trade — SE $130C, stopped out -25.9%
+# (-$360) — and could never apply to quote-size, the gate that actually blocks.
+# See docs/RATIONALE.md before proposing anything like it again.
+
+# --- Strike search ------------------------------------------------------------
+# Liquidity clusters at ROUND strikes, not by distance from spot. The old cascade
+# ("next strike further OTM once") searched an axis that does not describe the
+# liquidity surface and only in the direction where premium falls and % spread
+# mechanically worsens: it made OI worse in 7 of 9 measured cases (-99%, -88%,
+# -71%, -70%, -65%). Both improvements were steps onto round strikes.
+strike_search_steps_itm: 1       # how many strikes BELOW spot to consider (calls;
+                                 # above spot for puts). 0 restores OTM-only search.
+strike_search_steps_otm: 2       # how many strikes BEYOND spot to consider
+                                 # Among strikes in the band that pass ALL gates, take
+                                 # the one CLOSEST TO ATM — the band widens the search,
+                                 # it does not change the strike preference.
+
+# --- Exits: the cascade -------------------------------------------------------
+# Checked in this order each monitor cycle:
+#   hard TP (50) -> scale-out (40) -> ratchet arm (12) -> floors -> otherwise hold
+stop_loss_pct: -25               # hard floor. Deliberately NOT scaled when leverage
+                                 # halved — that is what widens stop tolerance. Do not touch.
+hard_take_profit_pct: 50         # instant sale at mid, no discretion
+scale_out_pct: 40                # sell floor(qty/3) once, qty>=2, then raise the stop
+scale_out_floor_pct: -15         # remainder's floor after a scale-out, keyed to original entry
+take_profit_pct: 12              # ratchet ARMS here (no forced sale)
+take_profit_floor_pct: 10        # floor once armed — but see FLOOR CLAMP below
+stop_ratchet_trail_pct: 20       # normal trail from high-water mark once armed
+stop_ratchet_stall_trail_pct: 10 # tighter trail applied on a STALLING bar
+thin_liquidity_take_profit_pct: 8         # THIN arms earlier than normal (8 < 12)
+thin_liquidity_stop_ratchet_trail_pct: 15 # THIN trails tighter than normal (15 < 20)
+#
+# FLOOR CLAMP: the effective floor once armed is
+#   min(take_profit_floor_pct, the arm level that applied)
+# = 10 normally, 8 for THIN. Without this a THIN position arming at +8% against a +10%
+# floor would need a stop ABOVE the mark at the instant of arming, forcing an instant sell.
+#
+# INVARIANTS (assert before changing any of the above):
+#   arm 12 < scale-out 40 < hard TP 50 · THIN arm 8 < arm 12
+#   THIN trail 15 < trail 20 · stall 10 < THIN trail 15
+
+# --- Exits: pre-arm floors (no-ops once the ratchet arms) ---------------------
+early_floor_trigger_pct: 8       # first touch of +8% ...
+early_floor_pct: -3              # ... raises the floor to -3% (just below breakeven)
+midday_floor_trigger_pct: 3      # inside the midday window, first touch of +3% ...
+midday_floor_pct: 0              # ... raises the floor to breakeven
+midday_floor_window_start_et: "11:30"
+midday_floor_window_end_et: "13:30"
+late_day_floor_trigger_pct: 5    # inside the late window, first touch of +5% ...
+late_day_floor_pct: 5            # ... locks in +5% (trigger = floor; banks real profit)
+late_day_floor_window_start_et: "13:30"
+late_day_floor_window_end_et: "15:00"
+# Whenever several floors are eligible, take the highest. Stops only ever move UP.
+
+# --- Order mechanics ----------------------------------------------------------
+resting_order_type: "stop_loss"  # "stop_loss" = resting stop at the stop level (monitor
+                                 # handles profit-taking) | "take_profit" = the inverse
+min_quote_size_for_stop_update: 5  # bid AND ask must both clear before any stop
+                                 # cancel+replace. Only ever DELAYS raising a stop.
+ratchet_stop_type: "stop_limit"  # once armed, switch the resting stop to stop_limit to
+                                 # bound slippage. "stop_market" disables.
+ratchet_stop_limit_buffer_pct: 5 # limit = stop x (1 - this/100)
+ratchet_stop_limit_cutoff_et: "15:30"  # past this, revert to stop_market — certainty of
+                                 # getting flat beats bounding slippage this late
+blackout_stop_check_interval_sec: 30  # edge case only: software stop-check cadence if a
+                                 # stop_market is unexpectedly rejected in the 9:30-9:45
+                                 # blackout. Normal path is a stop_limit, upgraded at 9:45.
+forced_close_start_et: "15:40"   # begin flattening
+forced_close_cross_et: "15:53"   # cross the spread if still open
+
+# --- Signal thresholds --------------------------------------------------------
+min_day_change_pct: 2            # underlying must move at least this % in the trade
+                                 # direction. NOTE: measures against YESTERDAY's close and
+                                 # says nothing about who is winning today — the
+                                 # above-open and VWAP gates do that. (W, 2026-08-14:
+                                 # crossed +2% while fading all day from its own open.)
+
+# --- Late-re-check leg confirmation (entry.md §1.3) ---------------------------
+# Revised 2026-08-14. The veto now rests on VOLUME + STRUCTURE. Leg age is a
+# measurement window, NOT a gate — review in RATIONALE found the 15-minute clock
+# was the sole binding constraint exactly once in the rule's life (BIRK 8/13),
+# and that call came down to 60 seconds. Do not restore it as a veto without data
+# from leg_log.csv.
+late_entry_min_bars: 3           # consecutive 5-min closes in the trade direction.
+                                 # 3 bars IS the 15 minutes the old rule asked for —
+                                 # stated once now, not twice.
+# *** UNDER REVIEW — MEASURED ANTI-PREDICTIVE, 2026-08-22. DO NOT GO LIVE ON THIS RULE. ***
+# With outcome_30m backfilled across 191 leg_log rows (tools/backfill_outcomes.py), the
+# volume leg's relationship to the next 30 minutes is negative and statistically
+# significant -- it selects the bars that LOSE:
+#     ratio <0.8      n=76  mean fwd30 +0.19%  win 47%
+#     ratio 0.8-1.0   n=40  mean fwd30 +0.44%  win 65%
+#     ratio 1.0-1.25  n=24  mean fwd30 +0.30%  win 54%
+#     ratio 1.25-1.5  n=17  mean fwd30 -0.26%  win 35%
+#     ratio 1.5-2.0   n=21  mean fwd30 -0.24%  win 43%
+#     ratio >=2.0     n=13  mean fwd30 -0.12%  win 31%
+#     below gate n=157 mean +0.223% | above gate n=34 mean -0.191% | diff -0.415%, t=-2.68
+# The streak leg inverts the same way (streak 0-2 positive, streak 3 -0.06%, streak 4
+# -0.32% on 22% wins). Mechanism is consistent with climax/exhaustion: a high-volume
+# 5-min bar in an already-extended name is more often the top than the continuation.
+# The value below is NOT being tuned, because the evidence says the gate is directionally
+# wrong rather than mis-calibrated, and tuning a sign error as if it were a scale error
+# is how you fit noise. Caveats: underlying moves not option P&L; 9 sessions dominated by
+# one crypto complex; every row is already a screened candidate.
+# DECISION RULE for the next review: if the negative relationship still holds at n>300
+# rows spanning more than one regime, demote this leg from a veto to advisory-only.
+late_entry_min_volume_ratio: 1.5 # this bar's volume vs the trailing baseline below.
+                                 # Separates the record cleanly: NBIS's real breakout
+                                 # measured 2.5-2.9x, BIRK's push 4.3x, against RDDT
+                                 # 0.5-0.8x and SMCI 0.9x.
+# BASELINE — must NOT depend on where the leg is judged to start (backtest 2026-08-14).
+# The first spec said "the quiet period immediately preceding the leg", which is
+# ambiguous: on BIRK 8/13 a consecutive-closes leg start walked back into the busy
+# post-open window and produced 0.48x, versus 3.35x from the dormant window the journal
+# picked by eye — same leg, same bars, 7x apart, and the runbook's own warning about
+# inflated opening volume violated by its own definition. Now fully determined:
+#   ratio = this bar's volume / median(volume of the previous late_entry_baseline_bars,
+#           skipping the first late_entry_baseline_skip_open_bars of the session)
+late_entry_baseline_bars: 6      # 30 min of trailing context
+late_entry_baseline_skip_open_bars: 3  # the opening 15 min is always inflated — excluded
+late_entry_require_structure: true  # leg must have made AND HELD a higher low or a new
+                                 # local extreme; breaking the structure low it was built
+                                 # on is an immediate disqualification. This is the veto
+                                 # the clock used to pretend to be.
+late_entry_advisory_leg_minutes: 15  # ADVISORY ONLY — journal it, never block on it.
+                                 # Legs dying near this mark is the hypothesis under test.
+
+# --- Opening gap-fade guard ---------------------------------------------------
+# BLOCKING-ONLY: can veto a candidate, never promote one. Worst case is a missed trade.
+# UNDER REVIEW — the live record is weaker than the derivation (Gate A passed 4 names,
+# 3 closed below their open; Gate B is structurally biased against the strongest trends
+# because it measures from a RATCHETING session high). See docs/RATIONALE.md before
+# changing. Do not tighten on current evidence. Set enabled: false to disable both.
+opening_fade_guard_enabled: true
+opening_fade_guard_min_gap_pct: 5     # gates apply only to names that actually gapped this much
+opening_bar_min_close_position: 0.50  # GATE A: first 5-min RTH bar must close in the upper
+                                 # half of its range for a call (lower half for a put).
+                                 # Cleared not by the clock but by a volume-confirmed 5-min
+                                 # close back above that bar's high.
+opening_window_chase_guard_pct: 1.5   # GATE B: before opening_window_end_et, reject an entry
+                                 # within this % of the session high (session low for puts)
+opening_window_end_et: "10:30"   # Gate B's OPENING-WINDOW level ends here. Gate A has no
+                                 # time limit. After this the all-session level below applies.
+
+# GATE B, all-session extension (added 2026-08-22 from the 33-name-day corpus).
+# Gate B used to switch off entirely at 10:30, after which nothing restrained buying the
+# session extreme -- while §1.3 structure (b) rewards a NEW LOCAL EXTREME and therefore
+# selects breakout bars by construction. The two rules pulled against each other and the
+# conflict was invisible before 10:30 because Gate B was doing the restraining.
+# Backtest over data/bars (tools/backtest_legs.py + the chase sweep): requiring distance
+# from the session extreme flips modelled P&L from negative to positive at EVERY volume
+# threshold tested, monotonically --
+#     vol>=1.00  off -4.0%avg | 0.5% -2.4% | 1.0% +0.9% | 1.5% +7.9%
+#     vol>=1.25  off -3.7%avg | 0.5% -3.9% | 1.0% +12.4% | 1.5% +20.9%
+#     vol>=1.50  off -6.7%avg | 0.5% -0.8% | 1.0% +12.4% | 1.5% +20.9%
+# The DIRECTION is consistent across three independent series; the MAGNITUDES are not
+# trustworthy (n falls to 2-5 at the wider levels). 1.0 is chosen as the level where the
+# sign flips while retaining the most trades, NOT because +12.4% is a real expectation.
+# Live witness: 2026-08-21 COIN filled 0.42% below a session high set on the qualifying
+# bar itself, with Gate B already inactive, and stopped out at -25%. Its leg_log row
+# records mfe +0.14% -- the position was never meaningfully green.
+chase_guard_all_session_pct: 1.0 # reject an entry closer than this to the session high
+                                 # (session low for puts) at ANY time in the entry window.
+                                 # Blocking-only, like Gate B: veto, never promote; a name
+                                 # blocked now frequently qualifies after a pullback.
+#
+# UNRESOLVED CONTRADICTION -- read before touching this number (2026-08-28).
+# This guard and late_entry_require_structure's session-extreme condition (`seq`)
+# cannot both be satisfied. `seq` requires the entry bar to SET the session
+# extreme; this guard requires distance FROM the session extreme. When seq holds,
+# the extreme is the bar's own, so the guard degenerates into "did this bar close
+# >1% below its own high" -- which gate (a) (close beyond open) all but forbids.
+#
+# Measured over the full 58 name-day corpus (`python3 tools/backtest_legs.py --audit`):
+#   25 qualifying bars, 25 blocked by the guard (100%),
+#   guard_pct equal to the bar's own high-to-close giveback in 25 of 25,
+#   largest guard_pct ever observed 0.637% against this 1.000% threshold.
+# Re-referencing the guard to the PRIOR bars' extreme does not fix it -- still 25/25,
+# because a bar setting a new extreme is by construction at or beyond the old one.
+#
+# So the strategy has produced ZERO executable entries in the entire corpus, and the
+# five consecutive live no-trade days are this, not a quiet tape.
+#
+# DO NOT loosen this number to start trading. The same corpus says the underlying
+# signal has no edge to release: entering on the breakout bar returns +0.01% at 60
+# minutes (6 wins in 14) and -4.7% modelled after friction; waiting for a pullback is
+# worse at every delay tested. Right now this guard is the only thing standing between
+# the strategy and a negative-expectancy rule. Removing it without replacing the entry
+# logic would convert a no-trade strategy into a losing one.
+# Resolving this -- drop `seq`, drop the guard, or redesign the entry -- is an owner
+# decision. See journal/2026-08-28.md.
