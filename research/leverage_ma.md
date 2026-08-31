@@ -1427,3 +1427,43 @@ This is now the best full-portfolio result in the investigation on every axis ex
 and needs to replace the zero-cash baseline as the reference configuration, pending a
 buffer-robustness check (not yet run on this design) before being written into the
 handoff spec.
+
+## Data correction: SPMO's cached series included 7 fabricated pre-trade days
+
+Prompted by a question about where the pre-2018 data came from. `data/kairos/etf/SPMO.csv`
+was cached from `get_equity_historicals` keeping only `d,o,c` — the `interpolated` and
+`volume` fields were dropped at cache time, so this had never actually been checked for
+SPMO the way it was for TQQQ earlier in this investigation (`research/kairos_five_factor.md`
+notes 280 interpolated pre-inception TQQQ bars were dropped for the same reason).
+
+Re-pulled with the flags intact: the first 11 trading days, **2015-09-25 through
+2015-10-09**, are explicitly flagged `interpolated: true` by the API — synthetic gap-fill
+at a flat $25.22, zero volume, predating the fund's actual first trade. SPMO's real first
+trade is **2015-10-12** (200 shares, close 25.19). The cached file started 2015-10-01,
+inside the fabricated block — 7 rows fixed by dropping everything before 2015-10-12.
+
+**Impact on published results: negligible but real.** Every full-window study in this file
+(`spmo_ladder.py`, `spmo_overlay.py`, quoted as "10.9 years", 2015-10-01→2026-08-27) carried
+7 fabricated flat-price days out of ~2,745 — a rounding error in CAGR/Sharpe/max-drawdown,
+not a material one, since a flat price contributes zero return either way. The published
+**regime tape artifact is unaffected**: its window starts 2016-08-29, entirely after the
+fabricated block. No headline number in this file needs restating; the source CSV is fixed
+so future re-runs don't carry it forward.
+
+### The more important finding: SPMO was real but very thinly traded through ~2017
+
+Not fabrication — genuine zero-volume days on a real, listed, extremely low-AUM ETF, where
+the reported close simply carries forward the last actual print. Out of 675 raw bars checked
+(2015-09-25 through mid-2018), **272 (40%) have zero recorded volume**, clustered in
+2015-2017. Typical daily volume on the days that DID trade was single or low-double digits
+of shares (3, 9, 20, 100) until late 2017.
+
+**This means SPMO's early history is a materially weaker signal than its later years** — many
+"trading days" in that stretch simply didn't trade, so the series understates volatility
+during 2015-2017 (a flat price from no trading looks identical to a flat price from genuine
+stability) and any daily-return statistic computed over that period is averaging in a lot of
+non-events. The 2016-2019 cohorts in the SPMO Mirror Study and every full-window backtest in
+this file inherit that weakness. It does not invalidate the results — the strategy's holdout
+period (2020+) is unaffected, since AUM and liquidity grew substantially after SPMO's
+reconstitution/relaunch-era attention picked up — but the earliest ~2 years of any
+"since-2015" SPMO statistic should be read with that caveat attached.
