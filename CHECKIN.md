@@ -1,6 +1,6 @@
 # Daily check-in runbook
 
-Run once per trading day after the close (the scheduled Routine fires at 17:15 ET).
+Run once per trading day after the close (the scheduled Routine fires at 16:15 ET).
 Skip on market holidays — `get_equity_quotes` will still return the prior session's
 close, and recording it twice under a new date would fabricate a flat day.
 
