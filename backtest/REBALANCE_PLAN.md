@@ -1,5 +1,18 @@
 # January 2027 rebalance — checklist
 
+**User's decision (as of Sept 2026):** do a FULL swap in January — fully
+refresh both sleeves to the new annual lists (not a partial/selective
+rebalance like the Sept 2026 mid-year swaps) — and keep the portfolio
+structured as a 50/50 split between the Dogs of the Dow sleeve and the SA
+Top 10 sleeve going forward. Rationale: the two sleeves showed genuine
+offsetting behavior for the first time in the 7/15/2026-9/17/2026 window
+(Dogs of the Dow +4.0% vs SPY +1.0%, while the SA H2 2026 basket was
+-13.3% over the identical window) — the first real evidence that Dogs'
+defensive/value tilt and SA's growth/momentum tilt diversify each other
+during a growth-stock pullback, rather than just being two flavors of the
+same bull-market bet (which is what 2023-2025 looked like, since both
+sleeves moved up together every year with no offsetting behavior).
+
 User's 20-position portfolio (see `portfolio_tracker.csv`) is due for review
 when both source strategies refresh in January 2027:
 
