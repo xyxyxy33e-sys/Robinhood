@@ -73,6 +73,30 @@ AMD) in later cohorts. Note the much higher volatility (37% vs 15%
 annualized) and only 4 rebalance points (~3.7 years) — this is a small,
 concentrated, short sample and should not be read as a durable edge.
 
+## Random momentum baseline
+
+To check whether SA Top 10's outperformance is genuine stock-picking skill
+versus just riding a generic "buy recent winners" momentum factor,
+`random_momentum_baseline.py` builds a baseline: at each of the same 4
+rebalance dates (Jan 2023/24/25/26), rank the S&P 500 by trailing 12-month
+return, take the top quintile (~100 names) as a momentum pool, then run
+300 simulations that each randomly draw 10 tickers from that pool per
+rebalance date (same equal-weight, annual-rebalance engine as above).
+
+Result: the 300 random momentum baskets had CAGR ranging **7.4%–66.7%**
+(median 28.4%, 90th percentile 42.8%). SA Top 10's actual **81.9% CAGR
+beat all 300 of them (100th percentile)**. So the outperformance is not
+simply explained by "any random basket of momentum names would have done
+this" — the specific picks mattered. Caveat still applies: this is 4
+rebalance points over one strong bull run for high-momentum growth/AI
+names, so it's evidence of skill in this window, not proof of a durable
+edge across market regimes.
+
+Run it: `python3 fetch_sp500_universe.py` (fetches S&P 500 list + price
+history, gitignored) then `python3 random_momentum_baseline.py` → outputs
+`random_momentum_sims.csv`, `random_momentum_report.json`,
+`random_momentum_hist.png`.
+
 ## Running it
 
 ```

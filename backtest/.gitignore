@@ -1,3 +1,5 @@
 data/
 __pycache__/
 *.pyc
+sp500_close.csv
+sp500_list.csv

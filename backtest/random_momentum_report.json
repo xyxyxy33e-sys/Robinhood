@@ -1,0 +1,32 @@
+{
+  "n_sims": 300,
+  "pool_sizes": {
+    "2023-01-01": 98,
+    "2024-01-01": 98,
+    "2025-01-01": 99,
+    "2026-01-01": 99
+  },
+  "random_momentum_cagr_pct_summary": {
+    "count": 300.0,
+    "mean": 29.516466666666663,
+    "std": 9.809443244723955,
+    "min": 7.39,
+    "10%": 18.14,
+    "25%": 22.3225,
+    "50%": 28.384999999999998,
+    "75%": 35.0175,
+    "90%": 42.781,
+    "max": 66.68
+  },
+  "sa_top10_actual": {
+    "strategy": "Seeking Alpha Top 10 (actual)",
+    "start": "2023-01-03",
+    "end": "2026-09-17",
+    "total_return_%": 817.63,
+    "cagr_%": 81.92,
+    "ann_vol_%": 37.03,
+    "sharpe": 1.81,
+    "max_drawdown_%": -33.92
+  },
+  "sa_cagr_percentile_vs_random_momentum": 100.0
+}
