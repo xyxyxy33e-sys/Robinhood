@@ -1,21 +1,21 @@
 sleeve,ticker,entry_date,entry_price,note,current_price,gain_%
-dogs_of_dow,CVX,2026-01-07,150.98,original,210.59,39.5
-dogs_of_dow,MRK,2026-01-07,106.4,original,146.26,37.5
-dogs_of_dow,KO,2026-01-07,66.25,original,87.53,32.1
-dogs_of_dow,JNJ,2026-01-07,204.21,original,268.95,31.7
-dogs_of_dow,VZ,2026-01-07,38.21,original,48.94,28.1
-dogs_of_dow,UNH,2026-01-07,335.08,original - pending trim/exit,378.67,13.0
-dogs_of_dow,AMGN,2026-01-07,334.79,original,380.39,13.6
-dogs_of_dow,PG,2026-01-07,135.03,original - watch Oct FY27 guidance,146.48,8.5
-dogs_of_dow,HD,2026-01-07,341.64,original,304.81,-10.8
-sa_top10,MU,2026-01-07,339.36,original,977.21,188.0
-sa_top10,AMD,2026-01-07,210.02,original,539.86,157.1
-sa_top10,COHR,2026-01-07,191.62,original - pending trim,295.02,54.0
-sa_top10,CIEN,2026-01-07,259.27,original - pending trim,356.42,37.5
-sa_top10,ALL,2026-01-07,204.3,original,251.71,23.2
-sa_top10,INCY,2026-01-07,110.57,original,126.3,14.2
+dogs_of_dow,CVX,2026-01-07,150.98,original,210.56,39.5
+dogs_of_dow,MRK,2026-01-07,106.4,original,146.34,37.5
+dogs_of_dow,KO,2026-01-07,66.25,original,87.56,32.2
+dogs_of_dow,JNJ,2026-01-07,204.21,original,268.83,31.6
+dogs_of_dow,VZ,2026-01-07,38.21,original,48.92,28.0
+dogs_of_dow,AMGN,2026-01-07,334.79,original,380.54,13.7
+dogs_of_dow,PG,2026-01-07,135.03,original - watch Oct FY27 guidance,146.54,8.5
+dogs_of_dow,HD,2026-01-07,341.64,original,304.67,-10.8
+sa_top10,MU,2026-01-07,339.36,original,977.73,188.1
+sa_top10,AMD,2026-01-07,210.02,original,540.93,157.6
+sa_top10,ALL,2026-01-07,204.3,original,251.67,23.2
+sa_top10,INCY,2026-01-07,110.57,original,126.31,14.2
 sa_top10,ABX,2026-01-07,8.25,original,9.22,11.8
-sa_top10,CLS,2026-01-07,305.87,original,338.87,10.8
-sa_top10,TTMI,2026-09-17,115.64,swapped in for WLDN,114.95,-0.6
-sa_top10,SNDK,2026-09-17,1616.06,swapped in for B,1600.81,-0.9
-sa_top10,AMZN,2026-09-17,252.57,swapped in for NKE (crossed from dogs sleeve),251.61,-0.4
+sa_top10,CLS,2026-01-07,305.87,original,339.86,11.1
+sa_top10,TTMI,2026-09-17,115.64,swapped in for WLDN,115.21,-0.4
+sa_top10,SNDK,2026-09-17,1616.06,swapped in for B,1602.8,-0.8
+sa_top10,AMZN,2026-09-17,252.57,swapped in for NKE (crossed from dogs sleeve),251.47,-0.4
+sa_top10,VICR,2026-09-17,211.52,swapped in for UNH,211.57,0.0
+sa_top10,STRL,2026-09-17,488.61,swapped in for COHR,488.61,0.0
+sa_top10,DAVE,2026-09-17,365.8,swapped in for CIEN,365.8,0.0
