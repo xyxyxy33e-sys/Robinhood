@@ -1,0 +1,7 @@
+{
+  "_note": "Seeking Alpha's branded 'Top Stocks for <year>' annual picks (Steven Cress / SA Quant team). This series only reliably starts around 2022; semi-annual H2 refresh lists exist from ~2023 onward but their full 10-ticker rosters are paywalled and could not be reliably confirmed. Only years with a fully corroborated 10-ticker list (>=2 independent sources) are included below. See backtest/README.md for details and sources.",
+  "2023-01-01": ["ASC", "ENGIY", "HDSN", "JXN", "MNSO", "MOD", "PDD", "SMCI", "VLO", "VRNA"],
+  "2024-01-01": ["APP", "CLS", "MOD", "RYCEY", "ANF", "GCT", "META", "ISNPY", "MHO", "LPG"],
+  "2025-01-01": ["CLS", "CRDO", "URBN", "OPFI", "LRN", "AGX", "PYPL", "INTA", "EAT", "DXPE"],
+  "2026-01-01": ["CLS", "MU", "AMD", "CIEN", "COHR", "ALL", "INCY", "B", "ABX", "WLDN"]
+}
