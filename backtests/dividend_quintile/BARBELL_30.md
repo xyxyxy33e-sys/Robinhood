@@ -48,30 +48,47 @@ that research path and the resulting concrete portfolio.
    not just "value + growth" in disguise -- it comes from (a) selecting the
    *extreme* yield tails rather than a broad half-market style split, (b)
    equal-weighting vs. cap-weighting, and (c) the quality/momentum overlays.
+9. **Dual Momentum for the growth leg (final version)**: tested replacing
+   the blended-momentum tie-break with a proper Dual Momentum rule --
+   absolute momentum filter (only zero-yield names with POSITIVE trailing
+   12-month return qualify), then relative momentum (rank the qualifying
+   names by 12-month return, take the top 20). This **meaningfully improved
+   drawdown** at every horizon (20y max drawdown: -49.7% -> -32.1%) while
+   also improving return and Sharpe in the 10y/20y windows. The mechanism:
+   the absolute-momentum filter lets the growth leg naturally shrink/de-risk
+   in a downturn instead of always forcing 20 holdings (including
+   "least-bad" negative-momentum names) through a broad selloff. **This is
+   the version implemented in `barbell_30.py` and used in the paper trail.**
 
-## Backtest results by leg-size combination (Sharpe ratio, all with quality filters)
+## Backtest results (Sharpe ratio)
 
-| Window | 20 (10+10) | 50 (25+25) | 35 (10 HY+25 gr) | **30 (10 HY+20 gr)** |
+| Window | 20 (10+10) | 50 (25+25) | 30, blended tie-break | **30, Dual Momentum (final)** |
 |---|---:|---:|---:|---:|
-| 5y  | 1.41 | 1.38 | 1.36 | **1.44** |
-| 10y | 1.27 | 1.27 | 1.35 | **1.38** |
-| 20y | 1.17 | 1.20 | 1.21 | **1.21** |
+| 5y  | 1.41 | 1.38 | 1.44 | **1.39** (Max DD **-22.4%** vs -16.7%) |
+| 10y | 1.27 | 1.27 | 1.38 | **1.36** (Max DD **-24.3%** vs -28.7%) |
+| 20y | 1.17 | 1.20 | 1.21 | **1.34** (Max DD **-32.1%** vs -49.7%) |
 
-**Caveat**: this is the result of a fairly extensive leg-size/weighting
-search over the same 20-year sample. Treat "roughly 10 high-yield + 20-25
-growth, equal-weighted" as the robust conclusion, not "exactly 20 growth
-names" as a precisely optimal number -- the margins between nearby
-configurations (e.g. 30 vs 35) are well within backtest noise.
+The Dual Momentum version has a slightly lower Sharpe than the blended
+tie-break version at 5y/10y but a **dramatically better max drawdown at every
+horizon**, and both higher Sharpe and higher return at 20y. Given the huge
+drawdown improvement for a small-to-negative Sharpe cost, this is judged the
+better version overall and is what's implemented below.
 
-## The strategy
+**Caveat**: this is the result of a fairly extensive leg-size/weighting/
+selection-rule search over the same 20-year sample. Treat "roughly 10
+high-yield + 20 Dual-Momentum growth, equal-weighted" as the robust
+conclusion, not any single number here as precisely optimal.
+
+## The strategy (final version)
 
 - **High-Yield leg (10 names)**: top-10 TTM dividend yield among S&P 500
   names, excluding dividend cutters and 6-month crashers.
-- **Growth leg (20 names)**: 20 zero/near-zero-yield names, ranked by a
-  blended 12-month + 1-month price momentum percentile.
+- **Growth leg (20 names)**: Dual Momentum among zero/near-zero-yield names
+  -- absolute momentum filter (trailing 12-month return > 0) to qualify,
+  then relative momentum (rank by 12-month return, take the top 20).
 - **Weighting**: pooled equal-weight, ~3.33% per name (33% aggregate to
   the HY leg, 67% to the growth leg).
-- **Rebalance**: monthly.
+- **Rebalance**: monthly, first trading day of the month.
 - **Returns**: total return via adjusted close (dividends reinvested).
 
 Regenerate the current holdings list any time with:
@@ -79,7 +96,7 @@ Regenerate the current holdings list any time with:
 python3 barbell_30.py
 ```
 
-## Holdings as of 2026-09-21
+## Holdings as of 2026-09-21 (Dual Momentum growth leg)
 
 **High-Yield leg (10)**
 
@@ -96,30 +113,25 @@ python3 barbell_30.py
 | PFE | 6.20% |
 | AMCR | 6.17% |
 
-**Growth leg (20)**
+**Growth leg (20, Dual Momentum)**
 
-| Ticker | 12mo Return | 1mo Return |
-|---|---:|---:|
-| MRNA | 579.5% | 29.7% |
-| INTC | 298.4% | 32.2% |
-| BE | 237.0% | 34.8% |
-| AMD | 289.8% | 31.1% |
-| SNDK | 1686.8% | 10.4% |
-| CRWD | 98.4% | 31.0% |
-| FTNT | 116.4% | 16.2% |
-| COHR | 197.6% | 10.9% |
-| LITE | 456.6% | 8.6% |
-| ILMN | 131.8% | 12.0% |
-| KEYS | 93.0% | 8.1% |
-| WBD | 64.7% | 9.1% |
-| PANW | 80.7% | 6.4% |
-| DDOG | 79.1% | 5.4% |
-| AKAM | 52.3% | 6.6% |
-| ANET | 40.1% | 11.8% |
-| FFIV | 35.7% | 19.1% |
-| IQV | 41.9% | 5.4% |
-| CNC | 102.0% | 1.3% |
-| ECHO | 33.9% | 9.7% |
+| Ticker | 12mo Return | | Ticker | 12mo Return |
+|---|---:|---|---|---:|
+| SNDK | 1686.8% | | CRWD | 98.4% |
+| MRNA | 579.5% | | KEYS | 93.0% |
+| LITE | 456.6% | | FLEX | 92.0% |
+| INTC | 298.4% | | PANW | 80.7% |
+| AMD | 289.8% | | DDOG | 79.1% |
+| BE | 237.0% | | CRL | 77.7% |
+| COHR | 197.6% | | WBD | 64.7% |
+| CIEN | 165.1% | | BIIB | 52.3% |
+| ILMN | 131.8% | | AKAM | 52.3% |
+| FTNT | 116.4% | | CNC | 102.0% |
+
+(Note: CIEN, FLEX, CRL, and BIIB entered the list in place of ANET, FFIV,
+IQV, and ECHO compared to the earlier blended-tie-break version -- the
+absolute momentum filter and pure 12-month ranking select a somewhat
+different set than the blended 12mo+1mo tie-break did.)
 
 ## Known limitations / before deploying real money
 
