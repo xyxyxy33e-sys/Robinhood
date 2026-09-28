@@ -98,13 +98,22 @@ def simulate_equal_weight(adj, holdings_by_date, month_ends):
     return pd.Series(rets, index=pd.DatetimeIndex(dates_used))
 
 
-def perf_stats(monthly_returns, label):
+def perf_stats(monthly_returns, label, periods_per_year=None):
+    """
+    periods_per_year: annualization factor for the return series' native
+    frequency. Defaults to inferring it from the actual calendar span of
+    the index divided by the number of periods (robust to monthly, weekly,
+    or any other rebalance cadence) rather than assuming monthly (12).
+    """
     cum = (1 + monthly_returns).cumprod()
-    n_years = len(monthly_returns) / 12.0
+    span_years = (monthly_returns.index[-1] - monthly_returns.index[0]).days / 365.25
+    if periods_per_year is None:
+        periods_per_year = len(monthly_returns) / span_years if span_years > 0 else 12.0
+    n_years = len(monthly_returns) / periods_per_year
     total_return = cum.iloc[-1] - 1
     cagr = cum.iloc[-1] ** (1 / n_years) - 1
-    vol = monthly_returns.std() * np.sqrt(12)
-    sharpe = (monthly_returns.mean() * 12) / vol if vol > 0 else np.nan
+    vol = monthly_returns.std() * np.sqrt(periods_per_year)
+    sharpe = (monthly_returns.mean() * periods_per_year) / vol if vol > 0 else np.nan
     running_max = cum.cummax()
     dd = cum / running_max - 1
     max_dd = dd.min()
