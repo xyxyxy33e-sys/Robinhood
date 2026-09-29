@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-29",
+  "source": "robinhood-mcp get_equity_quotes (last_trade_price, regular session)",
+  "closes": {
+    "SPY": 764.28, "NVDA": 227.30, "GOOGL": 340.95, "MSFT": 509.04, "JPM": 335.04,
+    "LLY": 1185.765, "UNH": 374.95, "AAPL": 329.59, "AMZN": 246.695, "XOM": 161.40,
+    "V": 366.03, "ANET": 202.805, "CRM": 225.41
+  }
+}
