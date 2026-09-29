@@ -1,0 +1,9 @@
+{
+  "cash": 0.0,
+  "shares": {
+    "SPY": 13.06148063809287
+  },
+  "inception_date": "2026-09-29",
+  "last_rebalance": "2026-09-29",
+  "starting_value": 10000.0
+}

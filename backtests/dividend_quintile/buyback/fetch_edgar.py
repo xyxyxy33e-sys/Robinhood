@@ -12,10 +12,13 @@ public at each rebalance date.
 Run from a folder containing the cached price parquet (see ../download_data.py)
 and backtest.py, or edit TICKERS below.
 """
-import json, threading, time
+import json, os, sys, threading, time
+from pathlib import Path
 import concurrent.futures as cf
 import requests
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backtest import load_data
+OUT = Path(os.environ.get('EDGAR_OUT') or Path(__file__).resolve().parent.parent / '.cache' / 'edgar_facts.json')
 
 UA = {"User-Agent": "research backtest xyxyxy33e@gmail.com"}
 REP_TAGS = ["PaymentsForRepurchaseOfCommonStock", "PaymentsForRepurchaseOfEquity"]
@@ -61,8 +64,12 @@ def extract(facts):
     return {"rep": rep, "shares": shares}
 
 def main():
-    close, *_ = load_data()
-    tickers = list(close.columns)
+    uni = OUT.parent / 'universe.json'
+    if uni.exists():
+        tickers = json.load(open(uni))          # current S&P 500 members
+    else:
+        close, *_ = load_data()
+        tickers = list(close.columns)
     tmap = get("https://www.sec.gov/files/company_tickers.json")
     cik = {v["ticker"].upper(): int(v["cik_str"]) for v in tmap.values()}
     missing = [t for t in tickers if t.upper() not in cik]
@@ -79,7 +86,8 @@ def main():
         for i, (t, d) in enumerate(ex.map(work, tickers), 1):
             if d: out[t] = d
             if i % 50 == 0: print(f"{i}/{len(tickers)} done, {len(out)} with data", flush=True)
-    json.dump(out, open("edgar_facts.json", "w"))
+    OUT.parent.mkdir(exist_ok=True)
+    json.dump(out, open(OUT, "w"))
     n_rep = sum(1 for d in out.values() if d["rep"])
     n_sh = sum(1 for d in out.values() if d["shares"])
     print(f"saved {len(out)} tickers; {n_rep} with repurchase facts; {n_sh} with share counts")

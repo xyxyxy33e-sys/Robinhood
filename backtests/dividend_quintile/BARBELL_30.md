@@ -60,6 +60,9 @@ that research path and the resulting concrete portfolio.
    "least-bad" negative-momentum names) through a broad selloff. **This is
    the version implemented in `barbell_30.py` and used in the paper trail.**
 
+
+> **Correction (2026-09-29):** the 20-year max drawdown quoted above for the Dual Momentum version (-32.1%) assumed months with too few qualifying growth names were skipped (an implicit move to cash). Holding what qualifies plus SHY in empty slots gives -42.3% (2006-10 onward), and staying fully invested in fewer names gives -46.9%. Results from 2010 onward are unaffected. See `REVIEW_2026-09.md`.
+
 ## Backtest results (Sharpe ratio)
 
 | Window | 20 (10+10) | 50 (25+25) | 30, blended tie-break | **30, Dual Momentum (final)** |

@@ -15,10 +15,12 @@ Strategy:
 Output: cumulative growth of $1, CAGR, vol, Sharpe, max drawdown, and comparison
 to SPY and to quintile 1/3/4/5 for context.
 """
+import os
+from pathlib import Path
 import numpy as np
 import pandas as pd
 
-DATA_PATH = "/tmp/claude-0/-home-user-Robinhood/9cd955bf-712e-5400-90f6-198dab301530/scratchpad/sp500_data.parquet"
+DATA_PATH = os.environ.get("SP500_DATA") or str(Path(__file__).resolve().parent / ".cache" / "sp500_data.parquet")
 BACKTEST_START = "2005-09-23"  # 20 years back from 2025-09-23; extra history before this used only for TTM div calc
 BACKTEST_END = "2026-09-23"
 MIN_HISTORY_DAYS = 380  # require enough trailing data to compute a stable TTM yield

@@ -26,14 +26,22 @@ reproduce this strategy's historical edge.
 """
 import numpy as np
 import pandas as pd
+import json
+import os
 from backtest import load_data, ttm_dividends
+import data_refresh
 
 HY_N = 10
 GROWTH_N = 20
 
 
-def build_current_portfolio():
+def build_current_portfolio(refresh=True):
+    # refresh the price/dividend cache first so live signals never use stale data
+    if refresh and not os.environ.get("SKIP_REFRESH"):
+        data_refresh.refresh()
     close, adj, div, spy_adj = load_data()
+    members = [t for t in json.load(open(data_refresh.UNIVERSE)) if t in close.columns]
+    close, div = close[members], div[members]
 
     # use the most recent trading day with near-complete data coverage,
     # since a same-day pull can have a partial/incomplete final row

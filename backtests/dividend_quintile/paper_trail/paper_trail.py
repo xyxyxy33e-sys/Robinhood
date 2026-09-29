@@ -21,6 +21,7 @@ the new target list exactly (fractional shares) against total account value
 """
 import json
 import sys
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -46,10 +47,14 @@ def save_state(state):
     STATE_PATH.write_text(json.dumps(state, indent=2, default=str))
 
 
+LEDGER_COLS = ["timestamp", "action", "ticker", "shares", "price", "notional", "cash_after",
+               "signal_asof", "price_asof", "total_value"]
+
+
 def append_ledger(rows):
     if not rows:
         return
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows).reindex(columns=LEDGER_COLS)
     if LEDGER_PATH.exists():
         df.to_csv(LEDGER_PATH, mode="a", header=False, index=False)
     else:
@@ -66,6 +71,9 @@ def get_live_prices(tickers):
 def target_list():
     dt, hy_leg, growth_leg = build_current_portfolio()
     tickers = list(hy_leg.index) + list(growth_leg.index)
+    # absolute momentum: unfilled slots (too few qualifying names) are held in SHY, not squeezed into fewer names
+    from barbell_30 import HY_N, GROWTH_N
+    tickers += ["SHY"] * (HY_N + GROWTH_N - len(tickers))
     return dt, tickers
 
 
@@ -82,16 +90,17 @@ def do_init():
     signal_dt, tickers = target_list()
     prices, price_asof = get_live_prices(tickers)
 
+    slots = Counter(tickers)
     target_per_name = STARTING_CASH / len(tickers)
     shares = {}
     cash = STARTING_CASH
     rows = []
-    for t in tickers:
+    for t in slots:
         px = prices.get(t)
         if px is None or pd.isna(px) or px <= 0:
             print(f"WARNING: no price for {t}, skipping")
             continue
-        qty = target_per_name / px
+        qty = target_per_name * slots[t] / px
         cost = qty * px
         shares[t] = qty
         cash -= cost
@@ -152,15 +161,16 @@ def do_rebalance():
     # equal-weight the new target list exactly (fractional shares) against
     # total account value
     total_value = portfolio_value(state, prices)
+    slots = Counter(tickers)
     target_per_name = total_value / len(tickers)
 
-    for t in tickers:
+    for t in slots:
         px = prices.get(t)
         if px is None or pd.isna(px) or px <= 0:
             print(f"WARNING: no price for {t}, skipping")
             continue
         cur_qty = state["shares"].get(t, 0.0)
-        target_qty = target_per_name / px
+        target_qty = target_per_name * slots[t] / px
         delta = target_qty - cur_qty
         if abs(delta) < 1e-9:
             continue
