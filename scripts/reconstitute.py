@@ -85,6 +85,7 @@ def main(date):
     lib.save_holdings(h)
     lib.append_trades(rows)
     plan["executed"] = {"date": date, "nav": round(nav, 2), "trades": rows}
+    os.makedirs(os.path.join(lib.ROOT, "portfolio", "reconstitutions"), exist_ok=True)
     json.dump(plan, open(os.path.join(lib.ROOT, "portfolio", "reconstitutions", f"{date}.json"), "w"), indent=2)
     os.remove(PENDING)
 
