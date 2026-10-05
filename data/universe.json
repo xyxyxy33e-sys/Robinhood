@@ -1,0 +1,13 @@
+{
+  "note": "Fixed v3 trading universe: 29 liquid US-listed large caps. SPY is recorded for reference only and is never traded.",
+  "symbols": {
+    "AAPL": "Consumer Hardware", "AMD": "Semiconductors", "AMZN": "Consumer / Cloud", "ANET": "Networking",
+    "APP": "Ad Tech", "AVGO": "Semiconductors", "COIN": "Crypto / Brokerage", "CRM": "Software",
+    "CRWD": "Cybersecurity", "GOOGL": "Internet Services", "HOOD": "Brokerage", "JPM": "Financials",
+    "LLY": "Pharmaceuticals", "META": "Internet Services", "MSFT": "Software", "MU": "Memory",
+    "NET": "Cloud / Edge", "NFLX": "Streaming", "NOW": "Software", "NVDA": "Semiconductors",
+    "ORCL": "Software / Cloud", "PLTR": "Software", "SHOP": "E-commerce", "TSLA": "Autos / Energy",
+    "TSM": "Semiconductors", "UNH": "Managed Care", "V": "Payments", "VRT": "Datacenter Power",
+    "XOM": "Energy"
+  }
+}

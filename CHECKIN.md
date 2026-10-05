@@ -1,4 +1,29 @@
-# Daily check-in runbook
+# Daily check-in runbook (v3 · daily reversal, from 2026-10-05)
+
+Run once per trading day after the close (the scheduled Routine fires at 16:15 ET).
+
+1. `git pull origin claude/model-stock-portfolio-19nk9z`
+2. `get_equity_quotes` for **SPY plus all 29 symbols in `data/universe.json`** — two calls of 15
+   (closes are omitted above 20 symbols per call). If SPY's `venue_last_trade_time` is not today,
+   the market was closed: stop, record nothing.
+3. Write `data/prices/YYYY-MM-DD.json` with `quote.last_trade_price` for all 30 symbols.
+4. Mark the book, compute the signal, trade, re-mark:
+   ```
+   python3 scripts/record_close.py YYYY-MM-DD
+   python3 scripts/daily_signal.py YYYY-MM-DD
+   python3 scripts/reconstitute.py YYYY-MM-DD
+   python3 scripts/record_close.py YYYY-MM-DD
+   ```
+   If the dashboard shows a drawdown worse than −30% from peak, stop after the first
+   `record_close` and ask the owner before trading.
+5. `python3 scripts/build_dashboard.py`, commit `checkin YYYY-MM-DD: NAV $X (day ±Y%, cum ±Z%)`,
+   push, and republish `dashboard/index.html` to the existing artifact.
+6. Report: NAV, day change, cumulative return, max drawdown, today's buys and sells.
+
+---
+
+# Earlier runbook (v1/v2, retained for the record)
+
 
 Run once per trading day after the close (the scheduled Routine fires at 16:15 ET).
 Skip on market holidays — `get_equity_quotes` will still return the prior session's

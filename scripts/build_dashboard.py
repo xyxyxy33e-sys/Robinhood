@@ -41,6 +41,32 @@ def build():
     cum = last["port"] - 100
     spy_cum = last["spy"] - 100
     _, _, _, _, _, _, proposals, reviews = check_drift.analyse(latest)
+    v3 = h.get("strategy_version") == 3
+    if v3:
+        proposals, reviews = [], []          # v3 rebalances daily; drift/review rules do not apply
+
+    peak, maxdd = 0.0, 0.0
+    for p in series:
+        peak = max(peak, p["nav"]); maxdd = min(maxdd, (p["nav"] / peak - 1) * 100)
+    curdd = (series[-1]["nav"] / peak - 1) * 100
+    costs = sum(float(t.get("cost") or 0) for t in trades)
+
+    prev = {}
+    cpath = os.path.join(lib.ROOT, "data", "daily", "closes.csv")
+    if os.path.exists(cpath):
+        import csv as _csv
+        crow = list(_csv.reader(open(cpath)))
+        dates = [r[0] for r in crow[1:]]
+        if latest in dates and dates.index(latest) > 0:
+            pr = crow[1:][dates.index(latest) - 1]
+            prev = {s_: float(v) for s_, v in zip(crow[0][1:], pr[1:])}
+    ranking, rank_of = [], {}
+    arch = [f for f in sorted(glob.glob(os.path.join(lib.ROOT, "portfolio", "reconstitutions", "*.json")))
+            if "superseded" not in f]
+    if arch:
+        last_plan = json.load(open(arch[-1]))
+        ranking = last_plan.get("ranking", [])
+        rank_of = {r["symbol"]: i + 1 for i, r in enumerate(ranking)}
 
     sectors = {}
     for d in detail.values():
@@ -59,6 +85,8 @@ def build():
             "flag": "review" if any(s == sym for s, _ in reviews)
                     else "drift" if breached else "ok",
             "thesis": next(p["thesis"] for p in h["positions"] if p["symbol"] == sym),
+            "day_pct": (d["price"] / prev[sym] - 1) * 100 if sym in prev else None,
+            "rank": rank_of.get(sym),
         })
 
     data = {
@@ -77,6 +105,9 @@ def build():
                   "hard": getattr(check_drift, "HARD_STOP", None)},
         "cash_target": h.get("cash_target", 0.02 if h.get("strategy_version") == 2 else 0.03) * 100,
         "version": h.get("strategy_version", 1), "v2_effective": h.get("v2_effective"),
+        "v3_effective": h.get("v3_effective"), "maxdd": maxdd, "curdd": curdd, "costs": costs,
+        "ranking": [{"symbol": r["symbol"], "score": r["score"], "held": r["symbol"] in detail}
+                    for r in ranking[:12]],
     }
     html = TEMPLATE.replace("__DATA__", json.dumps(data, separators=(",", ":")))
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -212,7 +243,7 @@ footer { color: var(--muted); font-size: 12px; line-height: 1.6; }
 <div class="wrap">
 <header>
   <div>
-    <div class="eyebrow">Paper portfolio · $10,000 · vs SPY</div>
+    <div class="eyebrow" id="eyebrow">Paper portfolio · $10,000 · vs SPY</div>
     <h1 id="name"></h1>
   </div>
   <span class="badge paper">Paper · no live orders</span>
@@ -224,7 +255,7 @@ footer { color: var(--muted); font-size: 12px; line-height: 1.6; }
 <section>
   <h2>Growth of $10,000 <span class="sub">Indexed to 100 at inception · daily closes</span></h2>
   <div class="chartwrap"><div class="chart" id="chart"></div><div class="tip" id="tip"></div></div>
-  <div class="legend"><span><i></i><span id="legname">Portfolio</span></span><span><i class="spy"></i>SPY</span><span class="note" id="cnote"></span></div>
+  <div class="legend"><span><i></i><span id="legname">Portfolio</span></span><span><i class="spy"></i><span id="spylab">SPY</span></span><span class="note" id="cnote"></span></div>
 </section>
 
 <section>
@@ -241,7 +272,7 @@ footer { color: var(--muted); font-size: 12px; line-height: 1.6; }
 
 <div class="two">
   <section>
-    <h2>Rebalancing rules <span class="sub">checked after every close</span></h2>
+    <h2 id="rulesh">Rebalancing rules <span class="sub">checked after every close</span></h2>
     <div class="rules" id="rules"></div>
     <div class="sectors" id="sectors"></div>
   </section>
@@ -252,7 +283,7 @@ footer { color: var(--muted); font-size: 12px; line-height: 1.6; }
 </div>
 
 <footer>Model portfolio for research only, not investment advice. Prices are regular-session last trades from Robinhood market data;
-NAV is marked at those closes with no commissions, slippage or dividends. Rules are in <span class="mono">portfolio/strategy.md</span>;
+NAV is marked at those closes; from 2026-10-05 every trade is charged 5 bp per side for spread and slippage; dividends are ignored. Rules are in <span class="mono">portfolio/strategy.md</span>;
 every close and trade is logged in <span class="mono">portfolio/history.csv</span> and <span class="mono">portfolio/trades.csv</span>.
 Page built <span id="built" class="mono"></span>.</footer>
 </div>
@@ -266,18 +297,25 @@ const pp = n => { if (Math.abs(n) < 0.005) n = 0; return (n > 0 ? "+" : "") + n.
 const cls = n => n > 0.0001 ? "up" : n < -0.0001 ? "down" : "";
 
 $("#name").textContent = D.name;
+if (D.version === 3) $("#eyebrow").textContent = "Paper portfolio · $10,000 · absolute return · rebalanced daily";
 $("#legname").textContent = D.name;
 $("#asof").textContent = D.asof;
 $("#days").textContent = D.days === 1 ? "inception" : D.days + " sessions since " + D.inception;
 $("#built").textContent = D.built;
 
-$("#stats").innerHTML = [
+$("#stats").innerHTML = (D.version === 3 ? [
+  ["Account value", usd(D.nav), `Cash ${usd(D.cash)} (${(D.cash/D.nav*100).toFixed(1)}%)`, "", "mono"],
+  ["Total return", pct(D.cum), `From ${usd(D.capital)} on ${D.inception}`, cls(D.cum), "mono hero"],
+  ["Last session", pct(D.day), "Portfolio day change", cls(D.day), "mono"],
+  ["Max drawdown", pct(D.maxdd), D.curdd < -0.005 ? `Now ${D.curdd.toFixed(2)}% below peak` : "At a high-water mark", D.maxdd < -0.005 ? "down" : "", "mono"],
+  ["Trading costs", usd(D.costs), "5 bp per side, charged to cash", "", "mono"],
+] : [
   ["Account value", usd(D.nav), `Cash ${usd(D.cash)} (${(D.cash/D.nav*100).toFixed(1)}%)`, "", "mono"],
   ["Total return", pct(D.cum), `From ${usd(D.capital)} on ${D.inception}`, cls(D.cum), "mono"],
   ["SPY, same period", pct(D.spy_cum), "Price return, indexed to inception close", cls(D.spy_cum), "mono"],
   ["Excess vs SPY", pp(D.excess), D.excess >= 0 ? "Ahead of benchmark" : "Behind benchmark", cls(D.excess), "mono hero"],
   ["Last session", pct(D.day), D.days === 1 ? "Inception — no prior close" : "Portfolio day change", cls(D.day), "mono"],
-].map(([l,v,d,c,x]) => `<div class="stat ${x.includes("hero")?"hero":""}"><div class="eyebrow">${l}</div>
+]).map(([l,v,d,c,x]) => `<div class="stat ${x.includes("hero")?"hero":""}"><div class="eyebrow">${l}</div>
   <div class="v mono ${c}">${v}</div><div class="d">${d}</div></div>`).join("");
 
 // ---- chart ----------------------------------------------------------------
@@ -302,11 +340,12 @@ $("#stats").innerHTML = [
     g += `<path class="l-spy" d="${path('spy')}"/><path class="l-port" d="${path('port')}"/>`;
     // x labels: first, last, and up to 4 between
     const k = Math.max(1, Math.floor((n-1)/5));
-    for (let i = 0; i < n; i += k) g += `<text x="${x(i)}" y="${H-8}" text-anchor="${i===0?'start':'middle'}">${S[i].date.slice(5)}</text>`;
-    if ((n-1) % k) g += `<text x="${x(n-1)}" y="${H-8}" text-anchor="end">${S[n-1].date.slice(5)}</text>`;
-    const vi = D.v2_effective ? S.findIndex(p => p.date === D.v2_effective) : -1;
+    for (let i = 0; i < n; i += k) if (i === 0 || n-1-i >= k/2) g += `<text x="${x(i)}" y="${H-8}" text-anchor="${i===0?'start':'middle'}">${S[i].date.slice(5)}</text>`;
+    g += `<text x="${x(n-1)}" y="${H-8}" text-anchor="end">${S[n-1].date.slice(5)}</text>`;
+    const vEff = D.v3_effective || D.v2_effective, vLab = D.v3_effective ? 'v3 daily reversal' : 'v2 aggressive';
+    const vi = vEff ? S.findIndex(p => p.date === vEff) : -1;
     if (vi > 0) g += `<line x1="${x(vi)}" x2="${x(vi)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="4 3"/>
-      <text x="${x(vi) > W*0.7 ? x(vi)-6 : x(vi)+6}" y="${m.t+12}" text-anchor="${x(vi) > W*0.7 ? 'end' : 'start'}" style="fill:var(--warn)">${x(vi) > W*0.7 ? 'v2 aggressive starts' : 'v2 aggressive →'}</text>`;
+      <text x="${x(vi) > W*0.7 ? x(vi)-6 : x(vi)+6}" y="${m.t+12}" text-anchor="${x(vi) > W*0.7 ? 'end' : 'start'}" style="fill:var(--warn)">${x(vi) > W*0.7 ? vLab + ' starts' : vLab + ' →'}</text>`;
   } else {
     g += `<text x="${W/2}" y="${H-8}" text-anchor="middle">${S[0].date}</text>`;
   }
@@ -316,7 +355,8 @@ $("#stats").innerHTML = [
         <line id="xh" class="xh" y1="${m.t}" y2="${H-m.b}" x1="-10" x2="-10"/>`;
   $("#chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" id="svg" aria-label="Portfolio vs SPY, indexed">${g}</svg>`;
   $("#cnote").textContent = n === 1 ? "Track record begins here — the next close adds the first data point."
-    : `Portfolio ${e.port.toFixed(1)} · SPY ${e.spy.toFixed(1)}`;
+    : `Portfolio ${e.port.toFixed(1)} · SPY ${e.spy.toFixed(1)}${D.version === 3 ? " (reference only)" : ""}`;
+  if (D.version === 3) $("#spylab").textContent = "SPY (reference only)";
 
   const svg = $("#svg"), tip = $("#tip"), xh = $("#xh"), wrap = $(".chartwrap");
   svg.addEventListener("mousemove", ev => {
@@ -326,7 +366,7 @@ $("#stats").innerHTML = [
     tip.innerHTML = `<b class="mono">${p.date}</b>
       <div class="row"><span>Portfolio</span><span class="mono ${cls(p.port-100)}">${pct(p.port-100)}</span></div>
       <div class="row"><span>SPY</span><span class="mono ${cls(p.spy-100)}">${pct(p.spy-100)}</span></div>
-      <div class="row"><span>Excess</span><span class="mono ${cls(p.port-p.spy)}">${pp(p.port-p.spy)}</span></div>
+      ${D.version === 3 ? "" : `<div class="row"><span>Excess</span><span class="mono ${cls(p.port-p.spy)}">${pp(p.port-p.spy)}</span></div>`}
       <div class="row"><span>NAV</span><span class="mono">${usd(p.nav)}</span></div>`;
     tip.style.display = "block";
     const wr = wrap.getBoundingClientRect(); let tx = ev.clientX - wr.left + 14;
@@ -339,7 +379,21 @@ $("#stats").innerHTML = [
 // ---- holdings ---------------------------------------------------------------
 $("#hsub").textContent = `${D.holdings.length} positions · equity ${usd(D.equity)}`;
 const maxW = Math.max(...D.holdings.map(h => Math.max(h.weight, h.target))) * 1.15;
-$("#holdings tbody").innerHTML = D.holdings.map(h => `<tr>
+if (D.version === 3) $("#holdings thead").innerHTML = `<tr><th class="l">Symbol</th><th>Shares</th><th>Price</th><th>Value</th>
+  <th class="l">Weight vs target</th><th>Day</th><th>P/L</th><th class="l">Oversold rank</th></tr>`;
+const rankPill = h => h.rank == null ? '<span class="pill ok">—</span>'
+  : `<span class="pill ${h.rank <= 8 ? 'ok' : 'drift'}">#${h.rank}${h.rank > 8 ? ' · buffer' : ''}</span>`;
+$("#holdings tbody").innerHTML = D.version === 3 ? D.holdings.map(h => `<tr>
+  <td class="sym mono">${h.symbol}<span class="sec">${h.sector}</span></td>
+  <td class="mono">${h.shares.toFixed(4)}</td>
+  <td class="mono">${h.price.toFixed(2)}</td>
+  <td class="mono">${usd(h.value)}</td>
+  <td class="l"><span class="wbar"><span style="width:${h.weight/maxW*100}%"></span><em style="left:${h.target/maxW*100}%"></em></span>
+      <span class="mono">${h.weight.toFixed(2)}%</span> <span class="mono" style="color:var(--muted)">/ ${+h.target.toFixed(2)}%</span></td>
+  <td class="mono ${h.day_pct == null ? '' : cls(h.day_pct)}">${h.day_pct == null ? '—' : pct(h.day_pct)}</td>
+  <td class="mono ${cls(h.pl)}">${pct(h.pl)}</td>
+  <td class="l">${rankPill(h)}</td>
+</tr>`).join("") : D.holdings.map(h => `<tr>
   <td class="sym mono">${h.symbol}<span class="sec">${h.sector}</span></td>
   <td class="mono">${h.shares.toFixed(4)}</td>
   <td class="mono">${h.price.toFixed(2)}</td>
@@ -352,16 +406,25 @@ $("#holdings tbody").innerHTML = D.holdings.map(h => `<tr>
   <td class="l"><span class="pill ${h.flag}">${h.flag === 'ok' ? 'in band' : h.flag === 'drift' ? 'drifted' : 'thesis review'}</span></td>
 </tr>`).join("");
 $("#holdings tfoot").innerHTML = `<tr><td class="l">Cash</td><td></td><td></td><td class="mono">${usd(D.cash)}</td>
-  <td class="l mono">${(D.cash/D.nav*100).toFixed(2)}% <span style="color:var(--muted)">/ ${D.cash_target.toFixed(0)}%</span></td><td colspan="4"></td></tr>`;
+  <td class="l mono">${(D.cash/D.nav*100).toFixed(2)}% <span style="color:var(--muted)">/ ${D.cash_target.toFixed(0)}%</span></td><td colspan="${D.version === 3 ? 3 : 4}"></td></tr>`;
 $("#thesis").innerHTML = D.holdings.map(h => `<div><b>${h.symbol}</b>${h.thesis}</div>`).join("");
 
 let al = "";
 if (D.reviews.length) al += `<div class="alert bad">Thesis review required: ${D.reviews.map(r => `<b class="mono">${r.symbol}</b> (${r.why})`).join(", ")}</div>`;
 if (D.proposals.length) al += `<div class="alert warn">Rebalance proposed: ${D.proposals.map(p => `${p.side} ${usd(p.notional)} ${p.symbol}`).join(" · ")}</div>`;
+if (D.version === 3 && D.curdd <= -30) al += `<div class="alert bad">Drawdown ${D.curdd.toFixed(1)}% from peak exceeds the −30% review line. Owner review required before the next rebalance.</div>`;
 $("#alerts").innerHTML = al;
 
 // ---- rules + sectors ----------------------------------------------------------
-$("#rules").innerHTML = `<dl>
+$("#rules").innerHTML = D.version === 3 ? `<dl>
+  <dt>Signal</dt><dd>Average return over the last 4, 5, 6, 7 and 8 sessions; lowest = most oversold</dd>
+  <dt>Book</dt><dd>8 most oversold of 29 names, equal weight 12.25%, 2% cash</dd>
+  <dt>Buffer</dt><dd>A held name stays while it is among the 12 most oversold</dd>
+  <dt>Rebalance</dt><dd>Every close; resizes under $50 are skipped</dd>
+  <dt>Costs</dt><dd>5 bp per side on traded notional, charged to cash</dd>
+  <dt>Benchmark</dt><dd>None. SPY is plotted for reference only</dd>
+  <dt>Review line</dt><dd>−30% drawdown from peak pauses trading for owner review</dd>
+</dl>` : `<dl>
   <dt>Drift band</dt><dd>±${D.bands.rel}% of target <em>or</em> ±${D.bands.abs} pp absolute — whichever trips first</dd>
   <dt>Churn floor</dt><dd>No trade under ${usd(D.bands.min_trade)}; drift below that is logged, not traded</dd>
   <dt>Position cap</dt><dd>${D.bands.cap}% at market forces a trim regardless of band</dd>
@@ -373,7 +436,12 @@ $("#rules").innerHTML = `<dl>
 const maxS = D.sectors[0][1];
 $("#sectors").innerHTML = `<div class="eyebrow" style="margin:6px 0 4px">Sector exposure</div>` +
   D.sectors.map(([s,w]) => `<div class="srow"><span>${s}</span><span class="bar"><span style="width:${w/maxS*100}%"></span></span>
-  <span class="mono" style="text-align:right">${w.toFixed(1)}%</span></div>`).join("");
+  <span class="mono" style="text-align:right">${w.toFixed(1)}%</span></div>`).join("") +
+  (D.ranking.length ? `<div class="eyebrow" style="margin:14px 0 4px">Oversold ranking at close · next session's watchlist</div>` +
+  D.ranking.map((r,i) => `<div class="srow"><span class="mono">${i+1}. ${r.symbol}${r.held ? ' ●' : ''}</span>
+  <span class="bar"><span style="width:${Math.min(100, Math.abs(r.score)/Math.abs(D.ranking[0].score)*100)}%;background:var(--bad)"></span></span>
+  <span class="mono" style="text-align:right">${r.score > 0 ? '+' : ''}${r.score.toFixed(1)}%</span></div>`).join("") +
+  `<div style="font-size:11px;color:var(--muted);margin-top:4px">● held · avg return over 4–8 sessions</div>` : "");
 
 // ---- trades ---------------------------------------------------------------------
 $("#trades").innerHTML = D.trades.length

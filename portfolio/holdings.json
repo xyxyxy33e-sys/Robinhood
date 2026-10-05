@@ -1,10 +1,10 @@
 {
-  "portfolio_name": "Model Alpha-12",
-  "objective": "Total-return outperformance of SPY over a rolling 12-month horizon",
+  "portfolio_name": "Model Alpha v3 \u00b7 Daily Reversal",
+  "objective": "Absolute return. No benchmark: SPY is recorded for reference only. Daily short-term reversal across a fixed 29-name universe.",
   "base_currency": "USD",
   "inception_date": "2026-09-04",
   "inception_capital": 10000.0,
-  "benchmark": "SPY",
+  "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
   "cash": 300.32,
   "positions": [
@@ -105,14 +105,7 @@
       "thesis": "Re-rating off the June low at PE 23.6; cheapest large-cap software with improving momentum."
     }
   ],
-  "excluded_with_reason": {
-    "AMD": "Highest raw momentum (+194% 12m) but PE 123 and 3m relative momentum already negative (-8.8pp). Momentum rolling over at an extreme multiple is the worst single-name risk in the universe.",
-    "VRT": "+120% 12m but -16pp relative over 3m and a 28% drawdown from the May high. Broken trend.",
-    "META": "Cheap at PE 23 but -18.6 blended relative momentum. Waiting for the downtrend to break before paying for the value.",
-    "AVGO": "-22.5pp relative over 3m at PE 46. Poor momentum/valuation combination.",
-    "COST": "PE 46 with negative momentum on both horizons.",
-    "WMT": "PE 39 with -29pp relative momentum over 6m.",
-    "TSLA": "PE 329. Valuation is not defensible under this mandate.",
-    "NFLX": "62% of its 52-week high and in a sustained downtrend."
-  }
+  "strategy_version": 3,
+  "v3_effective": "2026-10-05",
+  "cash_target": 0.02
 }

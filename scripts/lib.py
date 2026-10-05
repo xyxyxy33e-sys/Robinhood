@@ -13,7 +13,7 @@ HISTORY_FIELDS = [
     "date", "nav", "cash", "equity", "day_return_pct", "cum_return_pct",
     "spy_close", "spy_cum_return_pct", "excess_return_pct", "holdings_json",
 ]
-TRADE_FIELDS = ["date", "symbol", "side", "shares", "price", "notional", "reason"]
+TRADE_FIELDS = ["date", "symbol", "side", "shares", "price", "notional", "reason", "cost"]
 
 
 def load_holdings():

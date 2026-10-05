@@ -58,5 +58,6 @@
       "GOOGL": "15.9% below its 12m high: fails the trend filter by 0.9pp. Exits from v1.",
       "JPM, UNH, V, AMZN, XOM, CRM": "Fail 12m and/or 6m relative momentum. Exit from v1."
     }
-  }
+  },
+  "status": "superseded before execution: owner switched to v3 daily reversal on 2026-10-05 before the close"
 }

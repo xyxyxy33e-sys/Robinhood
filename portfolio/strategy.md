@@ -1,9 +1,71 @@
 # Model Alpha — Investment Policy
 
-**Mandate:** beat SPY total return, starting from $10,000 on 2026-09-04.
+**Mandate (from 2026-10-05):** absolute return. **No benchmark:** SPY is recorded and plotted for
+reference only and appears in no rule. Started from $10,000 on 2026-09-04.
 **Mode:** paper / model portfolio. No live orders are ever placed. Robinhood MCP is used for market data only.
 
-## v2 · Aggressive (effective at the 2026-10-05 close)
+## v3 · Daily Reversal (effective at the 2026-10-05 close)
+
+The owner asked for a book that seeks opportunities through daily rebalancing and ignores SPY.
+Daily trading is where intuition misleads most and costs bite hardest, so the rule was chosen by
+backtest (`scripts/backtest.py`, 2025-10-01 → 2026-10-02 daily closes, 29 names, 5 bp/side costs),
+not by preference.
+
+### What the backtest showed
+
+| Daily rule (Apr–Oct 2026 window) | Return | Sharpe | Max DD |
+| --- | --- | --- | --- |
+| Equal-weight buy & hold, same 29 names (the control) | +38.1% | 2.81 | −12.3% |
+| Short-term momentum, top 5 by 20-day return | +31.7% | 1.56 | −23.1% |
+| 6-month momentum rebalanced **daily** | +45.3% | 2.32 | −16.3% |
+| 6-month momentum rebalanced **monthly** (the staged v2) | +56.1% | 2.60 | −15.6% |
+| **Short-term reversal, ensemble 4–8 day, bottom 8, buffer 12** | **+65.6%** | **3.26** | **−12.0%** |
+
+Full year (Oct 2025 → Oct 2026): reversal +59.5% vs +25.2% for buy & hold of the same names; it beat
+the control in 3 of 4 quarters and still made +46.7% at a 15 bp/side stress cost.
+
+Two findings shaped the design:
+1. **Chasing short-term winners daily loses.** Short-horizon momentum underperformed holding the basket.
+   Short horizons mean-revert; that is the edge v3 harvests.
+2. **One lookback is a lottery ticket; a band is a strategy.** 5-day reversal alone returned +91%, but
+   3-day lost 43%. The 4–9 day range is a plateau, so the score averages 4, 5, 6, 7 and 8 days instead
+   of picking the best cell.
+
+### Rules (`scripts/daily_signal.py` → `scripts/reconstitute.py`, every close)
+
+1. **Universe:** fixed 29 liquid US large caps in `data/universe.json`.
+2. **Score:** average of the 4, 5, 6, 7 and 8-session returns. Lowest = most oversold.
+3. **Book:** the 8 most oversold names, equal weight 12.25%, 2% cash.
+4. **Buffer:** a held name stays while it remains among the 12 most oversold.
+5. **Execution:** at the close the signal is computed from. Exits and entries always trade;
+   resizes under $50 are skipped. **Costs: 5 bp per side** on traded notional, charged to cash.
+6. **No per-name stop.** The strategy deliberately buys falling stocks; a stop-loss would fight the
+   signal and was not part of the tested rule.
+7. **Review line:** a drawdown of −30% from peak NAV pauses trading until the owner reviews.
+   (The backtest's worst drawdown over the full year was −22.8%.)
+8. No leverage, options or shorting.
+
+### Known weaknesses, stated plainly
+
+- **Hindsight in the universe.** The 29 names were chosen in 2026 knowing how they did. Every absolute
+  backtest number is biased upward. The meaningful result is the gap to equal-weight buy & hold of
+  the same names, which carries the same bias.
+- **Regime dependence.** Reversal earns in choppy, range-bound markets and lags in strong one-way trends
+  (it trailed buy & hold in Q2 2026). 
+- **It buys falling knives by design.** On the Oct 2 data it would buy APP at −64% from its high.
+  A single name can keep falling; at 12.25% weight a further −30% costs the book about 3.7%.
+- **Execution at the close is an idealisation.** A real version would need market-on-close orders
+  decided from ~15:50 prices. The 5 bp cost charge partly covers that gap.
+- **Turnover is high:** ~35% of the book per day in the backtest, roughly one or two names swapped daily.
+
+---
+
+# v2 · Aggressive momentum (staged 2026-10-05, superseded before execution)
+
+Never traded. The owner switched to v3 the same morning. The staged plan is archived in
+`portfolio/reconstitutions/2026-10-05-v2-superseded.json`; its rules are kept below for the record.
+
+## v2 rules
 
 On 2026-10-04 the owner raised the risk budget ("willing to take bigger risk"). v1 was built to beat SPY
 with tracking error held down by diversifier sleeves (energy, banks, managed care, payments). Under a

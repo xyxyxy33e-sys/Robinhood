@@ -1,8 +1,10 @@
 # Model Alpha — paper portfolio vs SPY
 
 A $10,000 model stock portfolio, started at the 2026-09-04 close, whose only job is to
-beat SPY. **From the 2026-10-05 close it runs v2 (aggressive):** an equal-weight, 8-name
-dual-momentum book re-screened monthly (`scripts/screen.py`, `scripts/reconstitute.py`). Market data comes from the Robinhood MCP server; **no live orders are ever placed**.
+beat SPY. **From the 2026-10-05 close it runs v3 (daily reversal):** absolute return, no
+benchmark. Every close it buys the 8 most oversold of 29 large caps (average 4–8 session return),
+equal weight, with a turnover buffer and a 5 bp/side cost charge (`scripts/daily_signal.py`,
+`scripts/reconstitute.py`; evidence in `scripts/backtest.py` and `portfolio/strategy.md`). Market data comes from the Robinhood MCP server; **no live orders are ever placed**.
 
 | | |
 |---|---|

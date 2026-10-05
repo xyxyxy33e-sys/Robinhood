@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lib
 from screen import PENDING
 
-MIN_LEG = 1.00  # dollars; resizes smaller than this are skipped as noise
+MIN_LEG = 1.00  # dollars; default when the plan has no min_leg
 
 
 def main(date):
@@ -24,6 +24,9 @@ def main(date):
     if plan["effective"] > date:
         sys.exit(f"plan is effective {plan['effective']}, not yet")
     meta = plan.get("meta", {})
+    min_leg = plan.get("min_leg", MIN_LEG)
+    rate = plan.get("cost_bps", 0.0) / 1e4
+    label = plan.get("strategy", "v2 reconstitution")
     h = lib.load_holdings()
     closes = lib.load_prices(date)["closes"]
     targets = plan["targets"]
@@ -36,14 +39,14 @@ def main(date):
     legs = []
     for sym, d in detail.items():                       # exits and trims
         tgt = targets.get(sym, 0.0) * nav
-        if d["value"] - tgt >= MIN_LEG:
+        if sym not in targets or d["value"] - tgt >= min_leg:
             legs.append(("sell", sym, (d["value"] - tgt) / d["price"], d["price"],
-                         "v2 reconstitution: exit" if sym not in targets else "v2 reconstitution: resize"))
+                         f"{label}: exit" if sym not in targets else f"{label}: resize"))
     for sym, w in targets.items():                      # entries and top-ups
         cur = detail[sym]["value"] if sym in detail else 0.0
-        if w * nav - cur >= MIN_LEG:
+        if (sym not in detail and w * nav - cur > 0) or w * nav - cur >= min_leg:
             legs.append(("buy", sym, (w * nav - cur) / float(closes[sym]), float(closes[sym]),
-                         "v2 reconstitution: entry" if sym not in detail else "v2 reconstitution: resize"))
+                         f"{label}: entry" if sym not in detail else f"{label}: resize"))
 
     rows, cash = [], h["cash"]
     for side, sym, sh, px, why in sorted(legs, key=lambda l: l[0] != "sell"):
@@ -52,24 +55,26 @@ def main(date):
         if side == "sell":
             p = by_sym[sym]
             p["shares"] = round(p["shares"] - sh, 6)
-            cash += notional
+            cost = round(notional * rate, 2)
+            cash += notional - cost
         else:
-            notional = min(notional, round(cash, 2))
+            notional = min(notional, round(cash / (1 + rate), 2))
+            cost = round(notional * rate, 2)
             sh = round(notional / px, 6)
             if sym in by_sym:
                 p = by_sym[sym]
-                cost = p["cost_basis"] * p["shares"] + notional
+                basis = p["cost_basis"] * p["shares"] + notional
                 p["shares"] = round(p["shares"] + sh, 6)
-                p["cost_basis"] = round(cost / p["shares"], 4)
+                p["cost_basis"] = round(basis / p["shares"], 4)
             else:
                 m = meta.get(sym, {})
                 p = {"symbol": sym, "shares": sh, "cost_basis": px, "target_weight": 0,
                      "sector": m.get("sector", ""), "thesis": m.get("thesis", "")}
                 h["positions"].append(p)
                 by_sym[sym] = p
-            cash -= notional
+            cash -= notional + cost
         rows.append({"date": date, "symbol": sym, "side": side, "shares": f"{sh:.6f}",
-                     "price": f"{px:.4f}", "notional": f"{notional:.2f}", "reason": why})
+                     "price": f"{px:.4f}", "notional": f"{notional:.2f}", "cost": f"{cost:.2f}", "reason": why})
 
     h["positions"] = [p for p in h["positions"] if p["shares"] > 1e-6]
     for p in h["positions"]:
@@ -89,10 +94,11 @@ def main(date):
     json.dump(plan, open(os.path.join(lib.ROOT, "portfolio", "reconstitutions", f"{date}.json"), "w"), indent=2)
     os.remove(PENDING)
 
+    fees = sum(float(r["cost"]) for r in rows)
     sells = sum(float(r["notional"]) for r in rows if r["side"] == "sell")
     buys = sum(float(r["notional"]) for r in rows if r["side"] == "buy")
     print(f"Reconstituted at {date} close: NAV ${nav:,.2f}, {len(rows)} legs, "
-          f"sold ${sells:,.2f}, bought ${buys:,.2f}, cash now ${h['cash']:,.2f}")
+          f"sold ${sells:,.2f}, bought ${buys:,.2f}, costs ${fees:,.2f}, cash now ${h['cash']:,.2f}")
     for r in rows:
         print(f"  {r['side'].upper():4} {float(r['shares']):>11.6f} {r['symbol']:5} @ {float(r['price']):>9.2f} "
               f"= ${float(r['notional']):>9,.2f}  {r['reason']}")
