@@ -1,0 +1,62 @@
+{
+  "effective": "2026-10-05",
+  "screen": "data/screens/2026-10-02.json",
+  "cash_target": 0.02,
+  "targets": {
+    "MU": 0.1225,
+    "AMD": 0.1225,
+    "CRWD": 0.1225,
+    "NET": 0.1225,
+    "ANET": 0.1225,
+    "TSM": 0.1225,
+    "NVDA": 0.1225,
+    "AAPL": 0.1225
+  },
+  "meta": {
+    "MU": {
+      "sector": "Memory",
+      "thesis": "Screen rank 1: HBM memory for AI accelerators, +533pp vs SPY over 12m. PE 14 looks cheap, but low multiples at a memory-cycle peak are the classic trap, and it sits 14% below its June high."
+    },
+    "AMD": {
+      "sector": "Semiconductors",
+      "thesis": "Rank 2: new 52-week high on Oct 2 and +37pp vs SPY in September alone. PE 163 means the accelerator ramp has to keep delivering; the hard stop does the risk work, not the valuation."
+    },
+    "CRWD": {
+      "sector": "Cybersecurity",
+      "thesis": "Rank 3: at a 52-week high, +155pp vs SPY over 6m. Barely profitable on GAAP, so this is a pure growth-and-trend position."
+    },
+    "NET": {
+      "sector": "Cloud / Edge",
+      "thesis": "Rank 4: steady uptrend all year, +48pp vs SPY over 6m. Unprofitable on GAAP and the richest valuation in the book."
+    },
+    "ANET": {
+      "sector": "Networking",
+      "thesis": "Rank 5 and the best v1 holding: AI datacenter networking, carried over from the original book."
+    },
+    "TSM": {
+      "sector": "Semiconductors",
+      "thesis": "Rank 6: manufactures nearly every AI chip in this book, within 1.3% of its high at PE 34. The most reasonably priced name here."
+    },
+    "NVDA": {
+      "sector": "Semiconductors",
+      "thesis": "7th eligible: AI compute leader within 1.1% of its high. Carried over from v1."
+    },
+    "AAPL": {
+      "sector": "Consumer Hardware",
+      "thesis": "8th eligible: +15pp vs SPY over 12m and 3.4% below its high. The lowest-beta name and only consumer exposure in the book. Carried over from v1."
+    }
+  },
+  "holdings_update": {
+    "portfolio_name": "Model Alpha v2 \u00b7 Aggressive",
+    "strategy_version": 2,
+    "v2_effective": "2026-10-05",
+    "objective": "Beat SPY via concentrated, equal-weight dual-momentum book; accepts materially higher volatility than the index",
+    "excluded_with_reason": {
+      "PLTR": "Rank 7 on blend but 12m excess -12pp: fails dual-momentum filter.",
+      "MSFT": "Rank 8 on blend but 12m excess -15.5pp: fails dual-momentum filter. Exits from v1.",
+      "LLY": "Eligible (rank 9 on eligibility) but outside the top 8. Exits from v1.",
+      "GOOGL": "15.9% below its 12m high: fails the trend filter by 0.9pp. Exits from v1.",
+      "JPM, UNH, V, AMZN, XOM, CRM": "Fail 12m and/or 6m relative momentum. Exit from v1."
+    }
+  }
+}

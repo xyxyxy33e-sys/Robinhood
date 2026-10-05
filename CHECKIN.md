@@ -9,8 +9,8 @@ close, and recording it twice under a new date would fabricate a flat day.
 (19:59:59 ET-close timestamp). If it is a prior date, stop: holiday.
 
 ## 2. Snapshot closes
-Call `get_equity_quotes` with SPY plus every symbol in `portfolio/holdings.json`
-(currently: NVDA GOOGL MSFT JPM LLY UNH AAPL AMZN XOM V ANET CRM). Use
+Call `get_equity_quotes` with SPY plus every symbol in `portfolio/holdings.json` **plus every
+target in `portfolio/pending_reconstitution.json` if that file exists**. Use
 `quote.last_trade_price` (regular session). Write:
 
 ```json
@@ -24,12 +24,30 @@ python3 scripts/record_close.py YYYY-MM-DD
 python3 scripts/check_drift.py
 ```
 
+## 4a. Execute a pending reconstitution
+If `portfolio/pending_reconstitution.json` exists and its `effective` date is today or earlier:
+```
+python3 scripts/reconstitute.py YYYY-MM-DD
+python3 scripts/record_close.py YYYY-MM-DD   # re-mark post-trade
+```
+Skip step 4 that day.
+
+## 4b. Monthly re-screen (first trading session of each month)
+Pull monthly bars (`get_equity_historicals`, interval=month, 12 months) and the official close for
+the universe in the latest `data/screens/*.json`, write `data/screens/YYYY-MM-DD.json` in the same
+format, then:
+```
+python3 scripts/screen.py data/screens/YYYY-MM-DD.json --write YYYY-MM-DD
+```
+and execute it per 4a at the same close.
+
 ## 4. Rebalance only if proposed
 If `check_drift.py` prints proposals, apply them with
 `python3 scripts/apply_trades.py YYYY-MM-DD --yes`, then re-run `record_close.py` for the
 same date so history reflects post-trade cash. Respect the IPS frequency limit
 (max 4 trades per 5 sessions) — check `portfolio/trades.csv` first.
 
+A **hard stop** (−25% from cost) is proposed as a full sell and is applied like any other proposal.
 If it prints a **thesis review**, do not auto-trade. Restate the thesis in one sentence
 in the commit message, or close the position with a manual entry.
 

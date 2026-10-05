@@ -5,7 +5,7 @@ Usage: python3 scripts/check_drift.py [YYYY-MM-DD]   (defaults to latest snapsho
 
 Flags a position when |drift| exceeds EITHER the relative band (25% of target)
 OR the absolute band (3.0pp). Proposes a trade only when the required notional
-clears MIN_TRADE ($75) — the drift-vs-churn guard from the IPS.
+clears MIN_TRADE ($100) — the drift-vs-churn guard from the IPS.
 """
 import glob
 import os
@@ -14,12 +14,14 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lib
 
-REL_BAND = 25.0      # percent of target weight
-ABS_BAND = 3.0       # percentage points
-MIN_TRADE = 75.00    # dollars — below this, drift is noted but not traded
-MAX_POS_MKT = 0.15   # forced-trim ceiling at market
-STOP_ABS = -20.0     # percent from cost basis -> thesis review
-STOP_REL = -15.0     # percent vs SPY since entry -> thesis review
+# v2 (aggressive, from 2026-10-05). v1 values in brackets.
+REL_BAND = 25.0      # percent of target weight                     [25]
+ABS_BAND = 4.0       # percentage points                            [3]
+MIN_TRADE = 100.00   # dollars — below this, drift is noted only    [75]
+MAX_POS_MKT = 0.25   # forced-trim ceiling at market                [0.15]
+STOP_ABS = -15.0     # percent from cost basis -> thesis review     [-20]
+HARD_STOP = -25.0    # percent from cost basis -> automatic exit    [none]
+STOP_REL = -20.0     # pp vs SPY since entry -> thesis review       [-15]
 
 
 def latest_date():
@@ -44,6 +46,13 @@ def analyse(date):
         breached = abs(d["drift_rel"]) > REL_BAND or abs(d["drift_pp"]) > ABS_BAND
         over_cap = d["weight"] > MAX_POS_MKT
         vs_spy = d["unrealized_pct"] - spy_cum
+        if d["unrealized_pct"] <= HARD_STOP:
+            proposals.append({
+                "symbol": sym, "side": "sell", "shares": d["shares"],
+                "price": d["price"], "notional": round(d["value"], 2),
+                "reason": f"hard stop {d['unrealized_pct']:.1f}% from cost",
+            })
+            continue
         if d["unrealized_pct"] <= STOP_ABS:
             reviews.append((sym, f"{d['unrealized_pct']:.1f}% from cost"))
         if vs_spy <= STOP_REL:

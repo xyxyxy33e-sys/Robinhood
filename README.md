@@ -1,7 +1,8 @@
-# Model Alpha-12 — paper portfolio vs SPY
+# Model Alpha — paper portfolio vs SPY
 
 A $10,000 model stock portfolio, started at the 2026-09-04 close, whose only job is to
-beat SPY. Market data comes from the Robinhood MCP server; **no live orders are ever placed**.
+beat SPY. **From the 2026-10-05 close it runs v2 (aggressive):** an equal-weight, 8-name
+dual-momentum book re-screened monthly (`scripts/screen.py`, `scripts/reconstitute.py`). Market data comes from the Robinhood MCP server; **no live orders are ever placed**.
 
 | | |
 |---|---|

@@ -67,6 +67,9 @@ def main(date, assume_yes=False):
             "notional": f"{notional:.2f}", "reason": p["reason"],
         })
 
+    # a full exit (hard stop) removes the position; its weight sits in cash
+    # until the next monthly reconstitution
+    h["positions"] = [p for p in h["positions"] if p["shares"] > 1e-6]
     lib.save_holdings(h)
     lib.append_trades(rows)
     print(f"\nApplied. Cash now ${h['cash']:,.2f}. "

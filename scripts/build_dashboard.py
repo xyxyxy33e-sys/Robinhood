@@ -72,7 +72,11 @@ def build():
         "trades": trades[-20:][::-1], "proposals": proposals,
         "reviews": [{"symbol": s, "why": w} for s, w in reviews],
         "bands": {"rel": check_drift.REL_BAND, "abs": check_drift.ABS_BAND,
-                  "min_trade": check_drift.MIN_TRADE, "cap": check_drift.MAX_POS_MKT * 100},
+                  "min_trade": check_drift.MIN_TRADE, "cap": check_drift.MAX_POS_MKT * 100,
+                  "review": check_drift.STOP_ABS, "review_rel": check_drift.STOP_REL,
+                  "hard": getattr(check_drift, "HARD_STOP", None)},
+        "cash_target": h.get("cash_target", 0.02 if h.get("strategy_version") == 2 else 0.03) * 100,
+        "version": h.get("strategy_version", 1), "v2_effective": h.get("v2_effective"),
     }
     html = TEMPLATE.replace("__DATA__", json.dumps(data, separators=(",", ":")))
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -220,7 +224,7 @@ footer { color: var(--muted); font-size: 12px; line-height: 1.6; }
 <section>
   <h2>Growth of $10,000 <span class="sub">Indexed to 100 at inception · daily closes</span></h2>
   <div class="chartwrap"><div class="chart" id="chart"></div><div class="tip" id="tip"></div></div>
-  <div class="legend"><span><i></i>Model Alpha-12</span><span><i class="spy"></i>SPY</span><span class="note" id="cnote"></span></div>
+  <div class="legend"><span><i></i><span id="legname">Portfolio</span></span><span><i class="spy"></i>SPY</span><span class="note" id="cnote"></span></div>
 </section>
 
 <section>
@@ -262,6 +266,7 @@ const pp = n => { if (Math.abs(n) < 0.005) n = 0; return (n > 0 ? "+" : "") + n.
 const cls = n => n > 0.0001 ? "up" : n < -0.0001 ? "down" : "";
 
 $("#name").textContent = D.name;
+$("#legname").textContent = D.name;
 $("#asof").textContent = D.asof;
 $("#days").textContent = D.days === 1 ? "inception" : D.days + " sessions since " + D.inception;
 $("#built").textContent = D.built;
@@ -299,6 +304,9 @@ $("#stats").innerHTML = [
     const k = Math.max(1, Math.floor((n-1)/5));
     for (let i = 0; i < n; i += k) g += `<text x="${x(i)}" y="${H-8}" text-anchor="${i===0?'start':'middle'}">${S[i].date.slice(5)}</text>`;
     if ((n-1) % k) g += `<text x="${x(n-1)}" y="${H-8}" text-anchor="end">${S[n-1].date.slice(5)}</text>`;
+    const vi = D.v2_effective ? S.findIndex(p => p.date === D.v2_effective) : -1;
+    if (vi > 0) g += `<line x1="${x(vi)}" x2="${x(vi)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="${x(vi) > W*0.7 ? x(vi)-6 : x(vi)+6}" y="${m.t+12}" text-anchor="${x(vi) > W*0.7 ? 'end' : 'start'}" style="fill:var(--warn)">${x(vi) > W*0.7 ? 'v2 aggressive starts' : 'v2 aggressive →'}</text>`;
   } else {
     g += `<text x="${W/2}" y="${H-8}" text-anchor="middle">${S[0].date}</text>`;
   }
@@ -337,14 +345,14 @@ $("#holdings tbody").innerHTML = D.holdings.map(h => `<tr>
   <td class="mono">${h.price.toFixed(2)}</td>
   <td class="mono">${usd(h.value)}</td>
   <td class="l"><span class="wbar"><span style="width:${h.weight/maxW*100}%"></span><em style="left:${h.target/maxW*100}%"></em></span>
-      <span class="mono">${h.weight.toFixed(2)}%</span> <span class="mono" style="color:var(--muted)">/ ${h.target.toFixed(0)}%</span></td>
+      <span class="mono">${h.weight.toFixed(2)}%</span> <span class="mono" style="color:var(--muted)">/ ${+h.target.toFixed(2)}%</span></td>
   <td class="mono ${Math.abs(h.drift_pp) > D.bands.abs ? 'down' : ''}">${pp(h.drift_pp)}</td>
   <td class="mono ${cls(h.pl)}">${pct(h.pl)}</td>
   <td class="mono ${cls(h.vs_spy)}">${pp(h.vs_spy)}</td>
   <td class="l"><span class="pill ${h.flag}">${h.flag === 'ok' ? 'in band' : h.flag === 'drift' ? 'drifted' : 'thesis review'}</span></td>
 </tr>`).join("");
 $("#holdings tfoot").innerHTML = `<tr><td class="l">Cash</td><td></td><td></td><td class="mono">${usd(D.cash)}</td>
-  <td class="l mono">${(D.cash/D.nav*100).toFixed(2)}% <span style="color:var(--muted)">/ 3%</span></td><td colspan="4"></td></tr>`;
+  <td class="l mono">${(D.cash/D.nav*100).toFixed(2)}% <span style="color:var(--muted)">/ ${D.cash_target.toFixed(0)}%</span></td><td colspan="4"></td></tr>`;
 $("#thesis").innerHTML = D.holdings.map(h => `<div><b>${h.symbol}</b>${h.thesis}</div>`).join("");
 
 let al = "";
@@ -357,8 +365,10 @@ $("#rules").innerHTML = `<dl>
   <dt>Drift band</dt><dd>±${D.bands.rel}% of target <em>or</em> ±${D.bands.abs} pp absolute — whichever trips first</dd>
   <dt>Churn floor</dt><dd>No trade under ${usd(D.bands.min_trade)}; drift below that is logged, not traded</dd>
   <dt>Position cap</dt><dd>${D.bands.cap}% at market forces a trim regardless of band</dd>
-  <dt>Thesis review</dt><dd>−20% from cost, or −15 pp vs SPY since entry</dd>
-  <dt>Frequency</dt><dd>Max 4 trades per 5 sessions; 10-session cooldown before re-buying a sold name</dd>
+  <dt>Thesis review</dt><dd>${D.bands.review}% from cost, or ${D.bands.review_rel} pp vs SPY since entry</dd>
+  ${D.bands.hard !== null ? `<dt>Hard stop</dt><dd>${D.bands.hard}% from cost triggers an automatic full exit</dd>` : ""}
+  ${D.version === 2 ? `<dt>Re-screen</dt><dd>Monthly: top 8 by blended momentum among names beating SPY over 12m and 6m, within 15% of their high; equal weight</dd>` : ""}
+  <dt>Frequency</dt><dd>Max 4 drift trades per 5 sessions; monthly reconstitution is exempt</dd>
 </dl>`;
 const maxS = D.sectors[0][1];
 $("#sectors").innerHTML = `<div class="eyebrow" style="margin:6px 0 4px">Sector exposure</div>` +
