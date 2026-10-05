@@ -1,0 +1,17 @@
+date,symbol,side,shares,price,notional,reason,cost
+2026-10-05,NVDA,sell,5.209156,239.1100,1245.56,v3 daily reversal: exit,0.62
+2026-10-05,GOOGL,sell,2.954209,346.6100,1023.96,v3 daily reversal: exit,0.51
+2026-10-05,MSFT,sell,1.801153,525.5000,946.51,v3 daily reversal: exit,0.47
+2026-10-05,UNH,sell,2.014606,378.6500,762.83,v3 daily reversal: exit,0.38
+2026-10-05,AMZN,sell,3.094659,251.5200,778.37,v3 daily reversal: exit,0.39
+2026-10-05,XOM,sell,4.389326,164.0200,719.94,v3 daily reversal: exit,0.36
+2026-10-05,V,sell,1.600128,369.7900,591.71,v3 daily reversal: exit,0.30
+2026-10-05,ANET,sell,3.096276,206.9800,640.87,v3 daily reversal: exit,0.32
+2026-10-05,LLY,buy,0.374729,1144.8000,428.99,v3 daily reversal: resize,0.21
+2026-10-05,JPM,buy,0.900365,332.4650,299.34,v3 daily reversal: resize,0.15
+2026-10-05,CRM,buy,3.408618,229.7500,783.13,v3 daily reversal: resize,0.39
+2026-10-05,AAPL,buy,1.180920,333.1300,393.40,v3 daily reversal: resize,0.20
+2026-10-05,APP,buy,4.350101,281.8900,1226.25,v3 daily reversal: entry,0.61
+2026-10-05,NFLX,buy,18.169358,67.4900,1226.25,v3 daily reversal: entry,0.61
+2026-10-05,HOOD,buy,10.743385,114.1400,1226.25,v3 daily reversal: entry,0.61
+2026-10-05,COIN,buy,6.516021,188.1900,1226.25,v3 daily reversal: entry,0.61

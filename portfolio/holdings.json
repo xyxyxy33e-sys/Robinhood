@@ -6,103 +6,71 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 300.32,
+  "cash": 193.47,
   "positions": [
     {
-      "symbol": "NVDA",
-      "shares": 5.209156,
-      "cost_basis": 230.345,
-      "target_weight": 0.12,
-      "sector": "Semiconductors",
-      "thesis": "AI compute standard-setter; PE 29 is undemanding vs growth. Best risk-adjusted momentum in the AI complex."
-    },
-    {
-      "symbol": "GOOGL",
-      "shares": 2.954209,
-      "cost_basis": 338.5,
-      "target_weight": 0.1,
-      "sector": "Internet Services",
-      "thesis": "Cheapest megacap at PE 17 with Cloud + Gemini optionality. Value leg of the barbell."
-    },
-    {
-      "symbol": "MSFT",
-      "shares": 1.801153,
-      "cost_basis": 499.68,
-      "target_weight": 0.09,
-      "sector": "Software",
-      "thesis": "Quality anchor. Recovered off the June low; Azure/Copilot annuity revenue."
-    },
-    {
       "symbol": "JPM",
-      "shares": 2.788003,
-      "cost_basis": 358.61,
-      "target_weight": 0.1,
+      "shares": 3.688368,
+      "cost_basis": 352.2278,
+      "target_weight": 0.1225,
       "sector": "Financials",
       "thesis": "PE 15.4, strongest 3m relative momentum in the book, non-tech diversifier."
     },
     {
       "symbol": "LLY",
-      "shares": 0.696417,
-      "cost_basis": 1148.74,
-      "target_weight": 0.08,
+      "shares": 1.071146,
+      "cost_basis": 1147.3619,
+      "target_weight": 0.1225,
       "sector": "Pharmaceuticals",
       "thesis": "Incretin franchise compounding; healthcare leg uncorrelated to AI capex cycle."
     },
     {
-      "symbol": "UNH",
-      "shares": 2.014606,
-      "cost_basis": 397.1,
-      "target_weight": 0.08,
-      "sector": "Managed Care",
-      "thesis": "Post-crisis recovery from the March low with PE back to 25; second healthcare leg."
-    },
-    {
       "symbol": "AAPL",
-      "shares": 2.500078,
-      "cost_basis": 319.99,
-      "target_weight": 0.08,
+      "shares": 3.680998,
+      "cost_basis": 324.2055,
+      "target_weight": 0.1225,
       "sector": "Consumer Hardware",
       "thesis": "Installed-base services annuity. Held at benchmark-ish weight, not a conviction overweight."
     },
     {
-      "symbol": "AMZN",
-      "shares": 3.094659,
-      "cost_basis": 258.51,
-      "target_weight": 0.08,
-      "sector": "Consumer/Cloud",
-      "thesis": "PE 20.8 for AWS + retail margin expansion; cheapest it has looked in years."
-    },
-    {
-      "symbol": "XOM",
-      "shares": 4.389326,
-      "cost_basis": 159.46,
-      "target_weight": 0.07,
-      "sector": "Energy",
-      "thesis": "Inflation/geopolitics hedge with a 2.6% yield. Only true non-correlated sleeve."
-    },
-    {
-      "symbol": "V",
-      "shares": 1.600128,
-      "cost_basis": 374.97,
-      "target_weight": 0.06,
-      "sector": "Payments",
-      "thesis": "Toll-booth on consumer spend; near 52w high with steady relative momentum."
-    },
-    {
-      "symbol": "ANET",
-      "shares": 3.096276,
-      "cost_basis": 193.765,
-      "target_weight": 0.06,
-      "sector": "Networking",
-      "thesis": "Highest consistent excess momentum (+27 blended). Sized small because PE 61 leaves no margin for error."
-    },
-    {
       "symbol": "CRM",
-      "shares": 1.928729,
-      "cost_basis": 259.29,
-      "target_weight": 0.05,
+      "shares": 5.337347,
+      "cost_basis": 240.4247,
+      "target_weight": 0.1225,
       "sector": "Software",
       "thesis": "Re-rating off the June low at PE 23.6; cheapest large-cap software with improving momentum."
+    },
+    {
+      "symbol": "APP",
+      "shares": 4.350101,
+      "cost_basis": 281.89,
+      "target_weight": 0.1225,
+      "sector": "Ad Tech",
+      "thesis": "Reversal pick 2026-10-05: rank 1 of 29, avg -9.2% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "NFLX",
+      "shares": 18.169358,
+      "cost_basis": 67.49,
+      "target_weight": 0.1225,
+      "sector": "Streaming",
+      "thesis": "Reversal pick 2026-10-05: rank 2 of 29, avg -4.6% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "HOOD",
+      "shares": 10.743385,
+      "cost_basis": 114.14,
+      "target_weight": 0.1225,
+      "sector": "Brokerage",
+      "thesis": "Reversal pick 2026-10-05: rank 3 of 29, avg -4.1% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "COIN",
+      "shares": 6.516021,
+      "cost_basis": 188.19,
+      "target_weight": 0.1225,
+      "sector": "Crypto / Brokerage",
+      "thesis": "Reversal pick 2026-10-05: rank 4 of 29, avg -3.4% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
