@@ -1,0 +1,199 @@
+{
+  "effective": "2026-10-06",
+  "strategy": "v3 daily reversal",
+  "cash_target": 0.02,
+  "min_leg": 50.0,
+  "cost_bps": 5.0,
+  "targets": {
+    "APP": 0.1225,
+    "HOOD": 0.1225,
+    "COIN": 0.1225,
+    "CRM": 0.1225,
+    "NFLX": 0.1225,
+    "LLY": 0.1225,
+    "JPM": 0.1225,
+    "AAPL": 0.1225
+  },
+  "meta": {},
+  "ranking": [
+    {
+      "symbol": "APP",
+      "score": -8.654,
+      "r5": -8.761,
+      "sector": "Ad Tech"
+    },
+    {
+      "symbol": "HOOD",
+      "score": -4.272,
+      "r5": -3.622,
+      "sector": "Brokerage"
+    },
+    {
+      "symbol": "COIN",
+      "score": -3.414,
+      "r5": -2.2,
+      "sector": "Crypto / Brokerage"
+    },
+    {
+      "symbol": "CRM",
+      "score": -2.558,
+      "r5": -0.191,
+      "sector": "Software"
+    },
+    {
+      "symbol": "NFLX",
+      "score": -2.384,
+      "r5": -2.269,
+      "sector": "Streaming"
+    },
+    {
+      "symbol": "MU",
+      "score": -2.219,
+      "r5": -1.833,
+      "sector": "Memory"
+    },
+    {
+      "symbol": "LLY",
+      "score": -1.751,
+      "r5": -2.278,
+      "sector": "Pharmaceuticals"
+    },
+    {
+      "symbol": "JPM",
+      "score": -1.614,
+      "r5": -1.093,
+      "sector": "Financials"
+    },
+    {
+      "symbol": "AAPL",
+      "score": -0.552,
+      "r5": 1.293,
+      "sector": "Consumer Hardware"
+    },
+    {
+      "symbol": "META",
+      "score": -0.264,
+      "r5": 0.054,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "UNH",
+      "score": 0.497,
+      "r5": 0.312,
+      "sector": "Managed Care"
+    },
+    {
+      "symbol": "NET",
+      "score": 0.811,
+      "r5": 0.802,
+      "sector": "Cloud / Edge"
+    },
+    {
+      "symbol": "V",
+      "score": 1.398,
+      "r5": 1.33,
+      "sector": "Payments"
+    },
+    {
+      "symbol": "GOOGL",
+      "score": 1.429,
+      "r5": 1.989,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "XOM",
+      "score": 1.615,
+      "r5": 1.94,
+      "sector": "Energy"
+    },
+    {
+      "symbol": "PLTR",
+      "score": 1.776,
+      "r5": 2.733,
+      "sector": "Software"
+    },
+    {
+      "symbol": "VRT",
+      "score": 2.759,
+      "r5": 1.951,
+      "sector": "Datacenter Power"
+    },
+    {
+      "symbol": "NOW",
+      "score": 3.219,
+      "r5": 6.207,
+      "sector": "Software"
+    },
+    {
+      "symbol": "AMZN",
+      "score": 3.278,
+      "r5": 3.916,
+      "sector": "Consumer / Cloud"
+    },
+    {
+      "symbol": "MSFT",
+      "score": 4.034,
+      "r5": 4.034,
+      "sector": "Software"
+    },
+    {
+      "symbol": "TSLA",
+      "score": 4.94,
+      "r5": 7.889,
+      "sector": "Autos / Energy"
+    },
+    {
+      "symbol": "ANET",
+      "score": 5.229,
+      "r5": 6.191,
+      "sector": "Networking"
+    },
+    {
+      "symbol": "AMD",
+      "score": 5.234,
+      "r5": 6.909,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "NVDA",
+      "score": 5.451,
+      "r5": 5.264,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "ORCL",
+      "score": 5.791,
+      "r5": 5.051,
+      "sector": "Software / Cloud"
+    },
+    {
+      "symbol": "TSM",
+      "score": 6.335,
+      "r5": 5.543,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "AVGO",
+      "score": 6.858,
+      "r5": 5.863,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "CRWD",
+      "score": 7.431,
+      "r5": 6.162,
+      "sector": "Cybersecurity"
+    },
+    {
+      "symbol": "SHOP",
+      "score": 13.014,
+      "r5": 10.954,
+      "sector": "E-commerce"
+    }
+  ],
+  "executed": {
+    "date": "2026-10-06",
+    "nav": 9959.75,
+    "trades": []
+  }
+}
