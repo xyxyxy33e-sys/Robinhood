@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 193.47,
+  "cash": 190.86,
   "positions": [
     {
       "symbol": "JPM",
@@ -15,14 +15,6 @@
       "target_weight": 0.1225,
       "sector": "Financials",
       "thesis": "PE 15.4, strongest 3m relative momentum in the book, non-tech diversifier."
-    },
-    {
-      "symbol": "LLY",
-      "shares": 1.071146,
-      "cost_basis": 1147.3619,
-      "target_weight": 0.1225,
-      "sector": "Pharmaceuticals",
-      "thesis": "Incretin franchise compounding; healthcare leg uncorrelated to AI capex cycle."
     },
     {
       "symbol": "AAPL",
@@ -66,11 +58,19 @@
     },
     {
       "symbol": "COIN",
-      "shares": 6.516021,
-      "cost_basis": 188.19,
+      "shares": 6.826686,
+      "cost_basis": 187.75,
       "target_weight": 0.1225,
       "sector": "Crypto / Brokerage",
       "thesis": "Reversal pick 2026-10-05: rank 4 of 29, avg -3.4% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "NET",
+      "shares": 3.554927,
+      "cost_basis": 342.82,
+      "target_weight": 0.1225,
+      "sector": "Cloud / Edge",
+      "thesis": "Reversal pick 2026-10-07: rank 5 of 29, avg -2.2% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,

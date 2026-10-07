@@ -15,3 +15,6 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-05,NFLX,buy,18.169358,67.4900,1226.25,v3 daily reversal: entry,0.61
 2026-10-05,HOOD,buy,10.743385,114.1400,1226.25,v3 daily reversal: entry,0.61
 2026-10-05,COIN,buy,6.516021,188.1900,1226.25,v3 daily reversal: entry,0.61
+2026-10-07,LLY,sell,1.071146,1188.2900,1272.83,v3 daily reversal: exit,0.64
+2026-10-07,COIN,buy,0.310665,178.5200,55.46,v3 daily reversal: resize,0.03
+2026-10-07,NET,buy,3.554927,342.8200,1218.70,v3 daily reversal: entry,0.61
