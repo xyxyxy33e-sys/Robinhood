@@ -3,8 +3,10 @@
 Rules from the article (@Amy6Tina, Oct 2026), made mechanical:
   - Trend following, not mean reversion.
   - VIX low / contango          -> short vol with SVXY (-0.5x since Feb 2018).  ~60% of days.
-  - VIX trending up + backwardation confirmed -> long vol (VXX/VIXY).          <3% of days.
-  - Otherwise                   -> gold or cash.                               ~37% of days.
+  - VIX trending up + backwardation confirmed -> long vol (VXX/VIXY, or VXZ/VIXM). <3% of days.
+  - Otherwise                   -> gold (IAU/GLD) or cash (BOXX/BIL).              ~37% of days.
+The author's own backtest screenshot shows 60.77% / 36.61% / 2.62% of days and
+14413% total, 36% CAGR, 35.56% max drawdown (~16 years, so pre-2011 must be simulated).
   - Exit as soon as the signal flips ("don't hold losers").
 
 Parameters aren't published, so we grid over them and keep the variants whose time in
@@ -27,7 +29,7 @@ CLAIM_START = "2018-03-01"   # SVXY at -0.5x; "8 years of live trading"
 
 
 def load(start="2011-10-04") -> pd.DataFrame:
-    syms = {"^VIX": "vix", "^VIX3M": "vix3m", "VIXY": "vixy", "SVXY": "svxy", "SPY": "spy", "GLD": "gld", "BIL": "bil"}
+    syms = {"^VIX": "vix", "^VIX3M": "vix3m", "VIXY": "vixy", "VIXM": "vixm", "SVXY": "svxy", "SPY": "spy", "GLD": "gld", "BIL": "bil"}
     df = yf.download(list(syms), start=start, progress=False, auto_adjust=True)["Close"]
     return df.rename(columns=syms).dropna()
 
@@ -42,10 +44,10 @@ def signals(px, n=10, r_short=0.9, r_long=1.0, jump=0.10, short_below_ma=True):
     return short, long_
 
 
-def run(px, short, long_, alt="gld", lag=1):
-    w = pd.DataFrame(0.0, index=px.index, columns=["svxy", "vixy", "gld", "bil"])
+def run(px, short, long_, alt="gld", lag=1, long_sym="vixy"):
+    w = pd.DataFrame(0.0, index=px.index, columns=["svxy", long_sym, "gld", "bil"])
     w["svxy"] = short.astype(float)
-    w["vixy"] = long_.astype(float)
+    w[long_sym] = long_.astype(float)
     w[alt] = (~short & ~long_).astype(float)
     rets = px[w.columns].pct_change().fillna(0)
     held = w.shift(1 + lag).fillna(0)
@@ -72,6 +74,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--lag", type=int, default=1)
     ap.add_argument("--start", default=CLAIM_START)
+    ap.add_argument("--long", default="vixy", choices=["vixy", "vixm"],
+                    help="long-vol leg: vixy (front-month, like VXX) or vixm (months 4-7, like VXZ)")
     a = ap.parse_args()
 
     full = load()
@@ -80,11 +84,11 @@ def main():
         [5, 10, 20], [0.85, 0.90, 0.95, 1.0], [0.95, 1.0, 1.05, 1.10], [0.0, 0.05, 0.10, 0.20, 0.30], [True, False], ["gld", "bil"]
     ):
         s, l = signals(full, n, rs, rl, j, bm)
-        r, held = run(full, s, l, alt, a.lag)
+        r, held = run(full, s, l, alt, a.lag, a.long)
         r, held = r[a.start:], held[a.start:]
         spy = full.spy.pct_change()[a.start:]
         rows.append({"n": n, "r_short": rs, "r_long": rl, "jump": j, "below_ma": bm, "alt": alt,
-                     "short%": held.svxy.mean(), "long%": held.vixy.mean(), **stats(r, spy), "_r": r})
+                     "short%": held.svxy.mean(), "long%": held[a.long].mean(), **stats(r, spy), "_r": r})
     g = pd.DataFrame(rows)
     match = g[g["short%"].between(0.5, 0.7) & g["long%"].between(0.01, 0.05)]
 
@@ -93,7 +97,7 @@ def main():
     cols = ["n", "r_short", "r_long", "jump", "below_ma", "alt", "short%", "long%", "CAGR", "Total", "MaxDD", "Sharpe", "Corr_d", "WorstYr", "NegYrs"]
 
     spy = full.spy.pct_change()[a.start:].fillna(0)
-    print(f"Period {spy.index[0].date()} -> {spy.index[-1].date()} ({len(spy)} days), lag={a.lag}")
+    print(f"Period {spy.index[0].date()} -> {spy.index[-1].date()} ({len(spy)} days), lag={a.lag}, long leg={a.long}")
     print(f"{len(g)} variants, {len(match)} match the article's time split (short 50-70%, long 1-5%)\n")
     print("Benchmarks:")
     for name, r in {"SPY": spy, "SVXY hold": full.svxy.pct_change()[a.start:].fillna(0), "GLD hold": full.gld.pct_change()[a.start:].fillna(0)}.items():
