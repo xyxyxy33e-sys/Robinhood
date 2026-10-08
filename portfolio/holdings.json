@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 190.86,
+  "cash": 238.98,
   "positions": [
     {
       "symbol": "JPM",
@@ -15,14 +15,6 @@
       "target_weight": 0.1225,
       "sector": "Financials",
       "thesis": "PE 15.4, strongest 3m relative momentum in the book, non-tech diversifier."
-    },
-    {
-      "symbol": "AAPL",
-      "shares": 3.680998,
-      "cost_basis": 324.2055,
-      "target_weight": 0.1225,
-      "sector": "Consumer Hardware",
-      "thesis": "Installed-base services annuity. Held at benchmark-ish weight, not a conviction overweight."
     },
     {
       "symbol": "CRM",
@@ -41,17 +33,9 @@
       "thesis": "Reversal pick 2026-10-05: rank 1 of 29, avg -9.2% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "NFLX",
-      "shares": 18.169358,
-      "cost_basis": 67.49,
-      "target_weight": 0.1225,
-      "sector": "Streaming",
-      "thesis": "Reversal pick 2026-10-05: rank 2 of 29, avg -4.6% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
       "symbol": "HOOD",
-      "shares": 10.743385,
-      "cost_basis": 114.14,
+      "shares": 11.377905,
+      "cost_basis": 113.7424,
       "target_weight": 0.1225,
       "sector": "Brokerage",
       "thesis": "Reversal pick 2026-10-05: rank 3 of 29, avg -4.1% over 4-8 sessions. Held while in the 12 most oversold."
@@ -71,6 +55,22 @@
       "target_weight": 0.1225,
       "sector": "Cloud / Edge",
       "thesis": "Reversal pick 2026-10-07: rank 5 of 29, avg -2.2% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "MU",
+      "shares": 1.1759,
+      "cost_basis": 1035.42,
+      "target_weight": 0.1225,
+      "sector": "Memory",
+      "thesis": "Reversal pick 2026-10-08: rank 4 of 29, avg -3.3% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "ORCL",
+      "shares": 8.981963,
+      "cost_basis": 135.555,
+      "target_weight": 0.1225,
+      "sector": "Software / Cloud",
+      "thesis": "Reversal pick 2026-10-08: rank 6 of 29, avg -1.4% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
