@@ -21,7 +21,7 @@ import yfinance as yf
 CACHE = os.path.join(os.path.dirname(__file__), ".cache", "vx")
 URL = "https://cdn.cboe.com/data/us/futures/market_statistics/historical_data/VX/VX_{}.csv"
 TENORS = range(1, 8)
-warnings.simplefilter("ignore", FutureWarning)
+warnings.simplefilter("ignore")  # pandas concat deprecation noise
 EPISODES = [
     ("Aug 2015 China deval", "2015-08-17", "2015-08-25"),
     ("Feb 2018 Volmageddon", "2018-02-01", "2018-02-09"),
