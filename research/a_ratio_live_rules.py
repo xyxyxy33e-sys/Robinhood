@@ -129,13 +129,13 @@ if __name__ == "__main__":
 
 def proxy_returns(P, px):
     """2000+ proxy: QQQ as the core, TQQQ/QLD synthesized as 3x/2x daily QQQ minus fees (0.95%/yr)
-    and financing on the borrowed part at the T-bill rate; cash at the T-bill rate. No VIXM
+    and financing on the borrowed part at the T-bill rate; cash at the T-bill rate; XLU real. No VIXM
     (VIXM starts 2011, VIX3M 2007)."""
     q = px["QQQ"].pct_change()
     rf = px["^IRX"].ffill() / 100 / 252
     fee = 0.0095 / 252
     r = pd.DataFrame({"SPMO": q, "TQQQ": 3 * q - 2 * rf - fee, "QLD": 2 * q - rf - fee,
-                      "XLU": 0.0, "VIXM": 0.0, "BOXX": rf})
+                      "XLU": px["XLU"].pct_change(), "VIXM": 0.0, "BOXX": rf})
     r.index = [d.strftime("%Y-%m-%d") for d in r.index]
     Q = dict(P)
     Q["r"] = r.fillna(0.0)
