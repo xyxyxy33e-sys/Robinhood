@@ -91,3 +91,13 @@ if __name__ == "__main__":
             print(f"  {nm}: real {tr.loc[nm,'CAGR']*100:.1f}% / {tr.loc[nm,'Sharpe']:.3f} / {tr.loc[nm,'MaxDD']*100:.1f}% (P {pr:.2f});"
                   f" proxy {tp.loc[nm,'CAGR']*100:.1f}% / {tp.loc[nm,'Sharpe']:.3f} / {tp.loc[nm,'MaxDD']*100:.1f}% (P {pp:.2f});"
                   f" vs frontier {tr.loc[nm,'vs frontier']*100:+.1f} / {tp.loc[nm,'vs frontier']*100:+.1f}")
+
+
+# Owner follow-up (same day): D3 at A's mix (40% SPMO + 60% TQQQ) instead of 100% QLD, for the two
+# candidates. Result: +0.15-0.2 pt/yr and Sharpe +0.003-0.004 on both datasets; proxy first-half
+# Sharpe 0.838 / 0.839 vs live 0.835; proxy max DD 0.1-0.2 pt deeper. D3 is rare, so this mainly
+# simplifies the rule (D3 reuses the A row) rather than adding an edge.
+CANDIDATES = {
+    "A": {"D1 above 100d": (0.25, 0.0, 0.75), "D2 100-150d": (0.0, 0.5, 0.5), "D3 150-200d": (0.4, 0.6, 0.0)},
+    "B": {"D1 above 100d": (0.5, 0.0, 0.5), "D2 100-150d": (0.0, 0.5, 0.5), "D3 150-200d": (0.4, 0.6, 0.0)},
+}
