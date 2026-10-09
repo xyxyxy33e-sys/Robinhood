@@ -1,5 +1,8 @@
 """Take profit on TQQQ in three steps keyed to TQQQ's OWN gain: +10%, +15%, +20% (owner, 2026-10-09).
 
+Second pass (same day, owner: "at 10%, change 70/30 to 60/40 or 65/35"): small steps of 5 or 10
+points of TQQQ per threshold (`step`), and the single +10% step alone; `small_steps()` runs it.
+
 Live rules as research/a_ratio_live_rules.py. On effective-A days, each threshold TQQQ's gain has
 reached cuts one third of the TQQQ base, moved to SPMO or to cash; the live trim v2 still does the
 full exit at its own votes. TQQQ's gain is measured two ways:
@@ -19,7 +22,7 @@ from research.a7030_quick_exit import frontier_cagr_at
 TH = (0.10, 0.15, 0.20)
 
 
-def run_tp(P, tq, base, kind=None, th=TH, to="SPMO", start="2015-11-02", end="2026-10-07", vixm=True):
+def run_tp(P, tq, base, kind=None, th=TH, to="SPMO", step=None, start="2015-11-02", end="2026-10-07", vixm=True):
     out, prev, held = [], None, None
     spell, ref, k = None, None, 0
     idx = {d: i for i, d in enumerate(P["dates"])}
@@ -47,7 +50,7 @@ def run_tp(P, tq, base, kind=None, th=TH, to="SPMO", start="2015-11-02", end="20
         if t["in_a"]:
             a_days += 1; steps_days += lvl > 0
             c0, t0 = base
-            cut = t0 * lvl / 3.0
+            cut = min(t0, t0 * lvl / 3.0 if step is None else step * lvl)
             t["base"] = (c0 + cut, t0 - cut) if to == "SPMO" else (c0, t0 - cut)
         bp = P["pct"].get(d)
         gate = S.d_gate_active(st, bp if bp is not None else 1.0, gaps.get(200))
@@ -102,3 +105,35 @@ if __name__ == "__main__":
         for lab, (t, ser) in res.items():
             ci, p = block_boot(ser[nm], ser["plain0.4"])
             print(f"  {lab} {nm}: {t.loc[nm,'vs frontier']*100:+.2f}pp; Sharpe vs plain 40/60 CI {ci.round(3)} P<=0 {p:.2f}")
+
+
+def small_steps():
+    px = load(); P = prepare(px)
+    tq_real = {d.strftime("%Y-%m-%d"): float(v) for d, v in px["TQQQ"].dropna().items()}
+    Qp = proxy_returns(P, px)
+    tq_proxy = (1 + Qp["r"]["TQQQ"]).cumprod().to_dict()
+    pd.set_option("display.width", 260)
+    res = {}
+    for label, Q, tq, kw in (("REAL 2015-26 (VIXM on)", P, tq_real, dict()),
+                             ("PROXY 2001-26", Qp, tq_proxy, dict(start="2001-01-02", vixm=False))):
+        front, rows, ser = [], {}, {}
+        for c in (0.8, 0.7, 0.6, 0.5, 0.45, 0.4, 0.35, 0.3, 0.2):
+            s = run_tp(Q, tq, (c, round(1 - c, 2)), **kw); st_ = stats(s)
+            front.append((float(st_["MaxDD"]), float(st_["CAGR"])))
+            rows[f"plain {c*100:.0f}/{(1-c)*100:.0f}"] = {k: float(v) for k, v in st_.items()}; ser[f"plain{c}"] = s
+        for kind in ("spell", "roll20"):
+            for th, thn in (((0.10, 0.15, 0.20), "10/15/20%"), ((0.10,), "10% only")):
+                for step in (0.05, 0.10):
+                    s = run_tp(Q, tq, (0.3, 0.7), kind=kind, th=th, step=step, **kw)
+                    r = {kk: float(v) for kk, v in stats(s).items()}
+                    r["vs frontier"] = r["CAGR"] - frontier_cagr_at(r["MaxDD"], front)
+                    r["A days stepped"] = s.attrs["stepped"]
+                    nm = f"30/70, {kind} {thn}, -{step*100:.0f}pt TQQQ per step"
+                    rows[nm] = r; ser[nm] = s
+        t = pd.DataFrame(rows).T
+        res[label] = (t, ser)
+        print(f"\n{label}")
+        print(t[["CAGR", "Sharpe", "MaxDD", "Y2022", "h1", "h2", "A days stepped", "vs frontier"]].round(3).to_string())
+    (tr, sr), (tp, sp) = res.values()
+    both = [i for i in tr.index if not i.startswith("plain") and tr.loc[i, "vs frontier"] > 0 and tp.loc[i, "vs frontier"] > 0]
+    print("\nAhead of the plain-ratio frontier on BOTH real and proxy:", both or "none")
