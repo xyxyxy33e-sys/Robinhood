@@ -115,9 +115,16 @@ def name(k, a, b):
 
 
 def frontier_cagr_at(dd, front):
-    """CAGR the plain-ratio frontier reaches at max drawdown `dd` (linear interpolation)."""
-    f = sorted(front, key=lambda x: -x[0])          # from shallow to deep drawdown
-    xs = [-x[0] for x in f]; ys = [x[1] for x in f]
+    """Best CAGR a plain ratio reaches with a max drawdown no deeper than `dd`: the upper envelope
+    of the (depth, CAGR) points, linearly interpolated. (Fixed 2026-10-09: the first version
+    interpolated the raw points, which on the proxy -- where 50/50 has a SHALLOWER max drawdown
+    than 70/30 -- compared some arms with 80/20's CAGR instead of 50/50's and flattered them.)"""
+    pts = sorted((-a, b) for a, b in front)          # depth ascending
+    env, best = [], -1e9
+    for x, y in pts:
+        if y > best:
+            env.append((x, y)); best = y
+    xs = [x for x, _ in env]; ys = [y for _, y in env]
     return float(np.interp(-dd, xs, ys))
 
 
