@@ -2,6 +2,7 @@
 
 Second pass (same day, owner: "at 10%, change 70/30 to 60/40 or 65/35"): small steps of 5 or 10
 points of TQQQ per threshold (`step`), and the single +10% step alone; `small_steps()` runs it.
+Third pass: thresholds 20/30/40% and 20% alone -- small_steps(SETS_203040).
 
 Live rules as research/a_ratio_live_rules.py. On effective-A days, each threshold TQQQ's gain has
 reached cuts one third of the TQQQ base, moved to SPMO or to cash; the live trim v2 still does the
@@ -107,7 +108,7 @@ if __name__ == "__main__":
             print(f"  {lab} {nm}: {t.loc[nm,'vs frontier']*100:+.2f}pp; Sharpe vs plain 40/60 CI {ci.round(3)} P<=0 {p:.2f}")
 
 
-def small_steps():
+def small_steps(sets=(((0.10, 0.15, 0.20), "10/15/20%"), ((0.10,), "10% only"))):
     px = load(); P = prepare(px)
     tq_real = {d.strftime("%Y-%m-%d"): float(v) for d, v in px["TQQQ"].dropna().items()}
     Qp = proxy_returns(P, px)
@@ -122,7 +123,7 @@ def small_steps():
             front.append((float(st_["MaxDD"]), float(st_["CAGR"])))
             rows[f"plain {c*100:.0f}/{(1-c)*100:.0f}"] = {k: float(v) for k, v in st_.items()}; ser[f"plain{c}"] = s
         for kind in ("spell", "roll20"):
-            for th, thn in (((0.10, 0.15, 0.20), "10/15/20%"), ((0.10,), "10% only")):
+            for th, thn in sets:
                 for step in (0.05, 0.10):
                     s = run_tp(Q, tq, (0.3, 0.7), kind=kind, th=th, step=step, **kw)
                     r = {kk: float(v) for kk, v in stats(s).items()}
@@ -137,3 +138,6 @@ def small_steps():
     (tr, sr), (tp, sp) = res.values()
     both = [i for i in tr.index if not i.startswith("plain") and tr.loc[i, "vs frontier"] > 0 and tp.loc[i, "vs frontier"] > 0]
     print("\nAhead of the plain-ratio frontier on BOTH real and proxy:", both or "none")
+
+
+SETS_203040 = (((0.20, 0.30, 0.40), "20/30/40%"), ((0.20,), "20% only"))
