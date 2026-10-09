@@ -53,6 +53,10 @@ def replay(P, base=(0.4, 0.6), start="2015-11-02", end="2026-10-07", vixm=True):
                          g200=gaps.get(200), vol30=P["vol"].get(d), breadth=bp, vix=vix.get(d), vratio=ratio.get(d)))
     df = pd.DataFrame(rows).set_index("d")
     df["nav"] = (1 + df.ret).cumprod()
+    # Each day's return is earned on the row set at the PREVIOUS close, so attribute it to that
+    # state (fixed 2026-10-09: the first version used the same day's closing state, which booked
+    # every A->D break day -- held in the A row -- as a D loss).
+    df["held_state"] = df.eff.shift(1)
     return df
 
 
@@ -80,9 +84,9 @@ def describe(df, ep, qqq):
     print(f"\n=== {p} -> {t}: {dd*100:.1f}%  ({len(seg)} sessions down; recovered {rec or 'not yet'})")
     q = qqq.loc[p:t]; print(f"    QQQ over the same days: {(q.iloc[-1]/q.iloc[0]-1)*100:+.1f}%")
     lr = np.log1p(seg.ret)
-    by_state = lr.groupby(seg.eff).sum()
-    print("    loss by effective state (log %):", {k: round(v * 100, 1) for k, v in by_state.items()},
-          " days:", seg.eff.value_counts().to_dict())
+    by_state = lr.groupby(seg.held_state).sum()
+    print("    loss by the state actually held (log %):", {k: round(v * 100, 1) for k, v in by_state.items()},
+          " days:", seg.held_state.value_counts().to_dict())
     legs = {l: round(seg[f"c_{l}"].sum() * 100, 1) for l in LEGS}
     print("    leg contributions (sum of daily %):", legs)
     a = df.loc[p]
