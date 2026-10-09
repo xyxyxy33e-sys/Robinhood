@@ -7,7 +7,7 @@ Findings that drive the arms:
   2. In choppy falls the D gate flips cash <-> QLD as QQQ hovers around 200-day +2%, buying QLD
      back in just before the next leg down (2005: 14 flips; 2011; 2015-16; 2025-02/03).
 Arms (each alone, on the live rules, A 40/60, VIXM on for real ETFs):
-  D rows:   QLD 75% + cash 25%; QLD 50% + cash 50%; QLD 50% + SPMO 50%; SPMO 100%
+  D rows:   QLD 75% + cash 25%; QLD 75% + SPMO 25% (owner, same day); QLD 50% + cash 50%; QLD 50% + SPMO 50%; SPMO 100%
   D latch:  once the gate fires inside a D episode, stay in cash until the episode ends
             (macro state leaves D for more than `gap` sessions)
   D gate wider: gap200 line at 4% / 6% instead of 2%
@@ -75,6 +75,7 @@ ARMS = {
     "live (D = 100% QLD, gate 2%)": dict(),
     "D = 75% QLD + 25% cash": dict(d_row=(0.0, 0.75, 0.25)),
     "D = 50% QLD + 50% cash": dict(d_row=(0.0, 0.50, 0.50)),
+    "D = 75% QLD + 25% SPMO": dict(d_row=(0.25, 0.75, 0.0)),
     "D = 50% QLD + 50% SPMO": dict(d_row=(0.5, 0.50, 0.0)),
     "D = 100% SPMO": dict(d_row=(1.0, 0.0, 0.0)),
     "D gate latch (stay cash till D ends)": dict(latch=True),
