@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 238.98,
+  "cash": 280.78,
   "positions": [
     {
       "symbol": "JPM",
@@ -49,14 +49,6 @@
       "thesis": "Reversal pick 2026-10-05: rank 4 of 29, avg -3.4% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "NET",
-      "shares": 3.554927,
-      "cost_basis": 342.82,
-      "target_weight": 0.1225,
-      "sector": "Cloud / Edge",
-      "thesis": "Reversal pick 2026-10-07: rank 5 of 29, avg -2.2% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
       "symbol": "MU",
       "shares": 1.1759,
       "cost_basis": 1035.42,
@@ -71,6 +63,14 @@
       "target_weight": 0.1225,
       "sector": "Software / Cloud",
       "thesis": "Reversal pick 2026-10-08: rank 6 of 29, avg -1.4% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "TSM",
+      "shares": 2.735889,
+      "cost_basis": 453.275,
+      "target_weight": 0.1225,
+      "sector": "Semiconductors",
+      "thesis": "Reversal pick 2026-10-09: rank 5 of 29, avg -2.7% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,

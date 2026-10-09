@@ -23,3 +23,5 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-08,HOOD,buy,0.634520,107.0100,67.90,v3 daily reversal: resize,0.03
 2026-10-08,MU,buy,1.175900,1035.4200,1217.55,v3 daily reversal: entry,0.61
 2026-10-08,ORCL,buy,8.981963,135.5550,1217.55,v3 daily reversal: entry,0.61
+2026-10-09,NET,sell,3.554927,360.9550,1283.17,v3 daily reversal: exit,0.64
+2026-10-09,TSM,buy,2.735889,453.2750,1240.11,v3 daily reversal: entry,0.62
