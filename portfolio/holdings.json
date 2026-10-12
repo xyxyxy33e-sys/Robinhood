@@ -6,28 +6,12 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 280.78,
+  "cash": 187.0,
   "positions": [
     {
-      "symbol": "JPM",
-      "shares": 3.688368,
-      "cost_basis": 352.2278,
-      "target_weight": 0.1225,
-      "sector": "Financials",
-      "thesis": "PE 15.4, strongest 3m relative momentum in the book, non-tech diversifier."
-    },
-    {
-      "symbol": "CRM",
-      "shares": 5.337347,
-      "cost_basis": 240.4247,
-      "target_weight": 0.1225,
-      "sector": "Software",
-      "thesis": "Re-rating off the June low at PE 23.6; cheapest large-cap software with improving momentum."
-    },
-    {
       "symbol": "APP",
-      "shares": 4.350101,
-      "cost_basis": 281.89,
+      "shares": 4.535561,
+      "cost_basis": 281.4382,
       "target_weight": 0.1225,
       "sector": "Ad Tech",
       "thesis": "Reversal pick 2026-10-05: rank 1 of 29, avg -9.2% over 4-8 sessions. Held while in the 12 most oversold."
@@ -50,8 +34,8 @@
     },
     {
       "symbol": "MU",
-      "shares": 1.1759,
-      "cost_basis": 1035.42,
+      "shares": 1.24211,
+      "cost_basis": 1032.9442,
       "target_weight": 0.1225,
       "sector": "Memory",
       "thesis": "Reversal pick 2026-10-08: rank 4 of 29, avg -3.3% over 4-8 sessions. Held while in the 12 most oversold."
@@ -71,6 +55,22 @@
       "target_weight": 0.1225,
       "sector": "Semiconductors",
       "thesis": "Reversal pick 2026-10-09: rank 5 of 29, avg -2.7% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "AMD",
+      "shares": 2.067508,
+      "cost_basis": 594.15,
+      "target_weight": 0.1225,
+      "sector": "Semiconductors",
+      "thesis": "Reversal pick 2026-10-12: rank 3 of 29, avg -5.4% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "VRT",
+      "shares": 5.130989,
+      "cost_basis": 239.41,
+      "target_weight": 0.1225,
+      "sector": "Datacenter Power",
+      "thesis": "Reversal pick 2026-10-12: rank 4 of 29, avg -3.9% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
