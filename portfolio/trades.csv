@@ -31,3 +31,6 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-12,APP,buy,0.185460,270.8400,50.23,v3 daily reversal: resize,0.03
 2026-10-12,AMD,buy,2.067508,594.1500,1228.41,v3 daily reversal: entry,0.61
 2026-10-12,VRT,buy,5.130989,239.4100,1228.41,v3 daily reversal: entry,0.61
+2026-10-13,ORCL,sell,8.981963,143.2700,1286.85,v3 daily reversal: exit,0.64
+2026-10-13,MU,buy,0.052959,953.1900,50.48,v3 daily reversal: resize,0.03
+2026-10-13,CRWD,buy,4.727083,261.1420,1234.44,v3 daily reversal: entry,0.62
