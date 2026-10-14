@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-14",
+  "source": "robinhood get_equity_quotes last_trade_price (regular-session close, 19:59:59 UTC)",
+  "closes": {
+    "SPY": 769.63, "AAPL": 342.97, "AMD": 570.82, "AMZN": 254.1, "ANET": 195.4,
+    "APP": 262.11, "AVGO": 346.46, "COIN": 172.8753, "CRM": 236.0, "CRWD": 249.35,
+    "GOOGL": 347.84, "HOOD": 101.1, "JPM": 335.315, "LLY": 1210.79, "META": 738.02,
+    "MSFT": 533.86, "MU": 913.915, "NET": 324.19, "NFLX": 70.58, "NOW": 140.0,
+    "NVDA": 221.5, "ORCL": 130.598, "PLTR": 201.05, "SHOP": 172.5, "TSLA": 367.28,
+    "TSM": 430.08, "UNH": 395.755, "V": 391.39, "VRT": 222.82, "XOM": 177.06
+  }
+}

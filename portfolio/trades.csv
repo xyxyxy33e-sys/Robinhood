@@ -34,3 +34,5 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-13,ORCL,sell,8.981963,143.2700,1286.85,v3 daily reversal: exit,0.64
 2026-10-13,MU,buy,0.052959,953.1900,50.48,v3 daily reversal: resize,0.03
 2026-10-13,CRWD,buy,4.727083,261.1420,1234.44,v3 daily reversal: entry,0.62
+2026-10-14,COIN,sell,6.826686,172.8753,1180.17,v3 daily reversal: exit,0.59
+2026-10-14,ORCL,buy,8.975941,130.5980,1172.24,v3 daily reversal: entry,0.59
