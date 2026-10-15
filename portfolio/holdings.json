@@ -6,16 +6,8 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 194.39,
+  "cash": 201.23,
   "positions": [
-    {
-      "symbol": "APP",
-      "shares": 4.535561,
-      "cost_basis": 281.4382,
-      "target_weight": 0.1225,
-      "sector": "Ad Tech",
-      "thesis": "Reversal pick 2026-10-05: rank 1 of 29, avg -9.2% over 4-8 sessions. Held while in the 12 most oversold."
-    },
     {
       "symbol": "HOOD",
       "shares": 11.377905,
@@ -50,8 +42,8 @@
     },
     {
       "symbol": "VRT",
-      "shares": 5.130989,
-      "cost_basis": 239.41,
+      "shares": 5.493927,
+      "cost_basis": 237.7862,
       "target_weight": 0.1225,
       "sector": "Datacenter Power",
       "thesis": "Reversal pick 2026-10-12: rank 4 of 29, avg -3.9% over 4-8 sessions. Held while in the 12 most oversold."
@@ -71,6 +63,14 @@
       "target_weight": 0.1225,
       "sector": "Software / Cloud",
       "thesis": "Reversal pick 2026-10-14: rank 6 of 29, avg -7.8% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "ANET",
+      "shares": 6.360873,
+      "cost_basis": 185.55,
+      "target_weight": 0.1225,
+      "sector": "Networking",
+      "thesis": "Reversal pick 2026-10-15: rank 2 of 29, avg -12.9% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
