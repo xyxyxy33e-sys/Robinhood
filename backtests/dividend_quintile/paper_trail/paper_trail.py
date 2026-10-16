@@ -62,10 +62,18 @@ def append_ledger(rows):
 
 
 def get_live_prices(tickers):
-    data = yf.download(tickers, period="5d", auto_adjust=False, progress=False, threads=True)
-    last_close = data["Close"].ffill().iloc[-1]
-    asof = data["Close"].ffill().index[-1]
-    return last_close.to_dict(), asof
+    """Latest close per ticker. A name with no recent bars (delisted/acquired) keeps its last known
+    price instead of NaN so one dead ticker cannot poison a portfolio total; it is reported as STALE."""
+    data = yf.download(tickers, period="1mo", auto_adjust=False, progress=False, threads=True)
+    close = data["Close"]
+    filled = close.ffill()
+    asof = filled.index[-1]
+    last_valid = close.apply(lambda c: c.last_valid_index())
+    stale = [t for t in close.columns if last_valid[t] is not None and (asof - last_valid[t]).days > 3]
+    if stale:
+        print("WARNING stale prices (no bars for >3 days, possibly delisted/acquired), using last known:",
+              {t: str(last_valid[t].date()) for t in stale})
+    return filled.iloc[-1].to_dict(), asof
 
 
 def target_list():
