@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 201.23,
+  "cash": 144.0,
   "positions": [
     {
       "symbol": "HOOD",
@@ -50,8 +50,8 @@
     },
     {
       "symbol": "CRWD",
-      "shares": 4.727083,
-      "cost_basis": 261.142,
+      "shares": 4.977784,
+      "cost_basis": 259.4809,
       "target_weight": 0.1225,
       "sector": "Cybersecurity",
       "thesis": "Reversal pick 2026-10-13: rank 5 of 29, avg -3.5% over 4-8 sessions. Held while in the 12 most oversold."
