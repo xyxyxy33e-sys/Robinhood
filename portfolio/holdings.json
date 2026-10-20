@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 144.0,
+  "cash": 170.81,
   "positions": [
     {
       "symbol": "HOOD",
@@ -23,14 +23,6 @@
       "target_weight": 0.1225,
       "sector": "Memory",
       "thesis": "Reversal pick 2026-10-08: rank 4 of 29, avg -3.3% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
-      "symbol": "TSM",
-      "shares": 2.735889,
-      "cost_basis": 453.275,
-      "target_weight": 0.1225,
-      "sector": "Semiconductors",
-      "thesis": "Reversal pick 2026-10-09: rank 5 of 29, avg -2.7% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
       "symbol": "AMD",
@@ -71,6 +63,14 @@
       "target_weight": 0.1225,
       "sector": "Networking",
       "thesis": "Reversal pick 2026-10-15: rank 2 of 29, avg -12.9% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "NET",
+      "shares": 3.893742,
+      "cost_basis": 291.65,
+      "target_weight": 0.1225,
+      "sector": "Cloud / Edge",
+      "thesis": "Reversal pick 2026-10-20: rank 1 of 29, avg -15.4% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,

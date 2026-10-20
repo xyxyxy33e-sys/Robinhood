@@ -40,3 +40,5 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-15,VRT,buy,0.362938,214.8300,77.97,v3 daily reversal: resize,0.04
 2026-10-15,ANET,buy,6.360873,185.5500,1180.26,v3 daily reversal: entry,0.59
 2026-10-19,CRWD,buy,0.250701,228.1600,57.20,v3 daily reversal: resize,0.03
+2026-10-20,TSM,sell,2.735889,425.3000,1163.57,v3 daily reversal: exit,0.58
+2026-10-20,NET,buy,3.893742,291.6500,1135.61,v3 daily reversal: entry,0.57
