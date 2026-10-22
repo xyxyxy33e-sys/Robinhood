@@ -1,0 +1,245 @@
+{
+  "effective": "2026-10-22",
+  "strategy": "v3 daily reversal",
+  "cash_target": 0.02,
+  "min_leg": 50.0,
+  "cost_bps": 5.0,
+  "targets": {
+    "VRT": 0.1225,
+    "ANET": 0.1225,
+    "AMD": 0.1225,
+    "MU": 0.1225,
+    "HOOD": 0.1225,
+    "NET": 0.1225,
+    "ORCL": 0.1225,
+    "META": 0.1225
+  },
+  "meta": {
+    "META": {
+      "sector": "Internet Services",
+      "thesis": "Reversal pick 2026-10-22: rank 2 of 29, avg -12.0% over 4-8 sessions. Held while in the 12 most oversold."
+    }
+  },
+  "ranking": [
+    {
+      "symbol": "VRT",
+      "score": -12.449,
+      "r5": -8.951,
+      "sector": "Datacenter Power"
+    },
+    {
+      "symbol": "META",
+      "score": -12.016,
+      "r5": -11.896,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "ANET",
+      "score": -11.792,
+      "r5": -7.828,
+      "sector": "Networking"
+    },
+    {
+      "symbol": "AMD",
+      "score": -11.083,
+      "r5": -9.717,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "MU",
+      "score": -8.022,
+      "r5": -7.987,
+      "sector": "Memory"
+    },
+    {
+      "symbol": "HOOD",
+      "score": -7.554,
+      "r5": -7.076,
+      "sector": "Brokerage"
+    },
+    {
+      "symbol": "GOOGL",
+      "score": -7.035,
+      "r5": -7.143,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "NET",
+      "score": -6.742,
+      "r5": -3.968,
+      "sector": "Cloud / Edge"
+    },
+    {
+      "symbol": "ORCL",
+      "score": -6.74,
+      "r5": -6.659,
+      "sector": "Software / Cloud"
+    },
+    {
+      "symbol": "AVGO",
+      "score": -6.559,
+      "r5": -6.063,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "NFLX",
+      "score": -5.467,
+      "r5": -7.622,
+      "sector": "Streaming"
+    },
+    {
+      "symbol": "COIN",
+      "score": -5.127,
+      "r5": -8.01,
+      "sector": "Crypto / Brokerage"
+    },
+    {
+      "symbol": "TSM",
+      "score": -4.222,
+      "r5": -2.408,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "CRWD",
+      "score": -4.15,
+      "r5": -2.662,
+      "sector": "Cybersecurity"
+    },
+    {
+      "symbol": "NVDA",
+      "score": -4.129,
+      "r5": -2.274,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "SHOP",
+      "score": -3.58,
+      "r5": -5.206,
+      "sector": "E-commerce"
+    },
+    {
+      "symbol": "MSFT",
+      "score": -2.93,
+      "r5": -3.302,
+      "sector": "Software"
+    },
+    {
+      "symbol": "PLTR",
+      "score": -2.19,
+      "r5": -2.105,
+      "sector": "Software"
+    },
+    {
+      "symbol": "APP",
+      "score": -2.088,
+      "r5": -5.319,
+      "sector": "Ad Tech"
+    },
+    {
+      "symbol": "AMZN",
+      "score": -1.895,
+      "r5": -1.661,
+      "sector": "Consumer / Cloud"
+    },
+    {
+      "symbol": "JPM",
+      "score": 0.365,
+      "r5": 0.295,
+      "sector": "Financials"
+    },
+    {
+      "symbol": "XOM",
+      "score": 1.619,
+      "r5": 2.033,
+      "sector": "Energy"
+    },
+    {
+      "symbol": "AAPL",
+      "score": 1.802,
+      "r5": 1.854,
+      "sector": "Consumer Hardware"
+    },
+    {
+      "symbol": "TSLA",
+      "score": 1.97,
+      "r5": 3.352,
+      "sector": "Autos / Energy"
+    },
+    {
+      "symbol": "V",
+      "score": 4.672,
+      "r5": 3.627,
+      "sector": "Payments"
+    },
+    {
+      "symbol": "CRM",
+      "score": 4.722,
+      "r5": 1.435,
+      "sector": "Software"
+    },
+    {
+      "symbol": "LLY",
+      "score": 7.75,
+      "r5": 4.364,
+      "sector": "Pharmaceuticals"
+    },
+    {
+      "symbol": "UNH",
+      "score": 8.546,
+      "r5": 4.509,
+      "sector": "Managed Care"
+    },
+    {
+      "symbol": "NOW",
+      "score": 10.71,
+      "r5": 5.657,
+      "sector": "Software"
+    }
+  ],
+  "executed": {
+    "date": "2026-10-22",
+    "nav": 9087.53,
+    "trades": [
+      {
+        "date": "2026-10-22",
+        "symbol": "CRWD",
+        "side": "sell",
+        "shares": "4.977784",
+        "price": "238.0800",
+        "notional": "1185.11",
+        "cost": "0.59",
+        "reason": "v3 daily reversal: exit"
+      },
+      {
+        "date": "2026-10-22",
+        "symbol": "NET",
+        "side": "sell",
+        "shares": "0.229718",
+        "price": "303.8250",
+        "notional": "69.79",
+        "cost": "0.03",
+        "reason": "v3 daily reversal: resize"
+      },
+      {
+        "date": "2026-10-22",
+        "symbol": "AMD",
+        "side": "buy",
+        "shares": "0.124860",
+        "price": "507.7700",
+        "notional": "63.40",
+        "cost": "0.03",
+        "reason": "v3 daily reversal: resize"
+      },
+      {
+        "date": "2026-10-22",
+        "symbol": "META",
+        "side": "buy",
+        "shares": "1.715629",
+        "price": "648.8700",
+        "notional": "1113.22",
+        "cost": "0.56",
+        "reason": "v3 daily reversal: entry"
+      }
+    ]
+  }
+}

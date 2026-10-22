@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 170.81,
+  "cash": 247.88,
   "positions": [
     {
       "symbol": "HOOD",
@@ -26,8 +26,8 @@
     },
     {
       "symbol": "AMD",
-      "shares": 2.067508,
-      "cost_basis": 594.15,
+      "shares": 2.192368,
+      "cost_basis": 589.2304,
       "target_weight": 0.1225,
       "sector": "Semiconductors",
       "thesis": "Reversal pick 2026-10-12: rank 3 of 29, avg -5.4% over 4-8 sessions. Held while in the 12 most oversold."
@@ -39,14 +39,6 @@
       "target_weight": 0.1225,
       "sector": "Datacenter Power",
       "thesis": "Reversal pick 2026-10-12: rank 4 of 29, avg -3.9% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
-      "symbol": "CRWD",
-      "shares": 4.977784,
-      "cost_basis": 259.4809,
-      "target_weight": 0.1225,
-      "sector": "Cybersecurity",
-      "thesis": "Reversal pick 2026-10-13: rank 5 of 29, avg -3.5% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
       "symbol": "ORCL",
@@ -66,11 +58,19 @@
     },
     {
       "symbol": "NET",
-      "shares": 3.893742,
+      "shares": 3.664024,
       "cost_basis": 291.65,
       "target_weight": 0.1225,
       "sector": "Cloud / Edge",
       "thesis": "Reversal pick 2026-10-20: rank 1 of 29, avg -15.4% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "META",
+      "shares": 1.715629,
+      "cost_basis": 648.87,
+      "target_weight": 0.1225,
+      "sector": "Internet Services",
+      "thesis": "Reversal pick 2026-10-22: rank 2 of 29, avg -12.0% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,

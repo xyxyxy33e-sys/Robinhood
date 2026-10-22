@@ -42,3 +42,7 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-19,CRWD,buy,0.250701,228.1600,57.20,v3 daily reversal: resize,0.03
 2026-10-20,TSM,sell,2.735889,425.3000,1163.57,v3 daily reversal: exit,0.58
 2026-10-20,NET,buy,3.893742,291.6500,1135.61,v3 daily reversal: entry,0.57
+2026-10-22,CRWD,sell,4.977784,238.0800,1185.11,v3 daily reversal: exit,0.59
+2026-10-22,NET,sell,0.229718,303.8250,69.79,v3 daily reversal: resize,0.03
+2026-10-22,AMD,buy,0.124860,507.7700,63.40,v3 daily reversal: resize,0.03
+2026-10-22,META,buy,1.715629,648.8700,1113.22,v3 daily reversal: entry,0.56
