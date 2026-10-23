@@ -46,3 +46,6 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-22,NET,sell,0.229718,303.8250,69.79,v3 daily reversal: resize,0.03
 2026-10-22,AMD,buy,0.124860,507.7700,63.40,v3 daily reversal: resize,0.03
 2026-10-22,META,buy,1.715629,648.8700,1113.22,v3 daily reversal: entry,0.56
+2026-10-23,NET,sell,3.664024,326.0000,1194.47,v3 daily reversal: exit,0.60
+2026-10-23,VRT,buy,0.300463,194.3000,58.38,v3 daily reversal: resize,0.03
+2026-10-23,GOOGL,buy,3.515315,320.2700,1125.85,v3 daily reversal: entry,0.56
