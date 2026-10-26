@@ -49,3 +49,7 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-23,NET,sell,3.664024,326.0000,1194.47,v3 daily reversal: exit,0.60
 2026-10-23,VRT,buy,0.300463,194.3000,58.38,v3 daily reversal: resize,0.03
 2026-10-23,GOOGL,buy,3.515315,320.2700,1125.85,v3 daily reversal: entry,0.56
+2026-10-26,MU,sell,1.295069,903.7000,1170.35,v3 daily reversal: exit,0.59
+2026-10-26,META,buy,0.083874,630.4700,52.88,v3 daily reversal: resize,0.03
+2026-10-26,HOOD,buy,0.839759,92.8600,77.98,v3 daily reversal: resize,0.04
+2026-10-26,NFLX,buy,17.756162,63.8950,1134.53,v3 daily reversal: entry,0.57

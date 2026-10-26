@@ -6,23 +6,15 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 256.93,
+  "cash": 160.66,
   "positions": [
     {
       "symbol": "HOOD",
-      "shares": 11.377905,
-      "cost_basis": 113.7424,
+      "shares": 12.217664,
+      "cost_basis": 112.3071,
       "target_weight": 0.1225,
       "sector": "Brokerage",
       "thesis": "Reversal pick 2026-10-05: rank 3 of 29, avg -4.1% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
-      "symbol": "MU",
-      "shares": 1.295069,
-      "cost_basis": 1029.6828,
-      "target_weight": 0.1225,
-      "sector": "Memory",
-      "thesis": "Reversal pick 2026-10-08: rank 4 of 29, avg -3.3% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
       "symbol": "AMD",
@@ -58,8 +50,8 @@
     },
     {
       "symbol": "META",
-      "shares": 1.715629,
-      "cost_basis": 648.87,
+      "shares": 1.799503,
+      "cost_basis": 648.0124,
       "target_weight": 0.1225,
       "sector": "Internet Services",
       "thesis": "Reversal pick 2026-10-22: rank 2 of 29, avg -12.0% over 4-8 sessions. Held while in the 12 most oversold."
@@ -71,6 +63,14 @@
       "target_weight": 0.1225,
       "sector": "Internet Services",
       "thesis": "Reversal pick 2026-10-23: rank 4 of 29, avg -7.7% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "NFLX",
+      "shares": 17.756162,
+      "cost_basis": 63.895,
+      "target_weight": 0.1225,
+      "sector": "Streaming",
+      "thesis": "Reversal pick 2026-10-26: rank 2 of 29, avg -9.3% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
