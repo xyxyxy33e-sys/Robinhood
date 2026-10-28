@@ -61,3 +61,5 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-27,SHOP,buy,6.993729,165.8500,1159.91,v3 daily reversal: entry,0.58
 2026-10-27,APP,buy,4.411814,262.9100,1159.91,v3 daily reversal: entry,0.58
 2026-10-27,AMZN,buy,4.581727,253.1600,1159.91,v3 daily reversal: entry,0.58
+2026-10-28,META,buy,0.088928,612.4050,54.46,v3 daily reversal: resize,0.03
+2026-10-28,NFLX,buy,0.899823,61.9900,55.78,v3 daily reversal: resize,0.03
