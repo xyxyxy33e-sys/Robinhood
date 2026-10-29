@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 205.78,
+  "cash": 72.87,
   "positions": [
     {
       "symbol": "HOOD",
@@ -26,8 +26,8 @@
     },
     {
       "symbol": "GOOGL",
-      "shares": 3.515315,
-      "cost_basis": 320.27,
+      "shares": 3.983474,
+      "cost_basis": 315.9779,
       "target_weight": 0.1225,
       "sector": "Internet Services",
       "thesis": "Reversal pick 2026-10-23: rank 4 of 29, avg -7.7% over 4-8 sessions. Held while in the 12 most oversold."
