@@ -27,6 +27,14 @@ def is_first_trading_day():
     return bool(days) and days[0] == today
 
 
+def already_rebalanced_today():
+    import json
+    try:
+        return json.load(open(HERE / "state.json")).get("last_rebalance") == datetime.now(timezone.utc).date().isoformat()
+    except Exception:
+        return False
+
+
 def sh(*args):
     print("+", " ".join(args), flush=True)
     subprocess.run(args, check=True, cwd=HERE)
@@ -40,6 +48,9 @@ def main():
         return
     if mode != "--force" and not is_first_trading_day():
         print("Not the first trading day of the month - nothing to do.")
+        return
+    if mode != "--force" and already_rebalanced_today():
+        print("Already rebalanced today - nothing to do.")
         return
     sh(sys.executable, str(ROOT / "data_refresh.py"))
     sh(sys.executable, str(ROOT / "buyback" / "fetch_edgar.py"))
