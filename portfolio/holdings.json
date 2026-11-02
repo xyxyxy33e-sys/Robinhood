@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 170.32,
+  "cash": 146.45,
   "positions": [
     {
       "symbol": "HOOD",
@@ -17,14 +17,6 @@
       "thesis": "Reversal pick 2026-10-05: rank 3 of 29, avg -4.1% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "META",
-      "shares": 1.750744,
-      "cost_basis": 646.3356,
-      "target_weight": 0.1225,
-      "sector": "Internet Services",
-      "thesis": "Reversal pick 2026-10-22: rank 2 of 29, avg -12.0% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
       "symbol": "GOOGL",
       "shares": 3.983474,
       "cost_basis": 315.9779,
@@ -33,17 +25,9 @@
       "thesis": "Reversal pick 2026-10-23: rank 4 of 29, avg -7.7% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "NFLX",
-      "shares": 17.343586,
-      "cost_basis": 63.8031,
-      "target_weight": 0.1225,
-      "sector": "Streaming",
-      "thesis": "Reversal pick 2026-10-26: rank 2 of 29, avg -9.3% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
       "symbol": "COIN",
-      "shares": 7.196811,
-      "cost_basis": 161.17,
+      "shares": 7.765535,
+      "cost_basis": 159.4636,
       "target_weight": 0.1225,
       "sector": "Crypto / Brokerage",
       "thesis": "Reversal pick 2026-10-27: rank 3 of 29, avg -7.6% over 4-8 sessions. Held while in the 12 most oversold."
@@ -65,12 +49,28 @@
       "thesis": "Reversal pick 2026-10-27: rank 7 of 29, avg -2.9% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "AMZN",
-      "shares": 4.581727,
-      "cost_basis": 253.16,
+      "symbol": "NOW",
+      "shares": 10.096949,
+      "cost_basis": 106.035,
       "target_weight": 0.1225,
-      "sector": "Consumer / Cloud",
-      "thesis": "Reversal pick 2026-10-27: rank 8 of 29, avg -2.0% over 4-8 sessions. Held while in the 12 most oversold."
+      "sector": "Software",
+      "thesis": "Reversal pick 2026-11-02: rank 1 of 29, avg -32.2% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "NET",
+      "shares": 4.036305,
+      "cost_basis": 265.25,
+      "target_weight": 0.1225,
+      "sector": "Cloud / Edge",
+      "thesis": "Reversal pick 2026-11-02: rank 3 of 29, avg -16.8% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "AMD",
+      "shares": 2.293847,
+      "cost_basis": 466.74,
+      "target_weight": 0.1225,
+      "sector": "Semiconductors",
+      "thesis": "Reversal pick 2026-11-02: rank 7 of 29, avg -12.4% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,

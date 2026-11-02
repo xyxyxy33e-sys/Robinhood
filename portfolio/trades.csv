@@ -67,3 +67,10 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-10-30,META,sell,0.137687,614.9900,84.68,v3 daily reversal: resize,0.04
 2026-10-30,NFLX,sell,1.312399,62.0800,81.47,v3 daily reversal: resize,0.04
 2026-10-30,APP,buy,0.300175,228.5000,68.59,v3 daily reversal: resize,0.03
+2026-11-02,META,sell,1.750744,606.5400,1061.90,v3 daily reversal: exit,0.53
+2026-11-02,NFLX,sell,17.343586,62.3650,1081.63,v3 daily reversal: exit,0.54
+2026-11-02,AMZN,sell,4.581727,245.8000,1126.19,v3 daily reversal: exit,0.56
+2026-11-02,COIN,buy,0.568724,137.8700,78.41,v3 daily reversal: resize,0.04
+2026-11-02,NOW,buy,10.096949,106.0350,1070.63,v3 daily reversal: entry,0.54
+2026-11-02,NET,buy,4.036305,265.2500,1070.63,v3 daily reversal: entry,0.54
+2026-11-02,AMD,buy,2.293847,466.7400,1070.63,v3 daily reversal: entry,0.54

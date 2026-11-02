@@ -1,0 +1,283 @@
+{
+  "effective": "2026-11-02",
+  "strategy": "v3 daily reversal",
+  "cash_target": 0.02,
+  "min_leg": 50.0,
+  "cost_bps": 5.0,
+  "targets": {
+    "COIN": 0.1225,
+    "GOOGL": 0.1225,
+    "APP": 0.1225,
+    "HOOD": 0.1225,
+    "SHOP": 0.1225,
+    "NOW": 0.1225,
+    "NET": 0.1225,
+    "AMD": 0.1225
+  },
+  "meta": {
+    "NOW": {
+      "sector": "Software",
+      "thesis": "Reversal pick 2026-11-02: rank 1 of 29, avg -32.2% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    "NET": {
+      "sector": "Cloud / Edge",
+      "thesis": "Reversal pick 2026-11-02: rank 3 of 29, avg -16.8% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    "AMD": {
+      "sector": "Semiconductors",
+      "thesis": "Reversal pick 2026-11-02: rank 7 of 29, avg -12.4% over 4-8 sessions. Held while in the 12 most oversold."
+    }
+  },
+  "ranking": [
+    {
+      "symbol": "NOW",
+      "score": -32.202,
+      "r5": -32.97,
+      "sector": "Software"
+    },
+    {
+      "symbol": "COIN",
+      "score": -16.971,
+      "r5": -13.642,
+      "sector": "Crypto / Brokerage"
+    },
+    {
+      "symbol": "NET",
+      "score": -16.836,
+      "r5": -20.127,
+      "sector": "Cloud / Edge"
+    },
+    {
+      "symbol": "GOOGL",
+      "score": -13.669,
+      "r5": -11.947,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "APP",
+      "score": -13.04,
+      "r5": -12.212,
+      "sector": "Ad Tech"
+    },
+    {
+      "symbol": "HOOD",
+      "score": -12.792,
+      "r5": -9.73,
+      "sector": "Brokerage"
+    },
+    {
+      "symbol": "AMD",
+      "score": -12.446,
+      "r5": -12.179,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "PLTR",
+      "score": -9.987,
+      "r5": -10.183,
+      "sector": "Software"
+    },
+    {
+      "symbol": "CRM",
+      "score": -7.96,
+      "r5": -8.635,
+      "sector": "Software"
+    },
+    {
+      "symbol": "ANET",
+      "score": -7.876,
+      "r5": -7.376,
+      "sector": "Networking"
+    },
+    {
+      "symbol": "SHOP",
+      "score": -7.533,
+      "r5": -7.028,
+      "sector": "E-commerce"
+    },
+    {
+      "symbol": "MU",
+      "score": -6.959,
+      "r5": -7.817,
+      "sector": "Memory"
+    },
+    {
+      "symbol": "ORCL",
+      "score": -6.522,
+      "r5": -5.52,
+      "sector": "Software / Cloud"
+    },
+    {
+      "symbol": "NVDA",
+      "score": -6.277,
+      "r5": -6.385,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "META",
+      "score": -6.245,
+      "r5": -3.796,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "TSM",
+      "score": -6.147,
+      "r5": -6.115,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "CRWD",
+      "score": -4.157,
+      "r5": -7.615,
+      "sector": "Cybersecurity"
+    },
+    {
+      "symbol": "MSFT",
+      "score": -4.066,
+      "r5": -4.809,
+      "sector": "Software"
+    },
+    {
+      "symbol": "NFLX",
+      "score": -3.823,
+      "r5": -2.395,
+      "sector": "Streaming"
+    },
+    {
+      "symbol": "UNH",
+      "score": -3.79,
+      "r5": -2.503,
+      "sector": "Managed Care"
+    },
+    {
+      "symbol": "AMZN",
+      "score": -2.656,
+      "r5": -1.289,
+      "sector": "Consumer / Cloud"
+    },
+    {
+      "symbol": "AVGO",
+      "score": -2.508,
+      "r5": -2.089,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "AAPL",
+      "score": -2.054,
+      "r5": -1.416,
+      "sector": "Consumer Hardware"
+    },
+    {
+      "symbol": "XOM",
+      "score": -0.554,
+      "r5": -2.601,
+      "sector": "Energy"
+    },
+    {
+      "symbol": "JPM",
+      "score": 1.835,
+      "r5": 1.98,
+      "sector": "Financials"
+    },
+    {
+      "symbol": "V",
+      "score": 4.479,
+      "r5": 5.262,
+      "sector": "Payments"
+    },
+    {
+      "symbol": "TSLA",
+      "score": 4.627,
+      "r5": 3.13,
+      "sector": "Autos / Energy"
+    },
+    {
+      "symbol": "LLY",
+      "score": 10.098,
+      "r5": 10.379,
+      "sector": "Pharmaceuticals"
+    },
+    {
+      "symbol": "VRT",
+      "score": 11.147,
+      "r5": 12.288,
+      "sector": "Datacenter Power"
+    }
+  ],
+  "executed": {
+    "date": "2026-11-02",
+    "nav": 8739.84,
+    "trades": [
+      {
+        "date": "2026-11-02",
+        "symbol": "META",
+        "side": "sell",
+        "shares": "1.750744",
+        "price": "606.5400",
+        "notional": "1061.90",
+        "cost": "0.53",
+        "reason": "v3 daily reversal: exit"
+      },
+      {
+        "date": "2026-11-02",
+        "symbol": "NFLX",
+        "side": "sell",
+        "shares": "17.343586",
+        "price": "62.3650",
+        "notional": "1081.63",
+        "cost": "0.54",
+        "reason": "v3 daily reversal: exit"
+      },
+      {
+        "date": "2026-11-02",
+        "symbol": "AMZN",
+        "side": "sell",
+        "shares": "4.581727",
+        "price": "245.8000",
+        "notional": "1126.19",
+        "cost": "0.56",
+        "reason": "v3 daily reversal: exit"
+      },
+      {
+        "date": "2026-11-02",
+        "symbol": "COIN",
+        "side": "buy",
+        "shares": "0.568724",
+        "price": "137.8700",
+        "notional": "78.41",
+        "cost": "0.04",
+        "reason": "v3 daily reversal: resize"
+      },
+      {
+        "date": "2026-11-02",
+        "symbol": "NOW",
+        "side": "buy",
+        "shares": "10.096949",
+        "price": "106.0350",
+        "notional": "1070.63",
+        "cost": "0.54",
+        "reason": "v3 daily reversal: entry"
+      },
+      {
+        "date": "2026-11-02",
+        "symbol": "NET",
+        "side": "buy",
+        "shares": "4.036305",
+        "price": "265.2500",
+        "notional": "1070.63",
+        "cost": "0.54",
+        "reason": "v3 daily reversal: entry"
+      },
+      {
+        "date": "2026-11-02",
+        "symbol": "AMD",
+        "side": "buy",
+        "shares": "2.293847",
+        "price": "466.7400",
+        "notional": "1070.63",
+        "cost": "0.54",
+        "reason": "v3 daily reversal: entry"
+      }
+    ]
+  }
+}
