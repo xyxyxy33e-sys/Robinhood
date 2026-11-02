@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 72.87,
+  "cash": 170.32,
   "positions": [
     {
       "symbol": "HOOD",
@@ -18,7 +18,7 @@
     },
     {
       "symbol": "META",
-      "shares": 1.888431,
+      "shares": 1.750744,
       "cost_basis": 646.3356,
       "target_weight": 0.1225,
       "sector": "Internet Services",
@@ -34,7 +34,7 @@
     },
     {
       "symbol": "NFLX",
-      "shares": 18.655985,
+      "shares": 17.343586,
       "cost_basis": 63.8031,
       "target_weight": 0.1225,
       "sector": "Streaming",
@@ -58,8 +58,8 @@
     },
     {
       "symbol": "APP",
-      "shares": 4.411814,
-      "cost_basis": 262.91,
+      "shares": 4.711989,
+      "cost_basis": 260.7179,
       "target_weight": 0.1225,
       "sector": "Ad Tech",
       "thesis": "Reversal pick 2026-10-27: rank 7 of 29, avg -2.9% over 4-8 sessions. Held while in the 12 most oversold."

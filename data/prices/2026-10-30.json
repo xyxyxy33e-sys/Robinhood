@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-30",
+  "source": "robinhood get_equity_quotes close.price (official SIP close for 2026-10-30), backfilled 2026-11-02 after missed check-in",
+  "closes": {
+    "SPY": 755.72, "AAPL": 344.63, "AMD": 504.8, "AMZN": 240.35, "ANET": 168.86,
+    "APP": 228.5, "AVGO": 326.08, "COIN": 143.54, "CRM": 229.17, "CRWD": 250.43,
+    "GOOGL": 279.84, "HOOD": 84.99, "JPM": 337.04, "LLY": 1417.54, "META": 614.99,
+    "MSFT": 521.91, "MU": 884.74, "NET": 280.7, "NFLX": 62.08, "NOW": 105.12,
+    "NVDA": 204.64, "ORCL": 130.67, "PLTR": 184.11, "SHOP": 157.49, "TSLA": 399.81,
+    "TSM": 406.13, "UNH": 406.97, "V": 413.59, "VRT": 232.5, "XOM": 187.25
+  }
+}
