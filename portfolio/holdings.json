@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 146.45,
+  "cash": 117.2,
   "positions": [
     {
       "symbol": "HOOD",
@@ -34,15 +34,15 @@
     },
     {
       "symbol": "SHOP",
-      "shares": 6.993729,
-      "cost_basis": 165.85,
+      "shares": 7.655556,
+      "cost_basis": 163.8366,
       "target_weight": 0.1225,
       "sector": "E-commerce",
       "thesis": "Reversal pick 2026-10-27: rank 6 of 29, avg -4.2% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
       "symbol": "APP",
-      "shares": 4.711989,
+      "shares": 4.446445,
       "cost_basis": 260.7179,
       "target_weight": 0.1225,
       "sector": "Ad Tech",

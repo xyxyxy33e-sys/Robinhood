@@ -74,3 +74,5 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-02,NOW,buy,10.096949,106.0350,1070.63,v3 daily reversal: entry,0.54
 2026-11-02,NET,buy,4.036305,265.2500,1070.63,v3 daily reversal: entry,0.54
 2026-11-02,AMD,buy,2.293847,466.7400,1070.63,v3 daily reversal: entry,0.54
+2026-11-03,APP,sell,0.265544,245.4500,65.18,v3 daily reversal: resize,0.03
+2026-11-03,SHOP,buy,0.661827,142.5600,94.35,v3 daily reversal: resize,0.05

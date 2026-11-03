@@ -1,0 +1,220 @@
+{
+  "effective": "2026-11-03",
+  "strategy": "v3 daily reversal",
+  "cash_target": 0.02,
+  "min_leg": 50.0,
+  "cost_bps": 5.0,
+  "targets": {
+    "NOW": 0.1225,
+    "SHOP": 0.1225,
+    "NET": 0.1225,
+    "GOOGL": 0.1225,
+    "COIN": 0.1225,
+    "AMD": 0.1225,
+    "HOOD": 0.1225,
+    "APP": 0.1225
+  },
+  "meta": {},
+  "ranking": [
+    {
+      "symbol": "NOW",
+      "score": -29.901,
+      "r5": -29.503,
+      "sector": "Software"
+    },
+    {
+      "symbol": "SHOP",
+      "score": -15.117,
+      "r5": -14.043,
+      "sector": "E-commerce"
+    },
+    {
+      "symbol": "NET",
+      "score": -14.919,
+      "r5": -16.587,
+      "sector": "Cloud / Edge"
+    },
+    {
+      "symbol": "GOOGL",
+      "score": -12.929,
+      "r5": -12.678,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "PLTR",
+      "score": -11.179,
+      "r5": -11.743,
+      "sector": "Software"
+    },
+    {
+      "symbol": "COIN",
+      "score": -10.859,
+      "r5": -9.685,
+      "sector": "Crypto / Brokerage"
+    },
+    {
+      "symbol": "AMD",
+      "score": -9.9,
+      "r5": -13.552,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "CRM",
+      "score": -9.628,
+      "r5": -7.773,
+      "sector": "Software"
+    },
+    {
+      "symbol": "HOOD",
+      "score": -8.947,
+      "r5": -9.412,
+      "sector": "Brokerage"
+    },
+    {
+      "symbol": "APP",
+      "score": -6.194,
+      "r5": -6.641,
+      "sector": "Ad Tech"
+    },
+    {
+      "symbol": "MU",
+      "score": -5.793,
+      "r5": -7.962,
+      "sector": "Memory"
+    },
+    {
+      "symbol": "CRWD",
+      "score": -5.181,
+      "r5": -8.734,
+      "sector": "Cybersecurity"
+    },
+    {
+      "symbol": "TSM",
+      "score": -5.014,
+      "r5": -7.374,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "ANET",
+      "score": -4.884,
+      "r5": -9.172,
+      "sector": "Networking"
+    },
+    {
+      "symbol": "AAPL",
+      "score": -4.177,
+      "r5": -4.425,
+      "sector": "Consumer Hardware"
+    },
+    {
+      "symbol": "NVDA",
+      "score": -3.696,
+      "r5": -5.213,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "ORCL",
+      "score": -3.033,
+      "r5": -3.317,
+      "sector": "Software / Cloud"
+    },
+    {
+      "symbol": "UNH",
+      "score": -2.475,
+      "r5": -1.615,
+      "sector": "Managed Care"
+    },
+    {
+      "symbol": "XOM",
+      "score": -2.252,
+      "r5": -1.351,
+      "sector": "Energy"
+    },
+    {
+      "symbol": "META",
+      "score": -1.492,
+      "r5": 0.163,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "MSFT",
+      "score": -1.446,
+      "r5": -2.037,
+      "sector": "Software"
+    },
+    {
+      "symbol": "NFLX",
+      "score": -1.312,
+      "r5": 1.36,
+      "sector": "Streaming"
+    },
+    {
+      "symbol": "AVGO",
+      "score": -0.38,
+      "r5": -3.028,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "AMZN",
+      "score": -0.121,
+      "r5": -0.956,
+      "sector": "Consumer / Cloud"
+    },
+    {
+      "symbol": "JPM",
+      "score": 0.751,
+      "r5": 0.658,
+      "sector": "Financials"
+    },
+    {
+      "symbol": "TSLA",
+      "score": 2.23,
+      "r5": -2.269,
+      "sector": "Autos / Energy"
+    },
+    {
+      "symbol": "V",
+      "score": 3.579,
+      "r5": 4.583,
+      "sector": "Payments"
+    },
+    {
+      "symbol": "LLY",
+      "score": 9.576,
+      "r5": 9.969,
+      "sector": "Pharmaceuticals"
+    },
+    {
+      "symbol": "VRT",
+      "score": 14.068,
+      "r5": 13.065,
+      "sector": "Datacenter Power"
+    }
+  ],
+  "executed": {
+    "date": "2026-11-03",
+    "nav": 8909.22,
+    "trades": [
+      {
+        "date": "2026-11-03",
+        "symbol": "APP",
+        "side": "sell",
+        "shares": "0.265544",
+        "price": "245.4500",
+        "notional": "65.18",
+        "cost": "0.03",
+        "reason": "v3 daily reversal: resize"
+      },
+      {
+        "date": "2026-11-03",
+        "symbol": "SHOP",
+        "side": "buy",
+        "shares": "0.661827",
+        "price": "142.5600",
+        "notional": "94.35",
+        "cost": "0.05",
+        "reason": "v3 daily reversal: resize"
+      }
+    ]
+  }
+}
