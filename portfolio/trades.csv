@@ -76,3 +76,15 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-02,AMD,buy,2.293847,466.7400,1070.63,v3 daily reversal: entry,0.54
 2026-11-03,APP,sell,0.265544,245.4500,65.18,v3 daily reversal: resize,0.03
 2026-11-03,SHOP,buy,0.661827,142.5600,94.35,v3 daily reversal: resize,0.05
+2026-11-04,HOOD,sell,12.217664,87.4100,1067.95,v3 daily reversal: exit,0.53
+2026-11-04,COIN,sell,7.765535,151.5000,1176.48,v3 daily reversal: exit,0.59
+2026-11-04,APP,sell,4.446445,271.7500,1208.32,v3 daily reversal: exit,0.60
+2026-11-04,MU,buy,1.415389,795.2300,1125.56,v3 daily reversal: entry,0.56
+2026-11-04,PLTR,buy,6.555387,171.7000,1125.56,v3 daily reversal: entry,0.56
+2026-11-04,CRWD,buy,4.670373,241.0000,1125.56,v3 daily reversal: entry,0.56
+2026-11-05,GOOGL,sell,3.983474,282.6000,1125.73,v3 daily reversal: exit,0.56
+2026-11-05,SHOP,sell,7.655556,143.8100,1100.95,v3 daily reversal: exit,0.55
+2026-11-05,MU,buy,0.133635,658.3600,87.98,v3 daily reversal: resize,0.04
+2026-11-05,AMD,buy,0.239795,402.5100,96.52,v3 daily reversal: resize,0.05
+2026-11-05,VRT,buy,5.773378,176.6401,1019.81,v3 daily reversal: entry,0.51
+2026-11-05,TSM,buy,2.896941,352.0300,1019.81,v3 daily reversal: entry,0.51
