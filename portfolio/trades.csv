@@ -92,3 +92,8 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-06,AMD,sell,0.155679,449.0300,69.90,v3 daily reversal: resize,0.03
 2026-11-06,CRWD,buy,0.254555,216.8100,55.19,v3 daily reversal: resize,0.03
 2026-11-06,AVGO,buy,3.641442,293.2300,1067.78,v3 daily reversal: entry,0.53
+2026-11-09,AMD,sell,2.377963,509.0200,1210.43,v3 daily reversal: exit,0.61
+2026-11-09,AVGO,sell,3.641442,319.5000,1163.44,v3 daily reversal: exit,0.58
+2026-11-09,NOW,buy,0.972702,102.7550,99.95,v3 daily reversal: resize,0.05
+2026-11-09,NVDA,buy,6.369827,178.5700,1137.46,v3 daily reversal: entry,0.57
+2026-11-09,XOM,buy,6.903739,164.7600,1137.46,v3 daily reversal: entry,0.57

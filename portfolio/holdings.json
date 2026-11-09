@@ -6,23 +6,15 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 220.52,
+  "cash": 217.14,
   "positions": [
     {
       "symbol": "NOW",
-      "shares": 10.096949,
-      "cost_basis": 106.035,
+      "shares": 11.069651,
+      "cost_basis": 105.7468,
       "target_weight": 0.1225,
       "sector": "Software",
       "thesis": "Reversal pick 2026-11-02: rank 1 of 29, avg -32.2% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
-      "symbol": "AMD",
-      "shares": 2.377963,
-      "cost_basis": 460.661,
-      "target_weight": 0.1225,
-      "sector": "Semiconductors",
-      "thesis": "Reversal pick 2026-11-02: rank 7 of 29, avg -12.4% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
       "symbol": "MU",
@@ -65,12 +57,20 @@
       "thesis": "Reversal pick 2026-11-05: rank 7 of 29, avg -17.6% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "AVGO",
-      "shares": 3.641442,
-      "cost_basis": 293.23,
+      "symbol": "NVDA",
+      "shares": 6.369827,
+      "cost_basis": 178.57,
       "target_weight": 0.1225,
       "sector": "Semiconductors",
-      "thesis": "Reversal pick 2026-11-06: rank 7 of 29, avg -13.0% over 4-8 sessions. Held while in the 12 most oversold."
+      "thesis": "Reversal pick 2026-11-09: rank 3 of 29, avg -14.3% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "XOM",
+      "shares": 6.903739,
+      "cost_basis": 164.76,
+      "target_weight": 0.1225,
+      "sector": "Energy",
+      "thesis": "Reversal pick 2026-11-09: rank 6 of 29, avg -9.4% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
