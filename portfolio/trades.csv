@@ -99,3 +99,6 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-09,XOM,buy,6.903739,164.7600,1137.46,v3 daily reversal: entry,0.57
 2026-11-10,TSM,sell,2.896941,396.5850,1148.88,v3 daily reversal: exit,0.57
 2026-11-10,COIN,buy,8.473517,132.1600,1119.86,v3 daily reversal: entry,0.56
+2026-11-11,MU,sell,1.549024,812.0000,1257.81,v3 daily reversal: exit,0.63
+2026-11-11,NVDA,buy,0.327696,173.8500,56.97,v3 daily reversal: resize,0.03
+2026-11-11,CRM,buy,5.342081,217.9600,1164.36,v3 daily reversal: entry,0.58

@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 245.03,
+  "cash": 280.27,
   "positions": [
     {
       "symbol": "NOW",
@@ -15,14 +15,6 @@
       "target_weight": 0.1225,
       "sector": "Software",
       "thesis": "Reversal pick 2026-11-02: rank 1 of 29, avg -32.2% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
-      "symbol": "MU",
-      "shares": 1.549024,
-      "cost_basis": 783.4222,
-      "target_weight": 0.1225,
-      "sector": "Memory",
-      "thesis": "Reversal pick 2026-11-04: rank 3 of 29, avg -13.9% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
       "symbol": "PLTR",
@@ -50,8 +42,8 @@
     },
     {
       "symbol": "NVDA",
-      "shares": 6.369827,
-      "cost_basis": 178.57,
+      "shares": 6.697523,
+      "cost_basis": 178.3391,
       "target_weight": 0.1225,
       "sector": "Semiconductors",
       "thesis": "Reversal pick 2026-11-09: rank 3 of 29, avg -14.3% over 4-8 sessions. Held while in the 12 most oversold."
@@ -71,6 +63,14 @@
       "target_weight": 0.1225,
       "sector": "Crypto / Brokerage",
       "thesis": "Reversal pick 2026-11-10: rank 4 of 29, avg -10.4% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "CRM",
+      "shares": 5.342081,
+      "cost_basis": 217.96,
+      "target_weight": 0.1225,
+      "sector": "Software",
+      "thesis": "Reversal pick 2026-11-11: rank 5 of 29, avg -3.3% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
