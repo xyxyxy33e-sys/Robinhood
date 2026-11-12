@@ -102,3 +102,7 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-11,MU,sell,1.549024,812.0000,1257.81,v3 daily reversal: exit,0.63
 2026-11-11,NVDA,buy,0.327696,173.8500,56.97,v3 daily reversal: resize,0.03
 2026-11-11,CRM,buy,5.342081,217.9600,1164.36,v3 daily reversal: entry,0.58
+2026-11-12,PLTR,sell,6.555387,171.5600,1124.64,v3 daily reversal: exit,0.56
+2026-11-12,VRT,sell,5.773378,209.6550,1210.42,v3 daily reversal: exit,0.61
+2026-11-12,NFLX,buy,18.401596,62.6750,1153.32,v3 daily reversal: entry,0.58
+2026-11-12,HOOD,buy,14.173774,81.3700,1153.32,v3 daily reversal: entry,0.58
