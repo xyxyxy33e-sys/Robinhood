@@ -106,3 +106,5 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-12,VRT,sell,5.773378,209.6550,1210.42,v3 daily reversal: exit,0.61
 2026-11-12,NFLX,buy,18.401596,62.6750,1153.32,v3 daily reversal: entry,0.58
 2026-11-12,HOOD,buy,14.173774,81.3700,1153.32,v3 daily reversal: entry,0.58
+2026-11-13,NVDA,buy,0.311080,162.8201,50.65,v3 daily reversal: resize,0.03
+2026-11-13,COIN,buy,0.466782,127.6400,59.58,v3 daily reversal: resize,0.03
