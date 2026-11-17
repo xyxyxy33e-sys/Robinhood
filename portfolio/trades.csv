@@ -111,3 +111,5 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-16,XOM,sell,6.903739,166.9750,1152.75,v3 daily reversal: exit,0.58
 2026-11-16,HOOD,buy,1.126544,72.0700,81.19,v3 daily reversal: resize,0.04
 2026-11-16,MSFT,buy,2.128293,518.1100,1102.69,v3 daily reversal: entry,0.55
+2026-11-17,CRWD,sell,4.924928,219.5050,1081.05,v3 daily reversal: exit,0.54
+2026-11-17,TSM,buy,2.951478,359.6300,1061.44,v3 daily reversal: entry,0.53
