@@ -113,3 +113,7 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-16,MSFT,buy,2.128293,518.1100,1102.69,v3 daily reversal: entry,0.55
 2026-11-17,CRWD,sell,4.924928,219.5050,1081.05,v3 daily reversal: exit,0.54
 2026-11-17,TSM,buy,2.951478,359.6300,1061.44,v3 daily reversal: entry,0.53
+2026-11-18,NFLX,sell,0.870347,59.8000,52.05,v3 daily reversal: resize,0.03
+2026-11-18,MSFT,sell,2.128293,508.3300,1081.88,v3 daily reversal: exit,0.54
+2026-11-18,COIN,buy,0.544172,110.5350,60.15,v3 daily reversal: resize,0.03
+2026-11-18,UNH,buy,2.996199,349.9000,1048.37,v3 daily reversal: entry,0.52

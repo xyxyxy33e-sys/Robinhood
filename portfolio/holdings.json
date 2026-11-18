@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 182.31,
+  "cash": 206.6,
   "positions": [
     {
       "symbol": "NOW",
@@ -26,8 +26,8 @@
     },
     {
       "symbol": "COIN",
-      "shares": 8.940299,
-      "cost_basis": 131.924,
+      "shares": 9.484471,
+      "cost_basis": 130.6968,
       "target_weight": 0.1225,
       "sector": "Crypto / Brokerage",
       "thesis": "Reversal pick 2026-11-10: rank 4 of 29, avg -10.4% over 4-8 sessions. Held while in the 12 most oversold."
@@ -42,7 +42,7 @@
     },
     {
       "symbol": "NFLX",
-      "shares": 18.401596,
+      "shares": 17.531249,
       "cost_basis": 62.675,
       "target_weight": 0.1225,
       "sector": "Streaming",
@@ -57,20 +57,20 @@
       "thesis": "Reversal pick 2026-11-12: rank 5 of 29, avg -2.1% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "MSFT",
-      "shares": 2.128293,
-      "cost_basis": 518.11,
-      "target_weight": 0.1225,
-      "sector": "Software",
-      "thesis": "Reversal pick 2026-11-16: rank 5 of 29, avg -4.0% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
       "symbol": "TSM",
       "shares": 2.951478,
       "cost_basis": 359.63,
       "target_weight": 0.1225,
       "sector": "Semiconductors",
       "thesis": "Reversal pick 2026-11-17: rank 7 of 29, avg -6.3% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "UNH",
+      "shares": 2.996199,
+      "cost_basis": 349.9,
+      "target_weight": 0.1225,
+      "sector": "Managed Care",
+      "thesis": "Reversal pick 2026-11-18: rank 4 of 29, avg -12.7% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
