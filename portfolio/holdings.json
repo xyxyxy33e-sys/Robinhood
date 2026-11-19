@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 206.6,
+  "cash": 209.89,
   "positions": [
     {
       "symbol": "NOW",
@@ -41,14 +41,6 @@
       "thesis": "Reversal pick 2026-11-11: rank 5 of 29, avg -3.3% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "NFLX",
-      "shares": 17.531249,
-      "cost_basis": 62.675,
-      "target_weight": 0.1225,
-      "sector": "Streaming",
-      "thesis": "Reversal pick 2026-11-12: rank 4 of 29, avg -2.3% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
       "symbol": "HOOD",
       "shares": 15.300318,
       "cost_basis": 80.6853,
@@ -71,6 +63,14 @@
       "target_weight": 0.1225,
       "sector": "Managed Care",
       "thesis": "Reversal pick 2026-11-18: rank 4 of 29, avg -12.7% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "SHOP",
+      "shares": 7.732863,
+      "cost_basis": 131.955,
+      "target_weight": 0.1225,
+      "sector": "E-commerce",
+      "thesis": "Reversal pick 2026-11-19: rank 8 of 29, avg -11.0% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,

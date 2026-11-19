@@ -1,0 +1,225 @@
+{
+  "effective": "2026-11-19",
+  "strategy": "v3 daily reversal",
+  "cash_target": 0.02,
+  "min_leg": 50.0,
+  "cost_bps": 5.0,
+  "targets": {
+    "UNH": 0.1225,
+    "COIN": 0.1225,
+    "HOOD": 0.1225,
+    "CRM": 0.1225,
+    "NVDA": 0.1225,
+    "NOW": 0.1225,
+    "TSM": 0.1225,
+    "SHOP": 0.1225
+  },
+  "meta": {
+    "SHOP": {
+      "sector": "E-commerce",
+      "thesis": "Reversal pick 2026-11-19: rank 8 of 29, avg -11.0% over 4-8 sessions. Held while in the 12 most oversold."
+    }
+  },
+  "ranking": [
+    {
+      "symbol": "UNH",
+      "score": -18.137,
+      "r5": -18.431,
+      "sector": "Managed Care"
+    },
+    {
+      "symbol": "COIN",
+      "score": -17.827,
+      "r5": -16.656,
+      "sector": "Crypto / Brokerage"
+    },
+    {
+      "symbol": "HOOD",
+      "score": -15.909,
+      "r5": -15.632,
+      "sector": "Brokerage"
+    },
+    {
+      "symbol": "CRM",
+      "score": -15.213,
+      "r5": -15.688,
+      "sector": "Software"
+    },
+    {
+      "symbol": "NVDA",
+      "score": -14.026,
+      "r5": -12.063,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "NOW",
+      "score": -12.552,
+      "r5": -11.728,
+      "sector": "Software"
+    },
+    {
+      "symbol": "TSM",
+      "score": -12.076,
+      "r5": -13.217,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "SHOP",
+      "score": -11.046,
+      "r5": -10.097,
+      "sector": "E-commerce"
+    },
+    {
+      "symbol": "ORCL",
+      "score": -10.594,
+      "r5": -13.091,
+      "sector": "Software / Cloud"
+    },
+    {
+      "symbol": "MU",
+      "score": -10.149,
+      "r5": -13.625,
+      "sector": "Memory"
+    },
+    {
+      "symbol": "PLTR",
+      "score": -9.65,
+      "r5": -10.474,
+      "sector": "Software"
+    },
+    {
+      "symbol": "AMD",
+      "score": -9.084,
+      "r5": -16.465,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "VRT",
+      "score": -8.586,
+      "r5": -11.736,
+      "sector": "Datacenter Power"
+    },
+    {
+      "symbol": "NFLX",
+      "score": -7.655,
+      "r5": -6.741,
+      "sector": "Streaming"
+    },
+    {
+      "symbol": "GOOGL",
+      "score": -6.889,
+      "r5": -8.787,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "JPM",
+      "score": -6.707,
+      "r5": -6.577,
+      "sector": "Financials"
+    },
+    {
+      "symbol": "META",
+      "score": -6.161,
+      "r5": -4.386,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "MSFT",
+      "score": -5.882,
+      "r5": -4.77,
+      "sector": "Software"
+    },
+    {
+      "symbol": "APP",
+      "score": -5.848,
+      "r5": -3.746,
+      "sector": "Ad Tech"
+    },
+    {
+      "symbol": "LLY",
+      "score": -5.621,
+      "r5": -5.559,
+      "sector": "Pharmaceuticals"
+    },
+    {
+      "symbol": "XOM",
+      "score": -4.943,
+      "r5": -6.384,
+      "sector": "Energy"
+    },
+    {
+      "symbol": "V",
+      "score": -4.939,
+      "r5": -4.234,
+      "sector": "Payments"
+    },
+    {
+      "symbol": "AMZN",
+      "score": -3.901,
+      "r5": -3.842,
+      "sector": "Consumer / Cloud"
+    },
+    {
+      "symbol": "TSLA",
+      "score": -3.312,
+      "r5": -5.862,
+      "sector": "Autos / Energy"
+    },
+    {
+      "symbol": "ANET",
+      "score": -2.311,
+      "r5": -8.272,
+      "sector": "Networking"
+    },
+    {
+      "symbol": "NET",
+      "score": -1.243,
+      "r5": -4.636,
+      "sector": "Cloud / Edge"
+    },
+    {
+      "symbol": "AAPL",
+      "score": -1.146,
+      "r5": -1.62,
+      "sector": "Consumer Hardware"
+    },
+    {
+      "symbol": "AVGO",
+      "score": 1.653,
+      "r5": -4.893,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "CRWD",
+      "score": 6.78,
+      "r5": 5.886,
+      "sector": "Cybersecurity"
+    }
+  ],
+  "executed": {
+    "date": "2026-11-19",
+    "nav": 8329.71,
+    "trades": [
+      {
+        "date": "2026-11-19",
+        "symbol": "NFLX",
+        "side": "sell",
+        "shares": "17.531249",
+        "price": "58.4500",
+        "notional": "1024.70",
+        "cost": "0.51",
+        "reason": "v3 daily reversal: exit"
+      },
+      {
+        "date": "2026-11-19",
+        "symbol": "SHOP",
+        "side": "buy",
+        "shares": "7.732863",
+        "price": "131.9550",
+        "notional": "1020.39",
+        "cost": "0.51",
+        "reason": "v3 daily reversal: entry"
+      }
+    ]
+  }
+}
