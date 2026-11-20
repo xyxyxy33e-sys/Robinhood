@@ -6,20 +6,12 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 209.89,
+  "cash": 189.83,
   "positions": [
     {
-      "symbol": "NOW",
-      "shares": 11.069651,
-      "cost_basis": 105.7468,
-      "target_weight": 0.1225,
-      "sector": "Software",
-      "thesis": "Reversal pick 2026-11-02: rank 1 of 29, avg -32.2% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
       "symbol": "NVDA",
-      "shares": 7.008603,
-      "cost_basis": 177.6503,
+      "shares": 7.656111,
+      "cost_basis": 173.2643,
       "target_weight": 0.1225,
       "sector": "Semiconductors",
       "thesis": "Reversal pick 2026-11-09: rank 3 of 29, avg -14.3% over 4-8 sessions. Held while in the 12 most oversold."
@@ -58,7 +50,7 @@
     },
     {
       "symbol": "UNH",
-      "shares": 2.996199,
+      "shares": 2.833504,
       "cost_basis": 349.9,
       "target_weight": 0.1225,
       "sector": "Managed Care",
@@ -71,6 +63,14 @@
       "target_weight": 0.1225,
       "sector": "E-commerce",
       "thesis": "Reversal pick 2026-11-19: rank 8 of 29, avg -11.0% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "MU",
+      "shares": 1.620702,
+      "cost_basis": 594.23,
+      "target_weight": 0.1225,
+      "sector": "Memory",
+      "thesis": "Reversal pick 2026-11-20: rank 2 of 29, avg -22.3% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,

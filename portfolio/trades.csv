@@ -119,3 +119,7 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-18,UNH,buy,2.996199,349.9000,1048.37,v3 daily reversal: entry,0.52
 2026-11-19,NFLX,sell,17.531249,58.4500,1024.70,v3 daily reversal: exit,0.51
 2026-11-19,SHOP,buy,7.732863,131.9550,1020.39,v3 daily reversal: entry,0.51
+2026-11-20,NOW,sell,11.069651,87.6450,970.20,v3 daily reversal: exit,0.49
+2026-11-20,UNH,sell,0.162695,339.8850,55.30,v3 daily reversal: resize,0.03
+2026-11-20,NVDA,buy,0.647508,125.7900,81.45,v3 daily reversal: resize,0.04
+2026-11-20,MU,buy,1.620702,594.2300,963.07,v3 daily reversal: entry,0.48
