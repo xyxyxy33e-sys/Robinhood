@@ -6,16 +6,8 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 189.83,
+  "cash": 274.01,
   "positions": [
-    {
-      "symbol": "NVDA",
-      "shares": 7.656111,
-      "cost_basis": 173.2643,
-      "target_weight": 0.1225,
-      "sector": "Semiconductors",
-      "thesis": "Reversal pick 2026-11-09: rank 3 of 29, avg -14.3% over 4-8 sessions. Held while in the 12 most oversold."
-    },
     {
       "symbol": "COIN",
       "shares": 9.484471,
@@ -26,8 +18,8 @@
     },
     {
       "symbol": "CRM",
-      "shares": 5.342081,
-      "cost_basis": 217.96,
+      "shares": 5.75727,
+      "cost_basis": 215.6213,
       "target_weight": 0.1225,
       "sector": "Software",
       "thesis": "Reversal pick 2026-11-11: rank 5 of 29, avg -3.3% over 4-8 sessions. Held while in the 12 most oversold."
@@ -41,17 +33,9 @@
       "thesis": "Reversal pick 2026-11-12: rank 5 of 29, avg -2.1% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "TSM",
-      "shares": 2.951478,
-      "cost_basis": 359.63,
-      "target_weight": 0.1225,
-      "sector": "Semiconductors",
-      "thesis": "Reversal pick 2026-11-17: rank 7 of 29, avg -6.3% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
       "symbol": "UNH",
-      "shares": 2.833504,
-      "cost_basis": 349.9,
+      "shares": 3.176274,
+      "cost_basis": 348.4312,
       "target_weight": 0.1225,
       "sector": "Managed Care",
       "thesis": "Reversal pick 2026-11-18: rank 4 of 29, avg -12.7% over 4-8 sessions. Held while in the 12 most oversold."
@@ -65,12 +49,28 @@
       "thesis": "Reversal pick 2026-11-19: rank 8 of 29, avg -11.0% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
-      "symbol": "MU",
-      "shares": 1.620702,
-      "cost_basis": 594.23,
+      "symbol": "AMD",
+      "shares": 2.352701,
+      "cost_basis": 454.01,
       "target_weight": 0.1225,
-      "sector": "Memory",
-      "thesis": "Reversal pick 2026-11-20: rank 2 of 29, avg -22.3% over 4-8 sessions. Held while in the 12 most oversold."
+      "sector": "Semiconductors",
+      "thesis": "Reversal pick 2026-11-23: rank 2 of 29, avg -15.0% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "AVGO",
+      "shares": 3.406742,
+      "cost_basis": 313.54,
+      "target_weight": 0.1225,
+      "sector": "Semiconductors",
+      "thesis": "Reversal pick 2026-11-23: rank 6 of 29, avg -9.4% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "ANET",
+      "shares": 5.991418,
+      "cost_basis": 178.28,
+      "target_weight": 0.1225,
+      "sector": "Networking",
+      "thesis": "Reversal pick 2026-11-23: rank 7 of 29, avg -8.4% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
