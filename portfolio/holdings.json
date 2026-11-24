@@ -6,23 +6,15 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 274.01,
+  "cash": 212.43,
   "positions": [
     {
       "symbol": "COIN",
-      "shares": 9.484471,
-      "cost_basis": 130.6968,
+      "shares": 10.1471,
+      "cost_basis": 128.8477,
       "target_weight": 0.1225,
       "sector": "Crypto / Brokerage",
       "thesis": "Reversal pick 2026-11-10: rank 4 of 29, avg -10.4% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
-      "symbol": "CRM",
-      "shares": 5.75727,
-      "cost_basis": 215.6213,
-      "target_weight": 0.1225,
-      "sector": "Software",
-      "thesis": "Reversal pick 2026-11-11: rank 5 of 29, avg -3.3% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
       "symbol": "HOOD",
@@ -50,8 +42,8 @@
     },
     {
       "symbol": "AMD",
-      "shares": 2.352701,
-      "cost_basis": 454.01,
+      "shares": 2.513913,
+      "cost_basis": 451.3958,
       "target_weight": 0.1225,
       "sector": "Semiconductors",
       "thesis": "Reversal pick 2026-11-23: rank 2 of 29, avg -15.0% over 4-8 sessions. Held while in the 12 most oversold."
@@ -71,6 +63,14 @@
       "target_weight": 0.1225,
       "sector": "Networking",
       "thesis": "Reversal pick 2026-11-23: rank 7 of 29, avg -8.4% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "MU",
+      "shares": 1.649429,
+      "cost_basis": 629.83,
+      "target_weight": 0.1225,
+      "sector": "Memory",
+      "thesis": "Reversal pick 2026-11-24: rank 2 of 29, avg -15.0% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,

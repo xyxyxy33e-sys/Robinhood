@@ -131,3 +131,7 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-23,AMD,buy,2.352701,454.0100,1068.15,v3 daily reversal: entry,0.53
 2026-11-23,AVGO,buy,3.406742,313.5400,1068.15,v3 daily reversal: entry,0.53
 2026-11-23,ANET,buy,5.991418,178.2800,1068.15,v3 daily reversal: entry,0.53
+2026-11-24,CRM,sell,5.757270,193.3000,1112.88,v3 daily reversal: exit,0.56
+2026-11-24,AMD,buy,0.161212,413.2450,66.62,v3 daily reversal: resize,0.03
+2026-11-24,COIN,buy,0.662629,102.3800,67.84,v3 daily reversal: resize,0.03
+2026-11-24,MU,buy,1.649429,629.8300,1038.86,v3 daily reversal: entry,0.52
