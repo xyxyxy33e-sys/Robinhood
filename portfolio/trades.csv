@@ -135,3 +135,6 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-24,AMD,buy,0.161212,413.2450,66.62,v3 daily reversal: resize,0.03
 2026-11-24,COIN,buy,0.662629,102.3800,67.84,v3 daily reversal: resize,0.03
 2026-11-24,MU,buy,1.649429,629.8300,1038.86,v3 daily reversal: entry,0.52
+2026-11-25,UNH,sell,0.196252,346.1000,67.92,v3 daily reversal: resize,0.03
+2026-11-25,SHOP,sell,7.732863,133.3300,1031.02,v3 daily reversal: exit,0.52
+2026-11-25,ORCL,buy,9.927712,103.8900,1031.39,v3 daily reversal: entry,0.52

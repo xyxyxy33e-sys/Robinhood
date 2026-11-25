@@ -6,7 +6,7 @@
   "inception_capital": 10000.0,
   "benchmark": "none (SPY shown for reference)",
   "trading_mode": "paper",
-  "cash": 212.43,
+  "cash": 278.91,
   "positions": [
     {
       "symbol": "COIN",
@@ -26,19 +26,11 @@
     },
     {
       "symbol": "UNH",
-      "shares": 3.176274,
+      "shares": 2.980022,
       "cost_basis": 348.4312,
       "target_weight": 0.1225,
       "sector": "Managed Care",
       "thesis": "Reversal pick 2026-11-18: rank 4 of 29, avg -12.7% over 4-8 sessions. Held while in the 12 most oversold."
-    },
-    {
-      "symbol": "SHOP",
-      "shares": 7.732863,
-      "cost_basis": 131.955,
-      "target_weight": 0.1225,
-      "sector": "E-commerce",
-      "thesis": "Reversal pick 2026-11-19: rank 8 of 29, avg -11.0% over 4-8 sessions. Held while in the 12 most oversold."
     },
     {
       "symbol": "AMD",
@@ -71,6 +63,14 @@
       "target_weight": 0.1225,
       "sector": "Memory",
       "thesis": "Reversal pick 2026-11-24: rank 2 of 29, avg -15.0% over 4-8 sessions. Held while in the 12 most oversold."
+    },
+    {
+      "symbol": "ORCL",
+      "shares": 9.927712,
+      "cost_basis": 103.89,
+      "target_weight": 0.1225,
+      "sector": "Software / Cloud",
+      "thesis": "Reversal pick 2026-11-25: rank 5 of 29, avg -10.9% over 4-8 sessions. Held while in the 12 most oversold."
     }
   ],
   "strategy_version": 3,
