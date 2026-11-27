@@ -138,3 +138,5 @@ date,symbol,side,shares,price,notional,reason,cost
 2026-11-25,UNH,sell,0.196252,346.1000,67.92,v3 daily reversal: resize,0.03
 2026-11-25,SHOP,sell,7.732863,133.3300,1031.02,v3 daily reversal: exit,0.52
 2026-11-25,ORCL,buy,9.927712,103.8900,1031.39,v3 daily reversal: entry,0.52
+2026-11-27,HOOD,sell,15.300318,67.9200,1039.20,v3 daily reversal: exit,0.52
+2026-11-27,CRWD,buy,4.943833,217.2100,1073.85,v3 daily reversal: entry,0.54

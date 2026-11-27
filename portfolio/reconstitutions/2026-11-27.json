@@ -1,0 +1,225 @@
+{
+  "effective": "2026-11-27",
+  "strategy": "v3 daily reversal",
+  "cash_target": 0.02,
+  "min_leg": 50.0,
+  "cost_bps": 5.0,
+  "targets": {
+    "AMD": 0.1225,
+    "AVGO": 0.1225,
+    "ANET": 0.1225,
+    "MU": 0.1225,
+    "ORCL": 0.1225,
+    "COIN": 0.1225,
+    "UNH": 0.1225,
+    "CRWD": 0.1225
+  },
+  "meta": {
+    "CRWD": {
+      "sector": "Cybersecurity",
+      "thesis": "Reversal pick 2026-11-27: rank 3 of 29, avg -5.7% over 4-8 sessions. Held while in the 12 most oversold."
+    }
+  },
+  "ranking": [
+    {
+      "symbol": "AMD",
+      "score": -12.658,
+      "r5": -12.94,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "AVGO",
+      "score": -6.799,
+      "r5": -9.882,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "CRWD",
+      "score": -5.651,
+      "r5": -10.76,
+      "sector": "Cybersecurity"
+    },
+    {
+      "symbol": "ANET",
+      "score": -5.214,
+      "r5": -7.781,
+      "sector": "Networking"
+    },
+    {
+      "symbol": "MU",
+      "score": -5.154,
+      "r5": -6.418,
+      "sector": "Memory"
+    },
+    {
+      "symbol": "ORCL",
+      "score": -3.774,
+      "r5": -2.828,
+      "sector": "Software / Cloud"
+    },
+    {
+      "symbol": "COIN",
+      "score": -3.568,
+      "r5": -1.763,
+      "sector": "Crypto / Brokerage"
+    },
+    {
+      "symbol": "VRT",
+      "score": -2.955,
+      "r5": -3.307,
+      "sector": "Datacenter Power"
+    },
+    {
+      "symbol": "UNH",
+      "score": -2.697,
+      "r5": 6.559,
+      "sector": "Managed Care"
+    },
+    {
+      "symbol": "MSFT",
+      "score": -1.906,
+      "r5": -0.96,
+      "sector": "Software"
+    },
+    {
+      "symbol": "XOM",
+      "score": -1.33,
+      "r5": 0.975,
+      "sector": "Energy"
+    },
+    {
+      "symbol": "AMZN",
+      "score": -1.214,
+      "r5": -1.145,
+      "sector": "Consumer / Cloud"
+    },
+    {
+      "symbol": "GOOGL",
+      "score": -0.702,
+      "r5": 0.837,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "JPM",
+      "score": -0.328,
+      "r5": 0.943,
+      "sector": "Financials"
+    },
+    {
+      "symbol": "HOOD",
+      "score": -0.243,
+      "r5": -1.063,
+      "sector": "Brokerage"
+    },
+    {
+      "symbol": "TSM",
+      "score": 0.27,
+      "r5": 0.382,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "LLY",
+      "score": 0.702,
+      "r5": 3.252,
+      "sector": "Pharmaceuticals"
+    },
+    {
+      "symbol": "NOW",
+      "score": 1.311,
+      "r5": 4.551,
+      "sector": "Software"
+    },
+    {
+      "symbol": "NET",
+      "score": 2.036,
+      "r5": -2.235,
+      "sector": "Cloud / Edge"
+    },
+    {
+      "symbol": "AAPL",
+      "score": 2.561,
+      "r5": 2.729,
+      "sector": "Consumer Hardware"
+    },
+    {
+      "symbol": "NVDA",
+      "score": 3.217,
+      "r5": 3.157,
+      "sector": "Semiconductors"
+    },
+    {
+      "symbol": "NFLX",
+      "score": 3.258,
+      "r5": 4.328,
+      "sector": "Streaming"
+    },
+    {
+      "symbol": "CRM",
+      "score": 3.262,
+      "r5": 8.121,
+      "sector": "Software"
+    },
+    {
+      "symbol": "APP",
+      "score": 3.65,
+      "r5": 5.346,
+      "sector": "Ad Tech"
+    },
+    {
+      "symbol": "SHOP",
+      "score": 3.996,
+      "r5": 7.522,
+      "sector": "E-commerce"
+    },
+    {
+      "symbol": "V",
+      "score": 4.251,
+      "r5": 6.823,
+      "sector": "Payments"
+    },
+    {
+      "symbol": "META",
+      "score": 4.496,
+      "r5": 5.662,
+      "sector": "Internet Services"
+    },
+    {
+      "symbol": "TSLA",
+      "score": 7.529,
+      "r5": 6.925,
+      "sector": "Autos / Energy"
+    },
+    {
+      "symbol": "PLTR",
+      "score": 11.881,
+      "r5": 12.149,
+      "sector": "Software"
+    }
+  ],
+  "executed": {
+    "date": "2026-11-27",
+    "nav": 8766.1,
+    "trades": [
+      {
+        "date": "2026-11-27",
+        "symbol": "HOOD",
+        "side": "sell",
+        "shares": "15.300318",
+        "price": "67.9200",
+        "notional": "1039.20",
+        "cost": "0.52",
+        "reason": "v3 daily reversal: exit"
+      },
+      {
+        "date": "2026-11-27",
+        "symbol": "CRWD",
+        "side": "buy",
+        "shares": "4.943833",
+        "price": "217.2100",
+        "notional": "1073.85",
+        "cost": "0.54",
+        "reason": "v3 daily reversal: entry"
+      }
+    ]
+  }
+}
